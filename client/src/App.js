@@ -97,7 +97,7 @@ function App() {
               path="/user"
               element={
                 <PrivateRoute roles={['user']}>
-                  <UserDashboard />
+                  <BingoGame />
                 </PrivateRoute>
               }
             />
