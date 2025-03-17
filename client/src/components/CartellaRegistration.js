@@ -3,51 +3,110 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  Grid,
-  Typography,
-  Button,
-  Box,
   DialogActions,
-  Checkbox,
+  Button,
+  Grid,
+  Box,
+  Typography,
   FormControl,
-  FormLabel,
-  RadioGroup,
   FormControlLabel,
   Radio,
-  Divider
+  RadioGroup,
+  Select,
+  MenuItem,
+  Stack,
+  TextField,
+  Tooltip,
+  IconButton
 } from '@mui/material';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import InfoIcon from '@mui/icons-material/Info';
 
-const GAME_PATTERNS = {
-  FULL_HOUSE: 'Full House',
-  TOP_LINE: 'Top Line',
-  MIDDLE_LINE: 'Middle Line',
-  BOTTOM_LINE: 'Bottom Line',
-  FOUR_CORNERS: 'Four Corners',
-  T_PATTERN: 'T Pattern',
-  X_PATTERN: 'X Pattern',
-  L_PATTERN: 'L Pattern'
-};
+const PATTERNS = [
+  'Full House',
+  'Top Line',
+  'Middle Line',
+  'Bottom Line',
+  'Four Corners',
+  'T Pattern',
+  'X Pattern',
+  'L Pattern'
+];
 
 const CartellaRegistration = ({ open, onClose, onSelect, cartellas }) => {
   const [selectedCartellas, setSelectedCartellas] = useState([]);
-  const [selectedPattern, setSelectedPattern] = useState(GAME_PATTERNS.FULL_HOUSE);
+  const [selectedPattern, setSelectedPattern] = useState('');
+  const [betAmount, setBetAmount] = useState(10);
+  const [showNewCardForm, setShowNewCardForm] = useState(false);
+  const [newCardNumbers, setNewCardNumbers] = useState(Array(5).fill().map(() => Array(5).fill('')));
+  const [newCardId, setNewCardId] = useState('');
+  const [registeredCartellas, setRegisteredCartellas] = useState(cartellas);
+  const [userBalance, setUserBalance] = useState(1000);
 
-  const handleToggleCartella = (index) => {
-    setSelectedCartellas(prev => {
-      if (prev.includes(index)) {
-        return prev.filter(i => i !== index);
-      }
-      return [...prev, index];
-    });
+  const totalBetAmount = selectedCartellas.length * betAmount;
+
+  const handleCartellaToggle = (index) => {
+    const isSelected = selectedCartellas.includes(index);
+    if (isSelected) {
+      setSelectedCartellas(selectedCartellas.filter(i => i !== index));
+    } else {
+      setSelectedCartellas([...selectedCartellas, index]);
+    }
   };
 
-  const handleSelect = () => {
-    if (selectedCartellas.length > 0) {
+  const handleSubmit = () => {
+    if (selectedCartellas.length > 0 && selectedPattern && totalBetAmount <= userBalance) {
       onSelect({
-        cartellas: selectedCartellas.map(index => cartellas[index]),
-        pattern: selectedPattern
+        cartellas: selectedCartellas.map(index => registeredCartellas[index]),
+        pattern: selectedPattern,
+        betAmount: totalBetAmount
       });
+      setUserBalance(prev => prev - totalBetAmount);
       onClose();
+    }
+  };
+
+  const handleNewCardSubmit = () => {
+    if (!newCardId.trim()) {
+      alert('Please enter a card ID');
+      return;
+    }
+
+    // Validate numbers
+    const allNumbers = newCardNumbers.flat();
+    const middleIndex = Math.floor(allNumbers.length / 2);
+    const hasInvalidNumbers = allNumbers.some((num, index) => {
+      if (index === middleIndex) return false; // Skip middle cell
+      return !num || isNaN(num) || num < 1 || num > 75;
+    });
+
+    if (hasInvalidNumbers) {
+      alert('Please fill all cells with valid numbers (1-75)');
+      return;
+    }
+
+    // Create new cartella with middle cell as 'FREE'
+    const newCartella = newCardNumbers.map((row, i) => 
+      row.map((num, j) => {
+        if (i === 2 && j === 2) return 'FREE';
+        return parseInt(num);
+      })
+    );
+
+    setRegisteredCartellas(prev => [...prev, newCartella]);
+    setNewCardNumbers(Array(5).fill().map(() => Array(5).fill('')));
+    setNewCardId('');
+    setShowNewCardForm(false);
+  };
+
+  const handleNumberChange = (rowIndex, colIndex, value) => {
+    if (rowIndex === 2 && colIndex === 2) return; // Middle cell is always FREE
+    
+    const newNumbers = [...newCardNumbers];
+    // Only allow numbers 1-75
+    if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 75)) {
+      newNumbers[rowIndex][colIndex] = value;
+      setNewCardNumbers(newNumbers);
     }
   };
 
@@ -55,105 +114,183 @@ const CartellaRegistration = ({ open, onClose, onSelect, cartellas }) => {
     <Dialog 
       open={open} 
       onClose={onClose}
-      fullScreen
+      fullWidth
+      maxWidth="md"
+      PaperProps={{
+        sx: { height: '90vh' }
+      }}
     >
-      <DialogTitle>
-        <Typography variant="h4" align="center" color="primary">
-          Select Your Cartellas
-        </Typography>
-      </DialogTitle>
-      <DialogContent>
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={8}>
-            <Typography variant="h6" gutterBottom>
-              Available Cartellas: {cartellas.length}
+      <DialogTitle sx={{ pb: 1 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="h5">Select Cartellas</Typography>
+          <Box>
+            <Typography variant="subtitle1" color="primary">
+              Balance: {userBalance} Birr
             </Typography>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              {cartellas.map((_, index) => (
-                <Grid item xs={3} sm={2} key={index}>
-                  <Box
-                    onClick={() => handleToggleCartella(index)}
-                    sx={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: '50%',
-                      bgcolor: selectedCartellas.includes(index) ? 'primary.main' : 'background.paper',
-                      color: selectedCartellas.includes(index) ? 'white' : 'text.primary',
-                      border: 2,
-                      borderColor: 'primary.main',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s',
-                      position: 'relative',
-                      '&:hover': {
-                        transform: 'scale(1.1)',
-                      }
-                    }}
-                  >
-                    <Typography variant="h5">
-                      #{index + 1}
-                    </Typography>
-                    <Checkbox
-                      checked={selectedCartellas.includes(index)}
+          </Box>
+        </Stack>
+      </DialogTitle>
+
+      <DialogContent dividers>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <Box sx={{ mb: 3 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="h6">Available Cartellas</Typography>
+                <Button
+                  startIcon={<AddCircleIcon />}
+                  onClick={() => setShowNewCardForm(true)}
+                >
+                  Add New Card
+                </Button>
+              </Stack>
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                {registeredCartellas.map((cartella, index) => (
+                  <Grid item xs={4} key={index}>
+                    <Box
+                      onClick={() => handleCartellaToggle(index)}
                       sx={{
-                        position: 'absolute',
-                        right: -10,
-                        top: -10,
-                        '& .MuiSvgIcon-root': {
-                          fontSize: 20,
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: 2,
+                        borderColor: selectedCartellas.includes(index) ? 'primary.main' : 'grey.300',
+                        bgcolor: selectedCartellas.includes(index) ? 'primary.light' : 'background.paper',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          borderColor: 'primary.main',
+                          transform: 'scale(1.05)'
                         }
                       }}
-                    />
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
+                    >
+                      <Typography variant="h5" color={selectedCartellas.includes(index) ? 'primary.main' : 'text.primary'}>
+                        {index + 1}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
           </Grid>
 
           <Grid item xs={12} md={4}>
-            <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
-              <FormControl component="fieldset">
-                <FormLabel component="legend">
-                  <Typography variant="h6" gutterBottom>
-                    Game Pattern
-                  </Typography>
-                </FormLabel>
-                <RadioGroup
-                  value={selectedPattern}
-                  onChange={(e) => setSelectedPattern(e.target.value)}
+            <Stack spacing={3}>
+              <Box>
+                <Typography variant="h6" gutterBottom>Game Pattern</Typography>
+                <FormControl component="fieldset">
+                  <RadioGroup
+                    value={selectedPattern}
+                    onChange={(e) => setSelectedPattern(e.target.value)}
+                  >
+                    {PATTERNS.map((pattern) => (
+                      <FormControlLabel
+                        key={pattern}
+                        value={pattern}
+                        control={<Radio />}
+                        label={pattern}
+                      />
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+              </Box>
+
+              <Box>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="h6">Bet Amount</Typography>
+                  <Tooltip title="Amount per cartella">
+                    <InfoIcon fontSize="small" color="action" />
+                  </Tooltip>
+                </Stack>
+                <Select
+                  value={betAmount}
+                  onChange={(e) => setBetAmount(e.target.value)}
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 1 }}
                 >
-                  {Object.entries(GAME_PATTERNS).map(([key, value]) => (
-                    <FormControlLabel
-                      key={key}
-                      value={value}
-                      control={<Radio />}
-                      label={value}
-                    />
+                  {[10, 20, 50, 100, 200, 500].map((amount) => (
+                    <MenuItem key={amount} value={amount}>{amount} Birr</MenuItem>
                   ))}
-                </RadioGroup>
-              </FormControl>
-            </Box>
+                </Select>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Total bet: {totalBetAmount} Birr
+                </Typography>
+              </Box>
+            </Stack>
           </Grid>
         </Grid>
-      </DialogContent>
-      <DialogActions sx={{ p: 3 }}>
-        <Typography variant="subtitle1" sx={{ mr: 'auto' }}>
-          Selected: {selectedCartellas.length} cartella(s)
-        </Typography>
-        <Button 
-          onClick={onClose}
-          variant="outlined"
-          size="large"
+
+        <Dialog
+          open={showNewCardForm}
+          onClose={() => setShowNewCardForm(false)}
+          maxWidth="sm"
+          fullWidth
         >
-          Cancel
-        </Button>
+          <DialogTitle>Add New Cartella</DialogTitle>
+          <DialogContent>
+            <TextField
+              label="Card ID"
+              fullWidth
+              value={newCardId}
+              onChange={(e) => setNewCardId(e.target.value)}
+              margin="normal"
+              required
+            />
+            <Grid container spacing={1} sx={{ mt: 1 }}>
+              {newCardNumbers.map((row, rowIndex) => (
+                <Grid item xs={12} key={rowIndex}>
+                  <Grid container spacing={1}>
+                    {row.map((num, colIndex) => (
+                      <Grid item xs={2.4} key={colIndex}>
+                        <TextField
+                          size="small"
+                          value={rowIndex === 2 && colIndex === 2 ? 'FREE' : num}
+                          onChange={(e) => handleNumberChange(rowIndex, colIndex, e.target.value)}
+                          inputProps={{
+                            min: 1,
+                            max: 75,
+                            style: { textAlign: 'center' }
+                          }}
+                          type="number"
+                          disabled={rowIndex === 2 && colIndex === 2}
+                          sx={{
+                            '& .MuiInputBase-input.Mui-disabled': {
+                              WebkitTextFillColor: '#1976d2',
+                              fontWeight: 'bold'
+                            }
+                          }}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Grid>
+              ))}
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowNewCardForm(false)}>Cancel</Button>
+            <Button onClick={handleNewCardSubmit} variant="contained">Add Card</Button>
+          </DialogActions>
+        </Dialog>
+      </DialogContent>
+
+      <DialogActions sx={{ p: 3 }}>
+        <Typography variant="body1" color="error" sx={{ flexGrow: 1 }}>
+          {totalBetAmount > userBalance ? 'Insufficient balance!' : ''}
+        </Typography>
+        <Button onClick={onClose}>Cancel</Button>
         <Button
-          onClick={handleSelect}
+          onClick={handleSubmit}
           variant="contained"
-          size="large"
-          disabled={selectedCartellas.length === 0}
+          disabled={
+            selectedCartellas.length === 0 ||
+            !selectedPattern ||
+            totalBetAmount > userBalance
+          }
         >
           Continue
         </Button>

@@ -19,7 +19,8 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CartellaRegistration from '../components/CartellaRegistration';
-import CartellaCheckDisplay from '../components/CartellaCheckDisplay';
+import PatternVisualizer from '../components/PatternVisualizer';
+import CartellaCheckModal from '../components/CartellaCheckModal';
 
 const BingoGame = () => {
   const [numbers] = useState(Array.from({ length: 75 }, (_, i) => i + 1));
@@ -30,9 +31,12 @@ const BingoGame = () => {
   const [drawSpeed, setDrawSpeed] = useState(1000); // 1 second default
   const [gameStarted, setGameStarted] = useState(false);
   const [showCartellaRegistration, setShowCartellaRegistration] = useState(false);
-  const [showCartellaCheck, setShowCartellaCheck] = useState(false);
   const [activeCartellas, setActiveCartellas] = useState([]);
   const [gamePattern, setGamePattern] = useState('');
+  const [checkNumber, setCheckNumber] = useState('');
+  const [checkedCartella, setCheckedCartella] = useState(null);
+  const [showCheckModal, setShowCheckModal] = useState(false);
+  const [totalBetAmount, setTotalBetAmount] = useState(0);
   const navigate = useNavigate();
   const { logout } = useAuth();
 
@@ -51,6 +55,16 @@ const BingoGame = () => {
       return shuffled.slice(0, 5);
     })
   ]);
+
+  const handleCheckCartella = () => {
+    const num = parseInt(checkNumber);
+    if (num && num > 0 && num <= activeCartellas.length) {
+      setCheckedCartella(activeCartellas[num - 1]);
+      setShowCheckModal(true);
+    } else {
+      setCheckedCartella(null);
+    }
+  };
 
   const drawNumber = useCallback(() => {
     const remainingNumbers = numbers.filter(n => !drawnNumbers.includes(n));
@@ -99,9 +113,12 @@ const BingoGame = () => {
     setDrawSpeed(3000 - newValue);
   };
 
-  const handleCartellaSelect = ({ cartellas, pattern }) => {
+  const handleCartellaSelect = ({ cartellas, pattern, betAmount }) => {
     setActiveCartellas(cartellas);
     setGamePattern(pattern);
+    setTotalBetAmount(betAmount);
+    setCheckedCartella(null);
+    setCheckNumber('');
   };
 
   const modalStyle = {
@@ -198,13 +215,6 @@ const BingoGame = () => {
         cartellas={registeredCartellas}
       />
 
-      <CartellaCheckDisplay
-        open={showCartellaCheck}
-        onClose={() => setShowCartellaCheck(false)}
-        cartellas={activeCartellas}
-        drawnNumbers={drawnNumbers}
-      />
-
       <Paper sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
@@ -212,8 +222,18 @@ const BingoGame = () => {
               Bingo Game
             </Typography>
             {gamePattern && (
-              <Typography variant="subtitle1" color="primary.dark">
-                Pattern: {gamePattern}
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle1" color="primary.dark" gutterBottom>
+                  Pattern: {gamePattern}
+                </Typography>
+                <Box sx={{ maxWidth: 200 }}>
+                  <PatternVisualizer pattern={gamePattern} />
+                </Box>
+              </Box>
+            )}
+            {totalBetAmount > 0 && (
+              <Typography variant="subtitle1" color="secondary">
+                Total Bet: {totalBetAmount} Birr
               </Typography>
             )}
           </Box>
@@ -276,7 +296,7 @@ const BingoGame = () => {
           )}
         </Box>
 
-        <Grid container spacing={1} sx={{ mb: 4 }}>
+        <Grid container spacing={1}>
           {organizedNumbers.map((row, rowIndex) => (
             <Grid item xs={12} key={rowIndex}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -316,17 +336,48 @@ const BingoGame = () => {
           ))}
         </Grid>
 
-        <Box sx={{ textAlign: 'center' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setShowCartellaCheck(true)}
-            size="large"
-          >
-            Check Cartellas
-          </Button>
+        <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
+            <TextField
+              label="Check Cartella"
+              variant="outlined"
+              size="small"
+              value={checkNumber}
+              onChange={(e) => {
+                setCheckNumber(e.target.value);
+                if (!e.target.value) setCheckedCartella(null);
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleCheckCartella();
+                }
+              }}
+              type="number"
+              inputProps={{ 
+                min: 1, 
+                max: activeCartellas.length,
+                style: { textAlign: 'center' }
+              }}
+              sx={{ width: 150 }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleCheckCartella}
+              disabled={!checkNumber}
+            >
+              Check
+            </Button>
+          </Stack>
         </Box>
       </Paper>
+
+      <CartellaCheckModal
+        open={showCheckModal}
+        onClose={() => setShowCheckModal(false)}
+        cartella={checkedCartella}
+        cartellaNumber={checkNumber}
+        drawnNumbers={drawnNumbers}
+      />
     </Container>
   );
 };
