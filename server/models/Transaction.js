@@ -44,14 +44,6 @@ module.exports = (sequelize) => {
         key: 'id'
       }
     },
-    gameId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: 'Games',
-        key: 'id'
-      }
-    },
     description: {
       type: DataTypes.STRING,
       allowNull: true
@@ -63,9 +55,6 @@ module.exports = (sequelize) => {
       },
       {
         fields: ['receiverId']
-      },
-      {
-        fields: ['gameId']
       },
       {
         fields: ['type']

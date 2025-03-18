@@ -199,8 +199,8 @@ router.post('/transfer-credits', auth, authorize(['superadmin', 'agent']), async
     }
 
     // Calculate new balances
-    const newSenderCredits = sender.role === 'superadmin' ? sender.credits : sender.credits - amount;
-    const newReceiverCredits = parseFloat(receiver.credits) + parseFloat(amount);
+    const newSenderCredits = sender.role === 'superadmin' ? sender.credits : parseFloat((sender.credits - amount).toFixed(2));
+    const newReceiverCredits = parseFloat((parseFloat(receiver.credits) + parseFloat(amount)).toFixed(2));
 
     console.log('Credit transfer amounts:', {
       currentSenderCredits: sender.credits,
@@ -209,6 +209,11 @@ router.post('/transfer-credits', auth, authorize(['superadmin', 'agent']), async
       newReceiverCredits,
       amount
     });
+
+    // Validate branch hierarchy for agents
+    if (sender.role === 'agent' && receiver.branchId !== sender.branchId) {
+      throw new Error('Agents can only transfer credits to users in their branch');
+    }
 
     // Update sender credits (skip for superadmin)
     if (sender.role !== 'superadmin') {
@@ -222,42 +227,33 @@ router.post('/transfer-credits', auth, authorize(['superadmin', 'agent']), async
       credits: newReceiverCredits
     }, { transaction: t });
 
-    // Verify the update was successful
-    const updatedReceiver = await db.User.findByPk(receiverId, { transaction: t });
-    console.log('Receiver credits after update:', {
-      beforeUpdate: receiver.credits,
-      afterUpdate: updatedReceiver.credits,
-      expected: newReceiverCredits
-    });
-
-    if (updatedReceiver.credits !== newReceiverCredits) {
-      throw new Error('Failed to update receiver credits');
-    }
-
     // Record transaction
     const transaction = await db.Transaction.create({
       senderId: sender.id,
       receiverId: receiver.id,
-      amount,
+      amount: parseFloat(amount),
       type: 'credit_transfer',
       status: 'completed',
       description: `Credit transfer from ${sender.username} to ${receiver.username}`
     }, { transaction: t });
 
-    console.log('Credit transfer successful:', {
-      transactionId: transaction.id,
-      newSenderCredits: sender.credits,
-      newReceiverCredits: updatedReceiver.credits
-    });
-
     await t.commit();
+    
+    // Fetch fresh data after commit
+    const updatedReceiver = await db.User.findByPk(receiverId);
+    const updatedSender = sender.role !== 'superadmin' ? await db.User.findByPk(sender.id) : sender;
+
     res.json({ 
       message: 'Credits transferred successfully',
       transaction: {
         id: transaction.id,
-        amount,
+        amount: parseFloat(amount),
         type: 'credit_transfer',
         status: 'completed'
+      },
+      sender: {
+        id: updatedSender.id,
+        credits: updatedSender.credits
       },
       receiver: {
         id: updatedReceiver.id,

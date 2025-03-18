@@ -290,4 +290,35 @@ router.patch('/:id/status', auth, authorize(['superadmin', 'agent']), async (req
   }
 });
 
+// Delete cartella
+router.delete('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) => {
+  const t = await db.sequelize.transaction();
+  try {
+    const cartella = await db.Cartella.findByPk(req.params.id, { transaction: t });
+
+    if (!cartella) {
+      throw new Error('Cartella not found');
+    }
+
+    // Verify branch ownership
+    if (req.user.role === 'agent' && cartella.branchId !== req.user.branchId) {
+      throw new Error('You can only delete cartellas from your branch');
+    }
+
+    // Only allow deletion of available cartellas
+    if (cartella.status !== 'available') {
+      throw new Error('Cannot delete cartella that is not available');
+    }
+
+    await cartella.destroy({ transaction: t });
+    await t.commit();
+
+    res.json({ message: 'Cartella deleted successfully' });
+  } catch (error) {
+    await t.rollback();
+    console.error('Delete cartella error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = router;
