@@ -1,6 +1,17 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
+  // Define custom enum type
+  sequelize.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_cartellas_status') THEN
+        CREATE TYPE enum_cartellas_status AS ENUM ('available', 'sold', 'playing', 'won', 'lost');
+      END IF;
+    END
+    $$;
+  `);
+
   const Cartella = sequelize.define('Cartella', {
     id: {
       type: DataTypes.STRING,
@@ -89,7 +100,7 @@ module.exports = (sequelize) => {
       }
     },
     status: {
-      type: DataTypes.ENUM('available', 'sold', 'playing', 'won', 'lost'),
+      type: DataTypes.STRING,
       defaultValue: 'available',
       validate: {
         isIn: [['available', 'sold', 'playing', 'won', 'lost']]
@@ -99,19 +110,19 @@ module.exports = (sequelize) => {
       type: DataTypes.JSONB,
       defaultValue: Array(5).fill().map(() => Array(5).fill(false)),
       validate: {
-        isValidMarks(value) {
+        isValidMarkedNumbers(value) {
           if (!Array.isArray(value) || value.length !== 5) {
-            throw new Error('Marked numbers must be a 5x5 grid of booleans');
+            throw new Error('Marked numbers must be a 5x5 grid');
           }
 
           for (let i = 0; i < 5; i++) {
             if (!Array.isArray(value[i]) || value[i].length !== 5) {
-              throw new Error('Each row must have exactly 5 marks');
+              throw new Error('Each row must have exactly 5 cells');
             }
 
             for (let j = 0; j < 5; j++) {
               if (typeof value[i][j] !== 'boolean') {
-                throw new Error('Each mark must be a boolean');
+                throw new Error('Each cell must be a boolean value');
               }
             }
           }
@@ -126,20 +137,17 @@ module.exports = (sequelize) => {
       }
     }
   }, {
-    indexes: [
-      {
-        fields: ['branchId']
-      },
-      {
-        fields: ['gameId']
-      },
-      {
-        fields: ['createdBy']
-      },
-      {
-        fields: ['status']
+    modelName: 'Cartella',
+    tableName: 'Cartellas',
+    timestamps: true,
+    hooks: {
+      beforeValidate: (cartella) => {
+        // Ensure markedNumbers is initialized if not set
+        if (!cartella.markedNumbers) {
+          cartella.markedNumbers = Array(5).fill().map(() => Array(5).fill(false));
+        }
       }
-    ]
+    }
   });
 
   Cartella.associate = (models) => {

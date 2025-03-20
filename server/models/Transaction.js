@@ -1,6 +1,20 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
+  // Define custom enum types
+  sequelize.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_transactions_type') THEN
+        CREATE TYPE enum_transactions_type AS ENUM ('credit_transfer', 'game_stake', 'game_win', 'commission');
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_transactions_status') THEN
+        CREATE TYPE enum_transactions_status AS ENUM ('pending', 'completed', 'failed');
+      END IF;
+    END
+    $$;
+  `);
+
   const Transaction = sequelize.define('Transaction', {
     id: {
       type: DataTypes.UUID,
@@ -15,14 +29,14 @@ module.exports = (sequelize) => {
       }
     },
     type: {
-      type: DataTypes.ENUM('credit_transfer', 'game_stake', 'game_win', 'commission'),
+      type: DataTypes.STRING,
       allowNull: false,
       validate: {
         isIn: [['credit_transfer', 'game_stake', 'game_win', 'commission']]
       }
     },
     status: {
-      type: DataTypes.ENUM('pending', 'completed', 'failed'),
+      type: DataTypes.STRING,
       defaultValue: 'pending',
       validate: {
         isIn: [['pending', 'completed', 'failed']]
@@ -49,6 +63,9 @@ module.exports = (sequelize) => {
       allowNull: true
     }
   }, {
+    modelName: 'Transaction',
+    tableName: 'Transactions',
+    timestamps: true,
     indexes: [
       {
         fields: ['senderId']

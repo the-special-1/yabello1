@@ -51,7 +51,6 @@ router.post('/register-superadmin', async (req, res) => {
     });
   } catch (error) {
     await t.rollback();
-    console.error('Register error:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -60,8 +59,6 @@ router.post('/register-superadmin', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    console.log('Request Body:', req.body);
-    console.log('Login attempt for:', username);
 
     if (!username || !password) {
       throw new Error('Username and password are required');
@@ -72,23 +69,14 @@ router.post('/login', async (req, res) => {
     });
     
     if (!user) {
-      console.log('User not found:', username);
       throw new Error('Invalid credentials');
     }
-
-    console.log('User found:', {
-      id: user.id,
-      username: user.username,
-      role: user.role,
-      status: user.status
-    });
 
     if (user.status !== 'active') {
       throw new Error('Account is inactive. Please contact support.');
     }
 
     const isValidPassword = await user.validatePassword(password);
-    console.log('Password validation result:', isValidPassword);
 
     if (!isValidPassword) {
       throw new Error('Invalid credentials');
@@ -112,7 +100,6 @@ router.post('/login', async (req, res) => {
       token 
     });
   } catch (error) {
-    console.error('Login error:', error);
     res.status(401).json({ error: error.message });
   }
 });
@@ -141,7 +128,6 @@ router.get('/me', auth, async (req, res) => {
       commission: user.commission
     });
   } catch (error) {
-    console.error('Get user error:', error);
     res.status(404).json({ error: error.message });
   }
 });

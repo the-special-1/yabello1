@@ -2,6 +2,20 @@ const { DataTypes, Sequelize } = require('sequelize');
 const bcrypt = require('bcryptjs');
 
 module.exports = (sequelize) => {
+  // Define custom enum types
+  sequelize.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_users_role') THEN
+        CREATE TYPE enum_users_role AS ENUM ('superadmin', 'agent', 'user');
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_users_status') THEN
+        CREATE TYPE enum_users_status AS ENUM ('active', 'inactive');
+      END IF;
+    END
+    $$;
+  `);
+
   const User = sequelize.define('User', {
     id: {
       type: DataTypes.UUID,
@@ -26,7 +40,7 @@ module.exports = (sequelize) => {
       }
     },
     role: {
-      type: DataTypes.ENUM('superadmin', 'agent', 'user'),
+      type: DataTypes.STRING,
       allowNull: false,
       validate: {
         isIn: [['superadmin', 'agent', 'user']]
@@ -69,7 +83,7 @@ module.exports = (sequelize) => {
       allowNull: true
     },
     status: {
-      type: DataTypes.ENUM('active', 'inactive'),
+      type: DataTypes.STRING,
       defaultValue: 'active',
       validate: {
         isIn: [['active', 'inactive']]
