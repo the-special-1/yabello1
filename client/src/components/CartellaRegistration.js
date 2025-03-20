@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -12,15 +12,12 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  Select,
-  MenuItem,
   Stack,
   TextField,
-  Tooltip,
-  IconButton
+  CircularProgress,
+  Alert
 } from '@mui/material';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import InfoIcon from '@mui/icons-material/Info';
+import { useAuth } from '../context/AuthContext';
 
 const PATTERNS = [
   'Full House',
@@ -33,80 +30,126 @@ const PATTERNS = [
   'L Pattern'
 ];
 
-const CartellaRegistration = ({ open, onClose, onSelect, cartellas }) => {
+const CartellaRegistration = ({ open, onClose, onSelect }) => {
   const [selectedCartellas, setSelectedCartellas] = useState([]);
   const [selectedPattern, setSelectedPattern] = useState('');
   const [betAmount, setBetAmount] = useState(10);
-  const [showNewCardForm, setShowNewCardForm] = useState(false);
-  const [newCardNumbers, setNewCardNumbers] = useState(Array(5).fill().map(() => Array(5).fill('')));
-  const [newCardId, setNewCardId] = useState('');
-  const [registeredCartellas, setRegisteredCartellas] = useState(cartellas);
-  const [userBalance, setUserBalance] = useState(1000);
+  const [availableCartellas, setAvailableCartellas] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [userBalance, setUserBalance] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const totalBetAmount = selectedCartellas.length * betAmount;
 
-  const handleCartellaToggle = (index) => {
-    const isSelected = selectedCartellas.includes(index);
-    if (isSelected) {
-      setSelectedCartellas(selectedCartellas.filter(i => i !== index));
-    } else {
-      setSelectedCartellas([...selectedCartellas, index]);
+  useEffect(() => {
+    if (open) {
+      fetchCartellas();
+      fetchUserBalance();
+    }
+  }, [open]);
+
+  const fetchCartellas = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/cartellas/available', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch cartellas');
+      }
+      const data = await response.json();
+      setAvailableCartellas(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = () => {
-    if (selectedCartellas.length > 0 && selectedPattern && totalBetAmount <= userBalance) {
+  const fetchUserBalance = async () => {
+    try {
+      const response = await fetch('/api/users/balance', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch balance');
+      }
+      const data = await response.json();
+      setUserBalance(data.balance || 0);
+    } catch (err) {
+      console.error('Error fetching balance:', err);
+      setError('Failed to fetch balance');
+    }
+  };
+
+  const handleCartellaToggle = (cartella) => {
+    const isSelected = selectedCartellas.some(c => c.id === cartella.id);
+    if (isSelected) {
+      setSelectedCartellas(selectedCartellas.filter(c => c.id !== cartella.id));
+    } else {
+      setSelectedCartellas([...selectedCartellas, cartella]);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedCartellas.length) {
+      setError('Please select at least one cartella');
+      return;
+    }
+    if (!selectedPattern) {
+      setError('Please select a pattern');
+      return;
+    }
+    if (totalBetAmount > userBalance) {
+      setError('Insufficient balance');
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/games/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          cartellaIds: selectedCartellas.map(c => c.id),
+          pattern: selectedPattern,
+          betAmount: totalBetAmount
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to register cartellas');
+      }
+      
+      const data = await response.json();
+      console.log('Game registration successful:', data);
+      
       onSelect({
-        cartellas: selectedCartellas.map(index => registeredCartellas[index]),
+        cartellas: selectedCartellas.map(c => c.numbers),
         pattern: selectedPattern,
         betAmount: totalBetAmount
       });
-      setUserBalance(prev => prev - totalBetAmount);
+      
       onClose();
-    }
-  };
-
-  const handleNewCardSubmit = () => {
-    if (!newCardId.trim()) {
-      alert('Please enter a card ID');
-      return;
-    }
-
-    // Validate numbers
-    const allNumbers = newCardNumbers.flat();
-    const middleIndex = Math.floor(allNumbers.length / 2);
-    const hasInvalidNumbers = allNumbers.some((num, index) => {
-      if (index === middleIndex) return false; // Skip middle cell
-      return !num || isNaN(num) || num < 1 || num > 75;
-    });
-
-    if (hasInvalidNumbers) {
-      alert('Please fill all cells with valid numbers (1-75)');
-      return;
-    }
-
-    // Create new cartella with middle cell as 'FREE'
-    const newCartella = newCardNumbers.map((row, i) => 
-      row.map((num, j) => {
-        if (i === 2 && j === 2) return 'FREE';
-        return parseInt(num);
-      })
-    );
-
-    setRegisteredCartellas(prev => [...prev, newCartella]);
-    setNewCardNumbers(Array(5).fill().map(() => Array(5).fill('')));
-    setNewCardId('');
-    setShowNewCardForm(false);
-  };
-
-  const handleNumberChange = (rowIndex, colIndex, value) => {
-    if (rowIndex === 2 && colIndex === 2) return; // Middle cell is always FREE
-    
-    const newNumbers = [...newCardNumbers];
-    // Only allow numbers 1-75
-    if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 75)) {
-      newNumbers[rowIndex][colIndex] = value;
-      setNewCardNumbers(newNumbers);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -132,48 +175,76 @@ const CartellaRegistration = ({ open, onClose, onSelect, cartellas }) => {
       </DialogTitle>
 
       <DialogContent dividers>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
             <Box sx={{ mb: 3 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="h6">Available Cartellas</Typography>
-                <Button
-                  startIcon={<AddCircleIcon />}
-                  onClick={() => setShowNewCardForm(true)}
-                >
-                  Add New Card
-                </Button>
-              </Stack>
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                {registeredCartellas.map((cartella, index) => (
-                  <Grid item xs={4} key={index}>
-                    <Box
-                      onClick={() => handleCartellaToggle(index)}
-                      sx={{
-                        width: 80,
-                        height: 80,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: 2,
-                        borderColor: selectedCartellas.includes(index) ? 'primary.main' : 'grey.300',
-                        bgcolor: selectedCartellas.includes(index) ? 'primary.light' : 'background.paper',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          borderColor: 'primary.main',
-                          transform: 'scale(1.05)'
-                        }
-                      }}
-                    >
-                      <Typography variant="h5" color={selectedCartellas.includes(index) ? 'primary.main' : 'text.primary'}>
-                        {index + 1}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
+              <Typography variant="h6" gutterBottom>
+                Available Cartellas
+              </Typography>
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <Grid container spacing={2}>
+                  {availableCartellas.map((cartella) => (
+                    <Grid item xs={12} sm={6} key={cartella.id}>
+                      <Box
+                        elevation={3}
+                        onClick={() => handleCartellaToggle(cartella)}
+                        sx={{
+                          p: 2,
+                          cursor: 'pointer',
+                          border: 2,
+                          borderColor: selectedCartellas.some(c => c.id === cartella.id) 
+                            ? 'primary.main' 
+                            : 'transparent',
+                          '&:hover': {
+                            borderColor: 'primary.main'
+                          }
+                        }}
+                      >
+                        <Typography variant="subtitle1" gutterBottom>
+                          Cartella #{cartella.id}
+                        </Typography>
+                        <Grid container spacing={1}>
+                          {cartella.numbers.map((row, rowIndex) => (
+                            <Grid item xs={12} key={rowIndex}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                {row.map((number, colIndex) => (
+                                  <Box
+                                    key={colIndex}
+                                    sx={{
+                                      width: 30,
+                                      height: 30,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      border: '1px solid',
+                                      borderColor: 'divider',
+                                      borderRadius: 1,
+                                      bgcolor: number === 'FREE' ? 'primary.light' : 'background.paper',
+                                      color: number === 'FREE' ? 'white' : 'text.primary'
+                                    }}
+                                  >
+                                    {number}
+                                  </Box>
+                                ))}
+                              </Box>
+                            </Grid>
+                          ))}
+                        </Grid>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
             </Box>
           </Grid>
 
@@ -199,100 +270,37 @@ const CartellaRegistration = ({ open, onClose, onSelect, cartellas }) => {
               </Box>
 
               <Box>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="h6">Bet Amount</Typography>
-                  <Tooltip title="Amount per cartella">
-                    <InfoIcon fontSize="small" color="action" />
-                  </Tooltip>
-                </Stack>
-                <Select
+                <Typography variant="h6" gutterBottom>Bet Amount (per cartella)</Typography>
+                <TextField
+                  type="number"
                   value={betAmount}
-                  onChange={(e) => setBetAmount(e.target.value)}
+                  onChange={(e) => setBetAmount(Math.max(1, parseInt(e.target.value) || 0))}
+                  inputProps={{ min: 1 }}
                   fullWidth
-                  size="small"
-                  sx={{ mt: 1 }}
-                >
-                  {[10, 20, 50, 100, 200, 500].map((amount) => (
-                    <MenuItem key={amount} value={amount}>{amount} Birr</MenuItem>
-                  ))}
-                </Select>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Total bet: {totalBetAmount} Birr
-                </Typography>
+                />
+                {selectedCartellas.length > 0 && (
+                  <Typography variant="subtitle1" sx={{ mt: 1 }}>
+                    Total Bet: {totalBetAmount} Birr
+                  </Typography>
+                )}
               </Box>
             </Stack>
           </Grid>
         </Grid>
-
-        <Dialog
-          open={showNewCardForm}
-          onClose={() => setShowNewCardForm(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Add New Cartella</DialogTitle>
-          <DialogContent>
-            <TextField
-              label="Card ID"
-              fullWidth
-              value={newCardId}
-              onChange={(e) => setNewCardId(e.target.value)}
-              margin="normal"
-              required
-            />
-            <Grid container spacing={1} sx={{ mt: 1 }}>
-              {newCardNumbers.map((row, rowIndex) => (
-                <Grid item xs={12} key={rowIndex}>
-                  <Grid container spacing={1}>
-                    {row.map((num, colIndex) => (
-                      <Grid item xs={2.4} key={colIndex}>
-                        <TextField
-                          size="small"
-                          value={rowIndex === 2 && colIndex === 2 ? 'FREE' : num}
-                          onChange={(e) => handleNumberChange(rowIndex, colIndex, e.target.value)}
-                          inputProps={{
-                            min: 1,
-                            max: 75,
-                            style: { textAlign: 'center' }
-                          }}
-                          type="number"
-                          disabled={rowIndex === 2 && colIndex === 2}
-                          sx={{
-                            '& .MuiInputBase-input.Mui-disabled': {
-                              WebkitTextFillColor: '#1976d2',
-                              fontWeight: 'bold'
-                            }
-                          }}
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Grid>
-              ))}
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowNewCardForm(false)}>Cancel</Button>
-            <Button onClick={handleNewCardSubmit} variant="contained">Add Card</Button>
-          </DialogActions>
-        </Dialog>
       </DialogContent>
 
-      <DialogActions sx={{ p: 3 }}>
-        <Typography variant="body1" color="error" sx={{ flexGrow: 1 }}>
-          {totalBetAmount > userBalance ? 'Insufficient balance!' : ''}
-        </Typography>
+      <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button
-          onClick={handleSubmit}
           variant="contained"
+          onClick={handleSubmit}
           disabled={
-            selectedCartellas.length === 0 ||
+            submitting || selectedCartellas.length === 0 ||
             !selectedPattern ||
             totalBetAmount > userBalance
           }
         >
-          Continue
+          {submitting ? <CircularProgress size={24} /> : 'Register'}
         </Button>
       </DialogActions>
     </Dialog>

@@ -7,7 +7,7 @@ module.exports = (sequelize) => {
     DO $$
     BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_users_role') THEN
-        CREATE TYPE enum_users_role AS ENUM ('superadmin', 'agent', 'user');
+        CREATE TYPE enum_users_role AS ENUM ('superadmin', 'agent', 'user', 'system');
       END IF;
       IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_users_status') THEN
         CREATE TYPE enum_users_status AS ENUM ('active', 'inactive');
@@ -43,7 +43,7 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isIn: [['superadmin', 'agent', 'user']]
+        isIn: [['superadmin', 'agent', 'user', 'system']]
       }
     },
     credits: {
@@ -95,16 +95,18 @@ module.exports = (sequelize) => {
     timestamps: true,
     hooks: {
       beforeCreate: async (user) => {
-        if (user.password) {
+        if (user.password && user.role !== 'system') {
           user.password = await bcrypt.hash(user.password, 10);
         }
         if (user.role === 'superadmin' && !user.credits) {
-          user.credits = 99999999.99; // Only set initial credits for new superadmins
+          user.credits = process.env.DEFAULT_SUPERADMIN_CREDITS || 1000000;
+        } else if (user.role === 'agent' && !user.credits) {
+          user.credits = process.env.DEFAULT_AGENT_CREDITS || 1000;
+        } else if (user.role === 'user' && !user.credits) {
+          user.credits = process.env.DEFAULT_USER_CREDITS || 0;
         }
-      },
-      beforeUpdate: async (user) => {
-        if (user.changed('password')) {
-          user.password = await bcrypt.hash(user.password, 10);
+        if (user.role === 'agent' && !user.commission) {
+          user.commission = process.env.DEFAULT_COMMISSION_RATE || 5;
         }
       }
     }

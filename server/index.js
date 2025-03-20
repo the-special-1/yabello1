@@ -1,110 +1,56 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const path = require('path');
 require('dotenv').config();
 const { sequelize } = require('./models');
 const routes = require('./routes');
+const cartellaRoutes = require('./routes/cartellaRoutes');
+const userRoutes = require('./routes/userRoutes');
+const gameRoutes = require('./routes/gameRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5001;
 
-// Enhanced logging middleware
-app.use(morgan(':method :url :status :response-time ms - :res[content-length]'));
-
-// CORS configuration
+// Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.CLIENT_URL 
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: true
 }));
-
-// Body parser middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
-// Request logging for debugging
-app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Request Headers:', req.headers);
-    console.log('Request Body:', req.body);
-  }
-  next();
-});
-
-// Authentication error handling
-app.use((err, req, res, next) => {
-  if (err.name === 'UnauthorizedError') {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-  next(err);
-});
-
-// Routes
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/cartellas', cartellaRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/games', gameRoutes);
 app.use('/api', routes);
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Server error:', err);
-  
-  // Handle Sequelize validation errors
-  if (err.name === 'SequelizeValidationError') {
-    return res.status(400).json({
-      error: err.errors.map(e => e.message).join(', ')
-    });
-  }
-
-  // Handle Sequelize unique constraint errors
-  if (err.name === 'SequelizeUniqueConstraintError') {
-    return res.status(400).json({
-      error: 'A record with that value already exists'
-    });
-  }
-
-  // Handle Sequelize foreign key errors
-  if (err.name === 'SequelizeForeignKeyConstraintError') {
-    return res.status(400).json({
-      error: 'Invalid reference to a related record'
-    });
-  }
-
-  // Handle JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-
-  if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({ error: 'Token expired' });
-  }
-
-  // Send detailed error in development
-  if (process.env.NODE_ENV === 'development') {
-    return res.status(500).json({ 
-      error: err.message,
-      stack: err.stack 
-    });
-  }
-
+  console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../client/build')));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+});
+
+const PORT = process.env.PORT || 5001;
+console.log('Starting server on port:', PORT);
+
 // Sync database and start server
-sequelize.sync({ alter: process.env.NODE_ENV === 'development' }) // Only alter in development
+sequelize.sync({ alter: true })
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log('Database synced successfully');
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch(err => {
     console.error('Unable to connect to the database:', err);
-    process.exit(1); // Exit if database connection fails
   });

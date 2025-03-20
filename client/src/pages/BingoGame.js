@@ -6,20 +6,16 @@ import {
   Box,
   Button,
   Grid,
-  Modal,
   Stack,
   Slider,
   IconButton,
   TextField,
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CartellaRegistration from '../components/CartellaRegistration';
@@ -43,26 +39,6 @@ const BingoGame = () => {
   const [totalBetAmount, setTotalBetAmount] = useState(0);
   const navigate = useNavigate();
   const { logout } = useAuth();
-
-  // Mock data for registered cartellas - replace with API call
-  const [registeredCartellas] = useState([
-    // Example cartella 1
-    [
-      [1, 16, 31, 46, 61],
-      [2, 17, 32, 47, 62],
-      [3, 18, 'FREE', 48, 63],
-      [4, 19, 33, 49, 64],
-      [5, 20, 34, 50, 65]
-    ],
-    // Example cartella 2
-    [
-      [6, 21, 35, 51, 66],
-      [7, 22, 36, 52, 67],
-      [8, 23, 'FREE', 53, 68],
-      [9, 24, 37, 54, 69],
-      [10, 25, 38, 55, 70]
-    ]
-  ]);
 
   const handleCheckCartella = () => {
     const num = parseInt(checkNumber);
@@ -122,30 +98,7 @@ const BingoGame = () => {
   };
 
   const handleCartellaSelect = ({ cartellas, pattern, betAmount }) => {
-    // Map the selected cartella indices to actual cartella data
-    const selectedCartellaData = cartellas.map(cartella => {
-      // If cartella is already in the correct format, return as is
-      if (Array.isArray(cartella) && cartella.length === 5 && Array.isArray(cartella[0])) {
-        return cartella;
-      }
-      // Otherwise, create a 5x5 grid from the cartella data
-      const grid = Array(5).fill().map(() => Array(5).fill(null));
-      const numbers = [...cartella];
-      
-      // Fill the grid with numbers, leaving the center as 'FREE'
-      for (let i = 0; i < 5; i++) {
-        for (let j = 0; j < 5; j++) {
-          if (i === 2 && j === 2) {
-            grid[i][j] = 'FREE';
-          } else {
-            grid[i][j] = numbers.shift() || 0;
-          }
-        }
-      }
-      return grid;
-    });
-
-    setActiveCartellas(selectedCartellaData);
+    setActiveCartellas(cartellas);
     setGamePattern(pattern);
     setTotalBetAmount(betAmount);
     setCheckedCartella(null);
@@ -189,7 +142,6 @@ const BingoGame = () => {
         fullWidth
       >
         <DialogContent>
-          {/* Sample Cartella Display */}
           <Box sx={{ mt: 3, mb: 3 }}>
             <Paper 
               elevation={3}
@@ -295,7 +247,6 @@ const BingoGame = () => {
         open={showCartellaRegistration}
         onClose={() => setShowCartellaRegistration(false)}
         onSelect={handleCartellaSelect}
-        cartellas={registeredCartellas}
       />
 
       <Paper sx={{ p: 3 }}>
@@ -418,72 +369,6 @@ const BingoGame = () => {
             </Grid>
           ))}
         </Grid>
-
-        {/* Display Active Cartellas */}
-        {activeCartellas.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h5" gutterBottom color="primary">
-              Your Active Cartellas
-            </Typography>
-            <Grid container spacing={3}>
-              {activeCartellas.map((cartella, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Paper 
-                    elevation={3}
-                    sx={{ 
-                      p: 2,
-                      backgroundColor: 'background.paper',
-                      border: '2px solid',
-                      borderColor: 'primary.main',
-                      borderRadius: 2
-                    }}
-                  >
-                    <Typography variant="h6" gutterBottom align="center" color="primary">
-                      Cartella #{index + 1}
-                    </Typography>
-                    <Grid container spacing={1}>
-                      {cartella.map((row, rowIndex) => (
-                        <Grid item xs={12} key={rowIndex}>
-                          <Box sx={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between',
-                            '& > *': { flex: 1 }
-                          }}>
-                            {row.map((number, colIndex) => (
-                              <Paper
-                                key={colIndex}
-                                elevation={1}
-                                sx={{
-                                  p: 1.5,
-                                  m: 0.5,
-                                  textAlign: 'center',
-                                  backgroundColor: number === 'FREE' ? 'primary.light' :
-                                    drawnNumbers.includes(number) ? 'primary.main' : 'background.default',
-                                  color: (number === 'FREE' || drawnNumbers.includes(number)) ? 'white' : 'text.primary',
-                                  border: '1px solid',
-                                  borderColor: 'divider',
-                                  fontWeight: 'bold',
-                                  fontSize: '1.1rem',
-                                  minWidth: '40px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  transition: 'all 0.3s ease'
-                                }}
-                              >
-                                {number}
-                              </Paper>
-                            ))}
-                          </Box>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
 
         <Box sx={{ mt: 4, textAlign: 'center' }}>
           <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
