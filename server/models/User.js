@@ -137,11 +137,6 @@ module.exports = (sequelize) => {
     });
 
     // Other associations
-    User.hasMany(models.Game, {
-      foreignKey: 'createdBy',
-      as: 'createdGames'
-    });
-
     User.hasMany(models.Cartella, {
       foreignKey: 'createdBy',
       as: 'createdCartellas'

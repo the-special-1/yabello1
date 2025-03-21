@@ -15,7 +15,7 @@ const CartellaCheckModal = ({ open, onClose, cartella, cartellaNumber, drawnNumb
     borderRadius: 2
   };
 
-  if (!cartella) return null;
+  if (!cartella || !cartella.numbers) return null;
 
   return (
     <Modal
@@ -28,7 +28,7 @@ const CartellaCheckModal = ({ open, onClose, cartella, cartellaNumber, drawnNumb
           Cartella #{cartellaNumber}
         </Typography>
         <Grid container spacing={1}>
-          {cartella.map((row, i) => (
+          {cartella.numbers.map((row, i) => (
             <Grid item xs={12} key={i}>
               <Grid container spacing={1}>
                 {row.map((number, j) => (

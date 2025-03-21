@@ -20,14 +20,14 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
+    // Create user with starting credits
     const user = await User.create({
       username,
       password: hashedPassword,
       branchId,
       role: 'user',
       status: 'active',
-      balance: 1000 // Default starting balance
+      credits: 1000 // Default starting credits for new users
     });
 
     // Generate token
@@ -44,7 +44,7 @@ router.post('/register', async (req, res) => {
         username: user.username,
         role: user.role,
         branchId: user.branchId,
-        balance: user.balance
+        credits: parseFloat(user.credits || 0)
       }
     });
   } catch (error) {
@@ -89,7 +89,7 @@ router.post('/login', async (req, res) => {
         username: user.username,
         role: user.role,
         branchId: user.branchId,
-        balance: user.balance
+        credits: parseFloat(user.credits || 0)
       }
     });
   } catch (error) {
@@ -101,18 +101,22 @@ router.post('/login', async (req, res) => {
 // Get current user
 router.get('/me', auth, async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id, {
-      attributes: ['id', 'username', 'role', 'branchId', 'balance', 'status']
-    });
-    
+    const user = await User.findByPk(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json(user);
+    res.json({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      branchId: user.branchId,
+      credits: parseFloat(user.credits || 0),
+      status: user.status
+    });
   } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ message: 'Error fetching user data' });
+    console.error('Error getting current user:', error);
+    res.status(500).json({ message: 'Error getting user information' });
   }
 });
 

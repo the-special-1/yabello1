@@ -47,6 +47,8 @@ const AgentDashboard = () => {
     amount: '',
   });
   const [balance, setBalance] = useState(0);
+  const [commission, setCommission] = useState(0);
+  const [branchName, setBranchName] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -84,6 +86,8 @@ const AgentDashboard = () => {
     try {
       const response = await axios.get('/api/users/balance');
       setBalance(response.data.credits);
+      setCommission(response.data.commission || 0);
+      setBranchName(response.data.branch?.name || '');
     } catch (error) {
       console.error('Error fetching balance:', error);
     }
@@ -173,216 +177,203 @@ const AgentDashboard = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Agent Dashboard
-        </Typography>
-        <Tooltip title="Refresh Data">
-          <IconButton onClick={fetchData} disabled={loading}>
-            <RefreshIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 2, height: '100%' }}>
-              <Typography variant="h6" gutterBottom>
-                Account Information
-              </Typography>
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body1" gutterBottom>
-                  Branch: {user?.branch?.name}
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  Available Credits: {balance} ETB
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  Commission Rate: {user?.commission}%
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => navigate('/cartellas')}
-                  sx={{ mt: 2 }}
-                  fullWidth
-                >
-                  Manage Cartellas
-                </Button>
-                <Divider sx={{ my: 2 }} />
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={logout}
-                  startIcon={<LogoutIcon />}
-                  fullWidth
-                >
-                  Sign Out
-                </Button>
-              </Box>
-            </Paper>
-          </Grid>
-
+    <Container maxWidth="lg">
+      <Box sx={{ mt: 4, mb: 4 }}>
+        <Grid container spacing={3} alignItems="center" sx={{ mb: 3 }}>
           <Grid item xs={12} md={8}>
-            <Paper sx={{ p: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6">
-                  Users Management
-                </Typography>
-                <Button
-                  variant="contained"
-                  onClick={() => setOpenDialog(true)}
-                >
-                  Create New User
-                </Button>
-              </Box>
-
-              {error && (
-                <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-                  {error}
-                </Alert>
-              )}
-              {success && (
-                <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
-                  {success}
-                </Alert>
-              )}
-
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Username</TableCell>
-                      <TableCell>Credits</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.username}</TableCell>
-                        <TableCell>{user.credits} ETB</TableCell>
-                        <TableCell>{user.status}</TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <TextField
-                              size="small"
-                              type="number"
-                              label="Amount"
-                              value={creditTransfer.userId === user.id ? creditTransfer.amount : ''}
-                              onChange={(e) => setCreditTransfer({ userId: user.id, amount: e.target.value })}
-                              sx={{ width: 100 }}
-                            />
-                            <Button
-                              variant="contained"
-                              size="small"
-                              onClick={() => handleTransferCredits(user.id)}
-                              disabled={!creditTransfer.amount || creditTransfer.userId !== user.id}
-                            >
-                              Transfer
-                            </Button>
-                            <Tooltip title="Edit User">
-                              <IconButton
-                                size="small"
-                                onClick={() => openEdit(user)}
-                                color="primary"
-                              >
-                                <EditIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete User">
-                              <IconButton
-                                size="small"
-                                onClick={() => openDelete(user)}
-                                color="error"
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Agent Dashboard
+            </Typography>
+          </Grid>
+          <Grid item xs={12} md={4} sx={{ textAlign: 'right' }}>
+            <IconButton onClick={fetchData} sx={{ mr: 1 }}>
+              <RefreshIcon />
+            </IconButton>
+            <IconButton onClick={logout} color="error">
+              <LogoutIcon />
+            </IconButton>
           </Grid>
         </Grid>
-      )}
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>Create New User</DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            <TextField
-              fullWidth
-              label="Username"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleCreateUser} variant="contained">Create</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
-        <DialogTitle>Edit User</DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            <TextField
-              fullWidth
-              label="Username"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="New Password (optional)"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              helperText="Leave blank to keep current password"
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEditDialog(false)}>Cancel</Button>
-          <Button onClick={handleEditUser} variant="contained">Update</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-        <DialogTitle>Delete User</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete user "{selectedUser?.username}"? This action cannot be undone.
+        <Paper sx={{ p: 3, mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Account Dashboard
           </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
-          <Button onClick={handleDeleteUser} variant="contained" color="error">Delete</Button>
-        </DialogActions>
-      </Dialog>
+          <Typography variant="body1" gutterBottom>
+            Branch: {branchName}
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            Available Credits: {balance.toFixed(2)} ETB
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            Commission Rate: {commission}%
+          </Typography>
+          <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setOpenDialog(true)}
+            >
+              Create New User
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => navigate('/cartellas')}
+            >
+              Manage Cartellas
+            </Button>
+          </Box>
+        </Paper>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
+            {success}
+          </Alert>
+        )}
+
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Users Management
+            </Typography>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Username</TableCell>
+                    <TableCell>Credits</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>{user.username}</TableCell>
+                      <TableCell>{user.credits} ETB</TableCell>
+                      <TableCell>{user.status}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <TextField
+                            size="small"
+                            type="number"
+                            label="Amount"
+                            value={creditTransfer.userId === user.id ? creditTransfer.amount : ''}
+                            onChange={(e) => setCreditTransfer({ userId: user.id, amount: e.target.value })}
+                            sx={{ width: 100 }}
+                          />
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleTransferCredits(user.id)}
+                            disabled={!creditTransfer.amount || creditTransfer.userId !== user.id}
+                          >
+                            Transfer
+                          </Button>
+                          <Tooltip title="Edit User">
+                            <IconButton
+                              size="small"
+                              onClick={() => openEdit(user)}
+                              color="primary"
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete User">
+                            <IconButton
+                              size="small"
+                              onClick={() => openDelete(user)}
+                              color="error"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        )}
+
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+          <DialogTitle>Create New User</DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2 }}>
+              <TextField
+                fullWidth
+                label="Username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+            <Button onClick={handleCreateUser} variant="contained">Create</Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
+          <DialogTitle>Edit User</DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2 }}>
+              <TextField
+                fullWidth
+                label="Username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="New Password (optional)"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                helperText="Leave blank to keep current password"
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenEditDialog(false)}>Cancel</Button>
+            <Button onClick={handleEditUser} variant="contained">Update</Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+          <DialogTitle>Delete User</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete user "{selectedUser?.username}"? This action cannot be undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
+            <Button onClick={handleDeleteUser} variant="contained" color="error">Delete</Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </Container>
   );
 };

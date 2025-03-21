@@ -1,17 +1,6 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  // Define custom enum type
-  sequelize.query(`
-    DO $$
-    BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_cartellas_status') THEN
-        CREATE TYPE enum_cartellas_status AS ENUM ('available', 'sold', 'playing', 'won', 'lost');
-      END IF;
-    END
-    $$;
-  `);
-
   const Cartella = sequelize.define('Cartella', {
     id: {
       type: DataTypes.STRING,
@@ -49,27 +38,31 @@ module.exports = (sequelize) => {
 
           for (let col = 0; col < 5; col++) {
             for (let row = 0; row < 5; row++) {
-              // Skip FREE space
-              if (row === 2 && col === 2) {
-                if (value[row][col] !== 'FREE') {
-                  throw new Error('Center space must be FREE');
-                }
-                continue;
-              }
-
               const num = value[row][col];
               
-              // Check if number is in valid range for its column
+              // Skip validation for FREE space
+              if (num === 'FREE') {
+                if (row === 2 && col === 2) continue;
+                throw new Error('FREE space must be in the center');
+              }
+
+              // Validate number
+              const numValue = parseInt(num);
+              if (isNaN(numValue)) {
+                throw new Error('Invalid number in card');
+              }
+
+              // Check range for column
               const [min, max] = columnRanges[col];
-              if (!Number.isInteger(num) || num < min || num > max) {
-                throw new Error(`Numbers in column ${col} must be between ${min} and ${max}`);
+              if (numValue < min || numValue > max) {
+                throw new Error(`Number ${numValue} is out of range for column ${col + 1}`);
               }
 
               // Check for duplicates
-              if (usedNumbers.has(num)) {
-                throw new Error('Duplicate numbers are not allowed');
+              if (usedNumbers.has(numValue)) {
+                throw new Error('Duplicate number in card');
               }
-              usedNumbers.add(num);
+              usedNumbers.add(numValue);
             }
           }
         }
@@ -77,34 +70,11 @@ module.exports = (sequelize) => {
     },
     branchId: {
       type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'Branches',
-        key: 'id'
-      }
-    },
-    gameId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: 'Games',
-        key: 'id'
-      }
+      allowNull: false
     },
     createdBy: {
       type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'Users',
-        key: 'id'
-      }
-    },
-    status: {
-      type: DataTypes.STRING,
-      defaultValue: 'available',
-      validate: {
-        isIn: [['available', 'sold', 'playing', 'won', 'lost']]
-      }
+      allowNull: false
     },
     markedNumbers: {
       type: DataTypes.JSONB,
@@ -151,23 +121,16 @@ module.exports = (sequelize) => {
   });
 
   Cartella.associate = (models) => {
-    // Cartella belongs to a branch
     Cartella.belongsTo(models.Branch, {
       foreignKey: 'branchId',
-      as: 'branch'
-    });
-
-    // Cartella belongs to a game
-    Cartella.belongsTo(models.Game, {
-      foreignKey: 'gameId',
-      as: 'game',
+      as: 'branch',
       constraints: false
     });
 
-    // Cartella belongs to a creator (agent)
     Cartella.belongsTo(models.User, {
       foreignKey: 'createdBy',
-      as: 'creator'
+      as: 'creator',
+      constraints: false
     });
   };
 

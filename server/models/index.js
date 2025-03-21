@@ -27,13 +27,16 @@ let sequelize = new Sequelize(
 
 const db = {};
 
-// Load models
+// Only load models we want to keep
+const modelsToLoad = ['User.js', 'Branch.js', 'Cartella.js', 'Transaction.js'];
+
 fs.readdirSync(__dirname)
   .filter(file => {
     return (
       file.indexOf('.') !== 0 &&
       file !== basename &&
-      file.slice(-3) === '.js'
+      file.slice(-3) === '.js' &&
+      modelsToLoad.includes(file)
     );
   })
   .forEach(file => {

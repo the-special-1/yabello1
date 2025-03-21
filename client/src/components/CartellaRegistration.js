@@ -14,7 +14,6 @@ import {
   RadioGroup,
   Stack,
   TextField,
-  CircularProgress,
   Alert
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
@@ -35,10 +34,8 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
   const [selectedPattern, setSelectedPattern] = useState('');
   const [betAmount, setBetAmount] = useState(10);
   const [availableCartellas, setAvailableCartellas] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [userBalance, setUserBalance] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
 
   const totalBetAmount = selectedCartellas.length * betAmount;
@@ -51,24 +48,29 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
   }, [open]);
 
   const fetchCartellas = async () => {
-    setLoading(true);
-    setError(null);
     try {
+      console.log('Fetching cartellas...');
       const response = await fetch('/api/cartellas/available', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
+      
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.message || 'Failed to fetch cartellas');
       }
-      const data = await response.json();
-      setAvailableCartellas(data);
+
+      const text = await response.text();
+      console.log('Raw response:', text);
+      
+      const data = JSON.parse(text);
+      console.log('Parsed cartellas:', data);
+      
+      setAvailableCartellas(data.cartellas || []); // Access cartellas array from response
     } catch (err) {
+      console.error('Error fetching cartellas:', err);
       setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -84,7 +86,7 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
         throw new Error(data.message || 'Failed to fetch balance');
       }
       const data = await response.json();
-      setUserBalance(data.balance || 0);
+      setUserBalance(data.credits || 0);
     } catch (err) {
       console.error('Error fetching balance:', err);
       setError('Failed to fetch balance');
@@ -101,55 +103,30 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedCartellas.length) {
-      setError('Please select at least one cartella');
-      return;
-    }
     if (!selectedPattern) {
       setError('Please select a pattern');
       return;
     }
+
+    if (selectedCartellas.length === 0) {
+      setError('Please select at least one cartella');
+      return;
+    }
+
     if (totalBetAmount > userBalance) {
       setError('Insufficient balance');
       return;
     }
 
-    setSubmitting(true);
-    setError(null);
-
     try {
-      const response = await fetch('/api/games/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          cartellaIds: selectedCartellas.map(c => c.id),
-          pattern: selectedPattern,
-          betAmount: totalBetAmount
-        })
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to register cartellas');
-      }
-      
-      const data = await response.json();
-      console.log('Game registration successful:', data);
-      
       onSelect({
-        cartellas: selectedCartellas.map(c => c.numbers),
+        cartellas: selectedCartellas,
         pattern: selectedPattern,
-        betAmount: totalBetAmount
+        betAmount
       });
-      
       onClose();
     } catch (err) {
       setError(err.message);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -187,120 +164,119 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
               <Typography variant="h6" gutterBottom>
                 Available Cartellas
               </Typography>
-              {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                  <CircularProgress />
-                </Box>
-              ) : (
-                <Grid container spacing={2}>
-                  {availableCartellas.map((cartella) => (
-                    <Grid item xs={12} sm={6} key={cartella.id}>
-                      <Box
-                        elevation={3}
-                        onClick={() => handleCartellaToggle(cartella)}
-                        sx={{
-                          p: 2,
-                          cursor: 'pointer',
-                          border: 2,
-                          borderColor: selectedCartellas.some(c => c.id === cartella.id) 
-                            ? 'primary.main' 
-                            : 'transparent',
-                          '&:hover': {
-                            borderColor: 'primary.main'
-                          }
-                        }}
-                      >
-                        <Typography variant="subtitle1" gutterBottom>
-                          Cartella #{cartella.id}
-                        </Typography>
-                        <Grid container spacing={1}>
-                          {cartella.numbers.map((row, rowIndex) => (
-                            <Grid item xs={12} key={rowIndex}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                {row.map((number, colIndex) => (
-                                  <Box
-                                    key={colIndex}
-                                    sx={{
-                                      width: 30,
-                                      height: 30,
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      border: '1px solid',
-                                      borderColor: 'divider',
-                                      borderRadius: 1,
-                                      bgcolor: number === 'FREE' ? 'primary.light' : 'background.paper',
-                                      color: number === 'FREE' ? 'white' : 'text.primary'
-                                    }}
-                                  >
-                                    {number}
-                                  </Box>
-                                ))}
-                              </Box>
-                            </Grid>
-                          ))}
-                        </Grid>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
+              <Grid container spacing={2}>
+                {availableCartellas.map((cartella) => (
+                  <Grid item xs={12} sm={6} key={cartella.id}>
+                    <Box
+                      onClick={() => handleCartellaToggle(cartella)}
+                      sx={{
+                        p: 2,
+                        cursor: 'pointer',
+                        border: 2,
+                        borderColor: selectedCartellas.some(c => c.id === cartella.id) 
+                          ? 'primary.main' 
+                          : 'transparent',
+                        '&:hover': {
+                          borderColor: 'primary.main'
+                        }
+                      }}
+                    >
+                      <Typography variant="subtitle1" gutterBottom>
+                        Cartella #{cartella.id}
+                      </Typography>
+                      <Grid container spacing={1}>
+                        {cartella.numbers.map((row, rowIndex) => (
+                          <Grid item xs={12} key={rowIndex}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                              {row.map((number, colIndex) => (
+                                <Box
+                                  key={colIndex}
+                                  sx={{
+                                    width: 30,
+                                    height: 30,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    borderRadius: 1,
+                                    bgcolor: number === 'FREE' ? 'primary.light' : 'background.paper',
+                                    color: number === 'FREE' ? 'white' : 'text.primary'
+                                  }}
+                                >
+                                  {number}
+                                </Box>
+                              ))}
+                            </Box>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
             </Box>
           </Grid>
 
           <Grid item xs={12} md={4}>
-            <Stack spacing={3}>
-              <Box>
-                <Typography variant="h6" gutterBottom>Game Pattern</Typography>
-                <FormControl component="fieldset">
-                  <RadioGroup
-                    value={selectedPattern}
-                    onChange={(e) => setSelectedPattern(e.target.value)}
-                  >
-                    {PATTERNS.map((pattern) => (
-                      <FormControlLabel
-                        key={pattern}
-                        value={pattern}
-                        control={<Radio />}
-                        label={pattern}
-                      />
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-              </Box>
+            <Box sx={{ position: 'sticky', top: 0 }}>
+              <Typography variant="h6" gutterBottom>
+                Game Settings
+              </Typography>
+              
+              <FormControl component="fieldset" sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Select Pattern
+                </Typography>
+                <RadioGroup
+                  value={selectedPattern}
+                  onChange={(e) => setSelectedPattern(e.target.value)}
+                >
+                  {PATTERNS.map((pattern) => (
+                    <FormControlLabel
+                      key={pattern}
+                      value={pattern}
+                      control={<Radio />}
+                      label={pattern}
+                    />
+                  ))}
+                </RadioGroup>
+              </FormControl>
 
-              <Box>
-                <Typography variant="h6" gutterBottom>Bet Amount (per cartella)</Typography>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Bet Amount (Birr)
+                </Typography>
                 <TextField
                   type="number"
                   value={betAmount}
-                  onChange={(e) => setBetAmount(Math.max(1, parseInt(e.target.value) || 0))}
-                  inputProps={{ min: 1 }}
+                  onChange={(e) => setBetAmount(Math.max(10, parseInt(e.target.value) || 0))}
+                  inputProps={{ min: 10 }}
                   fullWidth
                 />
-                {selectedCartellas.length > 0 && (
-                  <Typography variant="subtitle1" sx={{ mt: 1 }}>
-                    Total Bet: {totalBetAmount} Birr
-                  </Typography>
-                )}
               </Box>
-            </Stack>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1">
+                  Selected Cartellas: {selectedCartellas.length}
+                </Typography>
+                <Typography variant="subtitle1">
+                  Total Bet Amount: {totalBetAmount} Birr
+                </Typography>
+              </Box>
+            </Box>
           </Grid>
         </Grid>
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button
-          variant="contained"
+        <Button 
           onClick={handleSubmit}
-          disabled={
-            submitting || selectedCartellas.length === 0 ||
-            !selectedPattern ||
-            totalBetAmount > userBalance
-          }
+          variant="contained"
+          disabled={selectedCartellas.length === 0 || !selectedPattern || totalBetAmount > userBalance}
         >
-          {submitting ? <CircularProgress size={24} /> : 'Register'}
+          Confirm Selection
         </Button>
       </DialogActions>
     </Dialog>
