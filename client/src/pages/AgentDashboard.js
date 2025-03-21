@@ -30,6 +30,7 @@ import {
 import { Refresh as RefreshIcon, Logout as LogoutIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import TransactionHistory from '../components/TransactionHistory';
+import SalesAnalytics from '../components/SalesAnalytics';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -264,6 +265,7 @@ const AgentDashboard = () => {
           <Tabs value={tabValue} onChange={handleTabChange}>
             <Tab label="Users" />
             <Tab label="Transactions" />
+            <Tab label="Sales Analytics" />
           </Tabs>
         </Box>
 
@@ -342,6 +344,10 @@ const AgentDashboard = () => {
 
         <TabPanel value={tabValue} index={1}>
           <TransactionHistory />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={2}>
+          <SalesAnalytics />
         </TabPanel>
 
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>

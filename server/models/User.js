@@ -117,6 +117,17 @@ module.exports = (sequelize) => {
     modelName: 'User',
     tableName: 'Users',
     timestamps: true,
+    indexes: [
+      // Ensure only one agent per branch
+      {
+        unique: true,
+        fields: ['branchId'],
+        where: {
+          role: 'agent'
+        },
+        name: 'unique_agent_per_branch'
+      }
+    ],
     hooks: {
       beforeCreate: async (user) => {
         if (user.password && user.role !== 'system') {

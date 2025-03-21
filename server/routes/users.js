@@ -79,28 +79,29 @@ router.post('/create-agent', auth, authorize(['superadmin']), async (req, res) =
 // Get all users (filtered by role)
 router.get('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   try {
-    const where = {};
-    
-    // Agents can only see their users
+    let query = {
+      include: [
+        { 
+          model: db.Branch,
+          as: 'branch',
+          attributes: ['id', 'name']
+        }
+      ]
+    };
+
+    // Agents can only see users they created in their branch
     if (req.user.role === 'agent') {
-      where.createdBy = req.user.id;
-      where.role = 'user';
-    }
-    
-    // Superadmin can filter by role
-    if (req.user.role === 'superadmin' && req.query.role) {
-      where.role = req.query.role;
+      query.where = {
+        createdBy: req.user.id,
+        branchId: req.user.branchId
+      };
     }
 
-    const users = await db.User.findAll({
-      where,
-      attributes: { exclude: ['password'] }
-    });
-
+    const users = await db.User.findAll(query);
     res.json(users);
   } catch (error) {
     console.error('Get users error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -273,54 +274,69 @@ router.post('/transfer-credits', auth, authorize(['superadmin', 'agent']), async
 router.post('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   const t = await db.sequelize.transaction();
   try {
-    const { username, password, role, credits = 0, commission = 0 } = req.body;
+    const { username, password, role, credits = 0, commission = 0, branchId, branchName } = req.body;
 
-    // Basic validation
-    if (!username || !password) {
-      throw new Error('Username and password are required');
-    }
-
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
-    }
-
-    // Check if username exists
-    const existingUser = await db.User.findOne({ 
-      where: { username },
-      transaction: t
-    });
-    
-    if (existingUser) {
-      throw new Error('Username already exists');
-    }
-
-    // Validate role based on creator's role
+    // Validate role permissions
     if (req.user.role === 'agent' && role !== 'user') {
       throw new Error('Agents can only create users');
     }
 
-    if (req.user.role === 'superadmin' && !['agent', 'user'].includes(role)) {
-      throw new Error('Invalid role');
+    // For agent creation, check if branch exists and is not already assigned
+    if (role === 'agent') {
+      if (!branchName) {
+        throw new Error('Branch name is required for agent creation');
+      }
+
+      // First check if branch exists
+      let branch;
+      if (branchId) {
+        branch = await db.Branch.findOne({
+          where: { id: branchId },
+          include: [{
+            model: db.User,
+            as: 'users',
+            where: { role: 'agent' },
+            required: false
+          }]
+        });
+
+        if (branch && branch.users.length > 0) {
+          throw new Error('Branch already has an agent assigned');
+        }
+      } else {
+        // Create new branch if it doesn't exist
+        branch = await db.Branch.create({
+          name: branchName,
+          createdBy: req.user.id
+        }, { transaction: t });
+      }
+
+      req.body.branchId = branch.id;
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // For agents, automatically assign their branch
+    let targetBranchId = req.body.branchId;
+    if (req.user.role === 'agent') {
+      targetBranchId = req.user.branchId;
     }
 
     // Create user
     const user = await db.User.create({
       username,
-      password,
+      password: hashedPassword,
       role,
       credits,
       commission,
-      status: 'active',
+      branchId: targetBranchId,
       createdBy: req.user.id
     }, { transaction: t });
 
     await t.commit();
-
-    // Return user without password
-    const userResponse = user.toJSON();
-    delete userResponse.password;
-    
-    res.status(201).json(userResponse);
+    res.status(201).json(user);
   } catch (error) {
     await t.rollback();
     console.error('Create user error:', error);
