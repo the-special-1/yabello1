@@ -10,6 +10,7 @@ import {
 import { Refresh as RefreshIcon, Logout as LogoutIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import axios from 'axios';
 import TransactionHistory from '../components/TransactionHistory';
+import SalesAnalytics from '../components/SalesAnalytics';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -76,9 +77,10 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  const handleRefresh = () => {
-    fetchBranches();
-    fetchAgents();
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+    setError('');
+    setSuccess('');
   };
 
   const handleCreateBranch = async (e) => {
@@ -134,12 +136,6 @@ const SuperAdminDashboard = () => {
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to transfer credits');
     }
-  };
-
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-    setError('');
-    setSuccess('');
   };
 
   const handleEditAgent = async () => {
@@ -213,7 +209,7 @@ const SuperAdminDashboard = () => {
             Sign Out
           </Button>
           <Tooltip title="Refresh Data">
-            <IconButton onClick={handleRefresh}>
+            <IconButton onClick={fetchBranches}>
               <RefreshIcon />
             </IconButton>
           </Tooltip>
@@ -227,6 +223,8 @@ const SuperAdminDashboard = () => {
               <Tabs value={tabValue} onChange={handleTabChange}>
                 <Tab label="Branches" />
                 <Tab label="Agents" />
+                <Tab label="Transactions" />
+                <Tab label="Sales Analytics" />
               </Tabs>
             </Box>
 
@@ -463,6 +461,10 @@ const SuperAdminDashboard = () => {
 
             <TabPanel value={tabValue} index={2}>
               <TransactionHistory />
+            </TabPanel>
+
+            <TabPanel value={tabValue} index={3}>
+              <SalesAnalytics />
             </TabPanel>
           </Paper>
         </Grid>

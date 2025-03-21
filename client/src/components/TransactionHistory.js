@@ -12,7 +12,7 @@ import {
   TablePagination,
   Chip
 } from '@mui/material';
-import { format } from 'date-fns';
+import { formatISO9075 } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 
 const TransactionHistory = () => {
@@ -32,7 +32,11 @@ const TransactionHistory = () => {
         });
         if (!response.ok) throw new Error('Failed to fetch transactions');
         const data = await response.json();
-        setTransactions(data);
+        // Filter out game-related transactions
+        const filteredTransactions = data.filter(t => 
+          !['game_stake', 'game_win'].includes(t.type)
+        );
+        setTransactions(filteredTransactions);
       } catch (error) {
         console.error('Error fetching transactions:', error);
       }
@@ -56,10 +60,6 @@ const TransactionHistory = () => {
         return 'success';
       case 'credit_transfer':
         return 'primary';
-      case 'game_stake':
-        return 'warning';
-      case 'game_win':
-        return 'success';
       case 'commission':
         return 'info';
       default:
@@ -77,7 +77,7 @@ const TransactionHistory = () => {
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
       <Box p={2}>
         <Typography variant="h6" gutterBottom>
-          Transaction History
+          Credit Transactions
         </Typography>
       </Box>
       <TableContainer sx={{ maxHeight: 440 }}>
@@ -98,7 +98,7 @@ const TransactionHistory = () => {
               .map((transaction) => (
                 <TableRow key={transaction.id} hover>
                   <TableCell>
-                    {format(new Date(transaction.createdAt), 'MMM d, yyyy HH:mm')}
+                    {formatISO9075(new Date(transaction.createdAt))}
                   </TableCell>
                   <TableCell>
                     <Chip 

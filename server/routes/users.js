@@ -454,20 +454,42 @@ router.put('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) =>
 router.delete('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   const t = await db.sequelize.transaction();
   try {
-    const user = await db.User.findByPk(req.params.id, { transaction: t });
+    const userToDelete = await db.User.findByPk(req.params.id, {
+      include: [
+        { model: db.Branch, as: 'branch' },
+        { model: db.Transaction, as: 'sentTransactions' },
+        { model: db.Transaction, as: 'receivedTransactions' }
+      ],
+      transaction: t
+    });
 
-    if (!user) {
+    if (!userToDelete) {
       throw new Error('User not found');
     }
 
     // Validate permissions
     if (req.user.role === 'agent') {
-      if (user.createdBy !== req.user.id || user.role !== 'user') {
+      // Check both branch and creator
+      if (userToDelete.branch.id !== req.user.branchId || 
+          userToDelete.createdBy !== req.user.id || 
+          userToDelete.role !== 'user') {
         throw new Error('Unauthorized to delete this user');
       }
     }
 
-    await user.destroy({ transaction: t });
+    // Delete all transactions first
+    await db.Transaction.destroy({
+      where: {
+        [db.Sequelize.Op.or]: [
+          { senderId: userToDelete.id },
+          { receiverId: userToDelete.id }
+        ]
+      },
+      transaction: t
+    });
+
+    // Then delete the user
+    await userToDelete.destroy({ transaction: t });
     await t.commit();
     res.json({ message: 'User deleted successfully' });
   } catch (error) {

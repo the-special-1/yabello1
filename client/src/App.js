@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -54,80 +56,82 @@ const AuthenticatedRoute = ({ children }) => {
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Public routes */}
-            <Route
-              path="/login"
-              element={
-                <AuthenticatedRoute>
-                  <Login />
-                </AuthenticatedRoute>
-              }
-            />
-            
-            {/* Default route - redirect to login */}
-            <Route
-              path="/"
-              element={<Navigate to="/login" replace />}
-            />
-            
-            {/* Protected routes */}
-            <Route
-              path="/superadmin"
-              element={
-                <PrivateRoute roles={['superadmin']}>
-                  <SuperAdminDashboard />
-                </PrivateRoute>
-              }
-            />
-            
-            <Route
-              path="/agent"
-              element={
-                <PrivateRoute roles={['agent']}>
-                  <AgentDashboard />
-                </PrivateRoute>
-              }
-            />
-            
-            <Route
-              path="/user"
-              element={
-                <PrivateRoute roles={['user']}>
-                  <BingoGame />
-                </PrivateRoute>
-              }
-            />
-            
-            <Route
-              path="/game"
-              element={
-                <PrivateRoute roles={['user']}>
-                  <BingoGame />
-                </PrivateRoute>
-              }
-            />
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <CssBaseline />
+        <AuthProvider>
+          <Router>
+            <Routes>
+              {/* Public routes */}
+              <Route
+                path="/login"
+                element={
+                  <AuthenticatedRoute>
+                    <Login />
+                  </AuthenticatedRoute>
+                }
+              />
+              
+              {/* Default route - redirect to login */}
+              <Route
+                path="/"
+                element={<Navigate to="/login" replace />}
+              />
+              
+              {/* Protected routes */}
+              <Route
+                path="/superadmin"
+                element={
+                  <PrivateRoute roles={['superadmin']}>
+                    <SuperAdminDashboard />
+                  </PrivateRoute>
+                }
+              />
+              
+              <Route
+                path="/agent"
+                element={
+                  <PrivateRoute roles={['agent']}>
+                    <AgentDashboard />
+                  </PrivateRoute>
+                }
+              />
+              
+              <Route
+                path="/user"
+                element={
+                  <PrivateRoute roles={['user']}>
+                    <BingoGame />
+                  </PrivateRoute>
+                }
+              />
+              
+              <Route
+                path="/game"
+                element={
+                  <PrivateRoute roles={['user']}>
+                    <BingoGame />
+                  </PrivateRoute>
+                }
+              />
 
-            <Route
-              path="/cartellas"
-              element={
-                <PrivateRoute roles={['superadmin', 'agent']}>
-                  <CartellaManagement />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                path="/cartellas"
+                element={
+                  <PrivateRoute roles={['superadmin', 'agent']}>
+                    <CartellaManagement />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Catch all - redirect to login */}
-            <Route
-              path="*"
-              element={<Navigate to="/login" replace />}
-            />
-          </Routes>
-        </Router>
-      </AuthProvider>
+              {/* Catch all - redirect to login */}
+              <Route
+                path="*"
+                element={<Navigate to="/login" replace />}
+              />
+            </Routes>
+          </Router>
+        </AuthProvider>
+      </LocalizationProvider>
     </ThemeProvider>
   );
 }

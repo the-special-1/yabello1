@@ -144,12 +144,14 @@ module.exports = (sequelize) => {
 
     User.hasMany(models.Transaction, {
       foreignKey: 'senderId',
-      as: 'sentTransactions'
+      as: 'sentTransactions',
+      onDelete: 'SET NULL'
     });
 
     User.hasMany(models.Transaction, {
       foreignKey: 'receiverId',
-      as: 'receivedTransactions'
+      as: 'receivedTransactions',
+      onDelete: 'SET NULL'
     });
   };
 
