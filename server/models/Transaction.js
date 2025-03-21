@@ -18,7 +18,7 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isIn: [['credit_transfer', 'game_stake', 'game_win', 'commission', 'bet_placement']]
+        isIn: [['credit_transfer', 'credit_creation', 'game_stake', 'game_win', 'commission', 'bet_placement']]
       }
     },
     status: {

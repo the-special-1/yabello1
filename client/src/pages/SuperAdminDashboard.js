@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { Refresh as RefreshIcon, Logout as LogoutIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import axios from 'axios';
+import TransactionHistory from '../components/TransactionHistory';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -458,6 +459,10 @@ const SuperAdminDashboard = () => {
                   </TableContainer>
                 </Grid>
               </Grid>
+            </TabPanel>
+
+            <TabPanel value={tabValue} index={2}>
+              <TransactionHistory />
             </TabPanel>
           </Paper>
         </Grid>

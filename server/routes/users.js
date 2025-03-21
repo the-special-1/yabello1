@@ -232,9 +232,11 @@ router.post('/transfer-credits', auth, authorize(['superadmin', 'agent']), async
       senderId: sender.id,
       receiverId: receiver.id,
       amount: parseFloat(amount),
-      type: 'credit_transfer',
+      type: sender.role === 'superadmin' ? 'credit_creation' : 'credit_transfer',
       status: 'completed',
-      description: `Credit transfer from ${sender.username} to ${receiver.username}`
+      description: sender.role === 'superadmin' 
+        ? `Credit creation by ${sender.username} for ${receiver.username}`
+        : `Credit transfer from ${sender.username} to ${receiver.username}`
     }, { transaction: t });
 
     await t.commit();
@@ -244,11 +246,11 @@ router.post('/transfer-credits', auth, authorize(['superadmin', 'agent']), async
     const updatedSender = sender.role !== 'superadmin' ? await db.User.findByPk(sender.id) : sender;
 
     res.json({ 
-      message: 'Credits transferred successfully',
+      message: sender.role === 'superadmin' ? 'Credits created successfully' : 'Credits transferred successfully',
       transaction: {
         id: transaction.id,
         amount: parseFloat(amount),
-        type: 'credit_transfer',
+        type: sender.role === 'superadmin' ? 'credit_creation' : 'credit_transfer',
         status: 'completed'
       },
       sender: {

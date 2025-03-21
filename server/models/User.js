@@ -63,12 +63,24 @@ module.exports = (sequelize) => {
       defaultValue: 0.00,
       get() {
         const value = this.getDataValue('credits');
+        // Superadmin always has unlimited credits
+        if (this.role === 'superadmin') {
+          return Number.MAX_SAFE_INTEGER;
+        }
         return value === null ? null : parseFloat(value);
+      },
+      set(value) {
+        // Don't update credits for superadmin
+        if (this.role === 'superadmin') {
+          this.setDataValue('credits', Number.MAX_SAFE_INTEGER);
+        } else {
+          this.setDataValue('credits', value);
+        }
       },
       validate: {
         min: 0,
         isNotNegative(value) {
-          if (parseFloat(value) < 0) {
+          if (this.role !== 'superadmin' && parseFloat(value) < 0) {
             throw new Error('Credits cannot be negative');
           }
         }
@@ -109,9 +121,6 @@ module.exports = (sequelize) => {
       beforeCreate: async (user) => {
         if (user.password && user.role !== 'system') {
           user.password = await bcrypt.hash(user.password, 10);
-        }
-        if (user.role === 'superadmin' && !user.credits) {
-          user.credits = 1000000.00;
         }
       },
       beforeUpdate: async (user) => {

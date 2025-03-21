@@ -23,10 +23,28 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
-  Divider
+  Divider,
+  Tab,
+  Tabs
 } from '@mui/material';
 import { Refresh as RefreshIcon, Logout as LogoutIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import TransactionHistory from '../components/TransactionHistory';
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
@@ -50,6 +68,7 @@ const AgentDashboard = () => {
   const [commission, setCommission] = useState(0);
   const [branchName, setBranchName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
 
   useEffect(() => {
     if (!user || user.role !== 'agent') {
@@ -176,6 +195,10 @@ const AgentDashboard = () => {
     setOpenDeleteDialog(true);
   };
 
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ mt: 4, mb: 4 }}>
@@ -237,76 +260,89 @@ const AgentDashboard = () => {
           </Alert>
         )}
 
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Users Management
-            </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Username</TableCell>
-                    <TableCell>Credits</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.username}</TableCell>
-                      <TableCell>{user.credits} ETB</TableCell>
-                      <TableCell>{user.status}</TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <TextField
-                            size="small"
-                            type="number"
-                            label="Amount"
-                            value={creditTransfer.userId === user.id ? creditTransfer.amount : ''}
-                            onChange={(e) => setCreditTransfer({ userId: user.id, amount: e.target.value })}
-                            sx={{ width: 100 }}
-                          />
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => handleTransferCredits(user.id)}
-                            disabled={!creditTransfer.amount || creditTransfer.userId !== user.id}
-                          >
-                            Transfer
-                          </Button>
-                          <Tooltip title="Edit User">
-                            <IconButton
-                              size="small"
-                              onClick={() => openEdit(user)}
-                              color="primary"
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete User">
-                            <IconButton
-                              size="small"
-                              onClick={() => openDelete(user)}
-                              color="error"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={tabValue} onChange={handleTabChange}>
+            <Tab label="Users" />
+            <Tab label="Transactions" />
+          </Tabs>
+        </Box>
+
+        <TabPanel value={tabValue} index={0}>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Users Management
+              </Typography>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Username</TableCell>
+                      <TableCell>Credits</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        )}
+                  </TableHead>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.username}</TableCell>
+                        <TableCell>{user.credits} ETB</TableCell>
+                        <TableCell>{user.status}</TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <TextField
+                              size="small"
+                              type="number"
+                              label="Amount"
+                              value={creditTransfer.userId === user.id ? creditTransfer.amount : ''}
+                              onChange={(e) => setCreditTransfer({ userId: user.id, amount: e.target.value })}
+                              sx={{ width: 100 }}
+                            />
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => handleTransferCredits(user.id)}
+                              disabled={!creditTransfer.amount || creditTransfer.userId !== user.id}
+                            >
+                              Transfer
+                            </Button>
+                            <Tooltip title="Edit User">
+                              <IconButton
+                                size="small"
+                                onClick={() => openEdit(user)}
+                                color="primary"
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete User">
+                              <IconButton
+                                size="small"
+                                onClick={() => openDelete(user)}
+                                color="error"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          )}
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={1}>
+          <TransactionHistory />
+        </TabPanel>
 
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Create New User</DialogTitle>
