@@ -68,22 +68,6 @@ module.exports = (sequelize) => {
           return Number.MAX_SAFE_INTEGER;
         }
         return value === null ? null : parseFloat(value);
-      },
-      set(value) {
-        // Don't update credits for superadmin
-        if (this.role === 'superadmin') {
-          this.setDataValue('credits', Number.MAX_SAFE_INTEGER);
-        } else {
-          this.setDataValue('credits', value);
-        }
-      },
-      validate: {
-        min: 0,
-        isNotNegative(value) {
-          if (this.role !== 'superadmin' && parseFloat(value) < 0) {
-            throw new Error('Credits cannot be negative');
-          }
-        }
       }
     },
     commission: {
@@ -130,17 +114,23 @@ module.exports = (sequelize) => {
     ],
     hooks: {
       beforeCreate: async (user) => {
-        if (user.password && user.role !== 'system') {
-          user.password = await bcrypt.hash(user.password, 10);
+        if (user.password && user.password !== 'not_accessible') {
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(user.password, salt);
         }
       },
       beforeUpdate: async (user) => {
-        if (user.changed('password') && user.role !== 'system') {
-          user.password = await bcrypt.hash(user.password, 10);
+        if (user.changed('password') && user.password !== 'not_accessible') {
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(user.password, salt);
         }
       }
     }
   });
+
+  User.prototype.validatePassword = async function(password) {
+    return await bcrypt.compare(password, this.password);
+  };
 
   User.associate = (models) => {
     User.belongsTo(models.Branch, {
