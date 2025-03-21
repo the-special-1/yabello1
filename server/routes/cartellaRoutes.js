@@ -33,4 +33,70 @@ router.get('/available', auth, async (req, res) => {
   }
 });
 
+// Place bet on cartellas
+router.post('/place-bet', auth, async (req, res) => {
+  const t = await db.sequelize.transaction();
+  try {
+    const { selectedCartellas, betAmount, pattern } = req.body;
+
+    if (!selectedCartellas || !selectedCartellas.length || !betAmount || !pattern) {
+      throw new Error('Selected cartellas, bet amount, and pattern are required');
+    }
+
+    const user = await db.User.findByPk(req.user.id, { transaction: t });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Find or create system account for game transactions
+    const [systemAccount] = await db.User.findOrCreate({
+      where: { username: 'system' },
+      defaults: {
+        password: 'not_accessible',
+        role: 'system',
+        branchId: user.branchId,
+        credits: 0,
+        commission: 0,
+        status: 'active',
+        createdBy: user.id
+      },
+      transaction: t
+    });
+
+    // Calculate total bet amount
+    const totalBetAmount = selectedCartellas.length * betAmount;
+
+    // Check if user has enough credits
+    if (user.credits < totalBetAmount) {
+      throw new Error('Insufficient credits');
+    }
+
+    // Deduct credits from user
+    const newCredits = parseFloat((user.credits - totalBetAmount).toFixed(2));
+    await user.update({ credits: newCredits }, { transaction: t });
+
+    // Create game transaction
+    await db.Transaction.create({
+      senderId: user.id,
+      receiverId: systemAccount.id,
+      amount: totalBetAmount,
+      type: 'game_stake',
+      status: 'completed',
+      description: `Bet placed on ${selectedCartellas.length} cartellas with pattern ${pattern}`
+    }, { transaction: t });
+
+    await t.commit();
+
+    // Return updated user balance
+    res.json({
+      message: 'Bet placed successfully',
+      credits: newCredits
+    });
+  } catch (error) {
+    await t.rollback();
+    console.error('Place bet error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = router;

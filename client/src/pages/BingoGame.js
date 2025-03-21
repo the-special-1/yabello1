@@ -97,12 +97,36 @@ const BingoGame = () => {
     setDrawSpeed(3000 - newValue);
   };
 
-  const handleCartellaSelect = ({ cartellas, pattern, betAmount }) => {
-    setActiveCartellas(cartellas);
-    setGamePattern(pattern);
-    setTotalBetAmount(betAmount);
-    setCheckedCartella(null);
-    setCheckNumber('');
+  const handleCartellaSelect = async ({ cartellas, pattern, betAmount }) => {
+    try {
+      const response = await fetch('/api/cartellas/place-bet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          selectedCartellas: cartellas,
+          pattern,
+          betAmount
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to place bet');
+      }
+
+      const data = await response.json();
+      setActiveCartellas(cartellas);
+      setGamePattern(pattern);
+      setTotalBetAmount(cartellas.length * betAmount);
+      setShowCartellaRegistration(false);
+    } catch (error) {
+      console.error('Error placing bet:', error);
+      // Re-throw the error to be handled by the CartellaRegistration component
+      throw error;
+    }
   };
 
   const modalStyle = {

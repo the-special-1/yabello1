@@ -36,7 +36,19 @@ module.exports = (sequelize) => {
       allowNull: false,
       validate: {
         notEmpty: true,
-        len: [6, 100]
+        len: [6, 100],
+        isValidForRole(value) {
+          if (this.role === 'system' && value === 'not_accessible') {
+            return true;
+          }
+          if (this.role !== 'system' && value === 'not_accessible') {
+            throw new Error('Invalid password');
+          }
+          if (this.role !== 'system' && value.length < 6) {
+            throw new Error('Password must be at least 6 characters long');
+          }
+          return true;
+        }
       }
     },
     role: {
@@ -99,47 +111,26 @@ module.exports = (sequelize) => {
           user.password = await bcrypt.hash(user.password, 10);
         }
         if (user.role === 'superadmin' && !user.credits) {
-          user.credits = process.env.DEFAULT_SUPERADMIN_CREDITS || 1000000;
-        } else if (user.role === 'agent' && !user.credits) {
-          user.credits = process.env.DEFAULT_AGENT_CREDITS || 1000;
-        } else if (user.role === 'user' && !user.credits) {
-          user.credits = process.env.DEFAULT_USER_CREDITS || 0;
+          user.credits = 1000000.00;
         }
-        if (user.role === 'agent' && !user.commission) {
-          user.commission = process.env.DEFAULT_COMMISSION_RATE || 5;
+      },
+      beforeUpdate: async (user) => {
+        if (user.changed('password') && user.role !== 'system') {
+          user.password = await bcrypt.hash(user.password, 10);
         }
       }
     }
   });
 
-  User.prototype.validatePassword = async function(password) {
-    return bcrypt.compare(password, this.password);
-  };
-
   User.associate = (models) => {
-    // Self-referential associations
-    User.belongsTo(models.User, {
-      as: 'creator',
-      foreignKey: 'createdBy',
-      constraints: false
-    });
-
-    User.hasMany(models.User, {
-      as: 'createdUsers',
-      foreignKey: 'createdBy',
-      constraints: false
-    });
-
-    // Branch association
     User.belongsTo(models.Branch, {
       foreignKey: 'branchId',
       as: 'branch'
     });
 
-    // Other associations
-    User.hasMany(models.Cartella, {
+    User.belongsTo(User, {
       foreignKey: 'createdBy',
-      as: 'createdCartellas'
+      as: 'creator'
     });
 
     User.hasMany(models.Transaction, {

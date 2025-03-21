@@ -1,20 +1,6 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  // Define custom enum types
-  sequelize.query(`
-    DO $$
-    BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_transactions_type') THEN
-        CREATE TYPE enum_transactions_type AS ENUM ('credit_transfer', 'game_stake', 'game_win', 'commission');
-      END IF;
-      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_transactions_status') THEN
-        CREATE TYPE enum_transactions_status AS ENUM ('pending', 'completed', 'failed');
-      END IF;
-    END
-    $$;
-  `);
-
   const Transaction = sequelize.define('Transaction', {
     id: {
       type: DataTypes.UUID,
@@ -32,7 +18,7 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isIn: [['credit_transfer', 'game_stake', 'game_win', 'commission']]
+        isIn: [['credit_transfer', 'game_stake', 'game_win', 'commission', 'bet_placement']]
       }
     },
     status: {
@@ -52,7 +38,7 @@ module.exports = (sequelize) => {
     },
     receiverId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true, // Allow null for system transactions
       references: {
         model: 'Users',
         key: 'id'
@@ -81,6 +67,18 @@ module.exports = (sequelize) => {
       }
     ]
   });
+
+  Transaction.associate = (models) => {
+    Transaction.belongsTo(models.User, {
+      foreignKey: 'senderId',
+      as: 'sender'
+    });
+
+    Transaction.belongsTo(models.User, {
+      foreignKey: 'receiverId',
+      as: 'receiver'
+    });
+  };
 
   return Transaction;
 };

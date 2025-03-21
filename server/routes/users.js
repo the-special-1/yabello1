@@ -408,7 +408,7 @@ router.put('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) =>
       if (password.length < 6) {
         throw new Error('Password must be at least 6 characters long');
       }
-      updates.password = password; // Model hook will hash it
+      updates.password = await bcrypt.hash(password, 10);
     }
 
     if (typeof commission === 'number') {
