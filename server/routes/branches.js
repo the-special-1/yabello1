@@ -6,9 +6,15 @@ const { auth, authorize } = require('../middleware/auth');
 // Get all branches (or just own branch for agents)
 router.get('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   try {
-    // Return all active branches for both superadmin and agent
+    const whereClause = { status: 'active' };
+    
+    // If user is an agent, only return their branch
+    if (req.user.role === 'agent') {
+      whereClause.id = req.user.branchId;
+    }
+
     const branches = await db.Branch.findAll({
-      where: { status: 'active' },
+      where: whereClause,
       include: [{
         model: db.User,
         as: 'users',
