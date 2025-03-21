@@ -70,11 +70,20 @@ module.exports = (sequelize) => {
     },
     branchId: {
       type: DataTypes.UUID,
-      allowNull: false
+      allowNull: false,
+      primaryKey: true, 
+      references: {
+        model: 'Branches',
+        key: 'id'
+      }
     },
     createdBy: {
       type: DataTypes.UUID,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'id'
+      }
     },
     markedNumbers: {
       type: DataTypes.JSONB,
@@ -101,36 +110,26 @@ module.exports = (sequelize) => {
     },
     winningPattern: {
       type: DataTypes.STRING,
-      allowNull: true,
       validate: {
-        isIn: [['row', 'column', 'diagonal', 'corners', null]]
+        isIn: [['', 'line', 'diagonal', 'corners', 'full']]
       }
     }
   }, {
-    modelName: 'Cartella',
-    tableName: 'Cartellas',
-    timestamps: true,
-    hooks: {
-      beforeValidate: (cartella) => {
-        // Ensure markedNumbers is initialized if not set
-        if (!cartella.markedNumbers) {
-          cartella.markedNumbers = Array(5).fill().map(() => Array(5).fill(false));
-        }
+    indexes: [
+      {
+        fields: ['branchId']
       }
-    }
+    ]
   });
 
   Cartella.associate = (models) => {
     Cartella.belongsTo(models.Branch, {
       foreignKey: 'branchId',
-      as: 'branch',
-      constraints: false
+      as: 'branch'
     });
-
     Cartella.belongsTo(models.User, {
       foreignKey: 'createdBy',
-      as: 'creator',
-      constraints: false
+      as: 'creator'
     });
   };
 

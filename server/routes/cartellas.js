@@ -70,11 +70,16 @@ router.post('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
       return res.status(400).json({ error: 'Cartella ID must be numeric and at most 10 digits' });
     }
 
-    // Check if cartella ID already exists
-    const existingCartella = await db.Cartella.findByPk(id);
+    // Check if cartella ID already exists in the same branch
+    const existingCartella = await db.Cartella.findOne({
+      where: {
+        id,
+        branchId
+      }
+    });
     if (existingCartella) {
-      console.error('Duplicate cartella ID:', id);
-      return res.status(400).json({ error: 'A cartella with this ID already exists' });
+      console.error('Duplicate cartella ID in branch:', { id, branchId });
+      return res.status(400).json({ error: 'A cartella with this ID already exists in this branch' });
     }
 
     // Verify branch exists and is active
@@ -290,34 +295,36 @@ router.patch('/:id/status', auth, authorize(['superadmin', 'agent']), async (req
   }
 });
 
-// Delete cartella
-router.delete('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) => {
+// Delete a cartella
+router.delete('/:id/:branchId', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   const t = await db.sequelize.transaction();
   try {
-    const cartella = await db.Cartella.findByPk(req.params.id, { transaction: t });
+    const cartella = await db.Cartella.findOne({
+      where: {
+        id: req.params.id,
+        branchId: req.params.branchId
+      },
+      transaction: t
+    });
 
     if (!cartella) {
-      throw new Error('Cartella not found');
+      await t.rollback();
+      return res.status(404).json({ error: 'Cartella not found' });
     }
 
-    // Verify branch ownership
-    if (req.user.role === 'agent' && cartella.branchId !== req.user.branchId) {
-      throw new Error('You can only delete cartellas from your branch');
-    }
-
-    // Only allow deletion of available cartellas
-    if (cartella.status !== 'available') {
-      throw new Error('Cannot delete cartella that is not available');
+    // Check if user has permission to delete this cartella
+    if (req.user.role !== 'superadmin' && cartella.branchId !== req.user.branchId) {
+      await t.rollback();
+      return res.status(403).json({ error: 'Not authorized to delete this cartella' });
     }
 
     await cartella.destroy({ transaction: t });
     await t.commit();
-
     res.json({ message: 'Cartella deleted successfully' });
   } catch (error) {
     await t.rollback();
     console.error('Delete cartella error:', error);
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message || 'Failed to delete cartella' });
   }
 });
 
