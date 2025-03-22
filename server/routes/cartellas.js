@@ -211,6 +211,95 @@ router.get('/user', auth, async (req, res) => {
   }
 });
 
+// Get all cartellas for user's branch
+router.get('/branch', auth, async (req, res) => {
+  try {
+    // Get user with branch information
+    const user = await db.User.findByPk(req.user.id, {
+      include: [{
+        model: db.Branch,
+        as: 'branch'
+      }]
+    });
+
+    if (!user || !user.branchId) {
+      return res.status(400).json({ error: 'User is not associated with a branch' });
+    }
+
+    const cartellas = await db.Cartella.findAll({
+      where: {
+        branchId: user.branchId
+      },
+      include: [
+        {
+          model: db.Branch,
+          as: 'branch',
+          attributes: ['id', 'name', 'location']
+        },
+        {
+          model: db.User,
+          as: 'creator',
+          attributes: ['id', 'username']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json(cartellas);
+  } catch (error) {
+    console.error('Get branch cartellas error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all cartellas for user's branch (with status filter)
+router.get('/branch/available', auth, async (req, res) => {
+  try {
+    // Get user with branch information
+    const user = await db.User.findByPk(req.user.id, {
+      include: [{
+        model: db.Branch,
+        as: 'branch'
+      }]
+    });
+
+    if (!user || !user.branchId) {
+      return res.status(400).json({ error: 'User is not associated with a branch' });
+    }
+
+    const where = {
+      branchId: user.branchId
+    };
+
+    // Add status filter if provided
+    if (req.query.status) {
+      where.status = req.query.status;
+    }
+
+    const cartellas = await db.Cartella.findAll({
+      where,
+      include: [
+        {
+          model: db.Branch,
+          as: 'branch',
+          attributes: ['id', 'name', 'location']
+        },
+        {
+          model: db.User,
+          as: 'creator',
+          attributes: ['id', 'username']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json(cartellas);
+  } catch (error) {
+    console.error('Get branch cartellas error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update cartella
 router.put('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   try {

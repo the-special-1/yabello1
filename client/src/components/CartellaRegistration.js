@@ -78,7 +78,7 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
   const fetchCartellas = async () => {
     try {
       console.log('Fetching cartellas...');
-      const response = await fetch('/api/cartellas/available', {
+      const response = await fetch('/api/cartellas/branch', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -89,13 +89,15 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
         throw new Error(data.message || 'Failed to fetch cartellas');
       }
 
-      const text = await response.text();
-      console.log('Raw response:', text);
-      
-      const data = JSON.parse(text);
+      const data = await response.json();
       console.log('Parsed cartellas:', data);
       
-      setAvailableCartellas(data.cartellas || []);
+      // Filter out cartellas that are already registered in a game
+      const filteredCartellas = data.filter(cartella => 
+        !['playing', 'won', 'lost'].includes(cartella.status)
+      );
+      
+      setAvailableCartellas(filteredCartellas || []);
     } catch (err) {
       console.error('Error fetching cartellas:', err);
       setError(err.message);

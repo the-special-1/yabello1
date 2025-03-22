@@ -117,6 +117,14 @@ module.exports = (sequelize) => {
       validate: {
         isIn: [['', 'line', 'diagonal', 'corners', 'full']]
       }
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'available',
+      validate: {
+        isIn: [['available', 'sold', 'playing', 'won', 'lost']]
+      }
     }
   }, {
     indexes: [

@@ -252,15 +252,19 @@ const CartellasModal = ({ open, onClose }) => {
 
   const fetchCartellas = async () => {
     try {
-      const response = await fetch('/api/cartellas/user', {
+      const response = await fetch('/api/cartellas/branch/available?status=available', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch cartellas');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch cartellas');
+      }
       const data = await response.json();
       setExistingCartellas(data);
     } catch (err) {
+      console.error('Error fetching cartellas:', err);
       setError('Failed to load existing cartellas');
     }
   };

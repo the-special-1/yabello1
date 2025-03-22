@@ -3,7 +3,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
-const { sequelize } = require('./models');
+const db = require('./models');
 const routes = require('./routes');
 const cartellaRoutes = require('./routes/cartellaRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -45,12 +45,12 @@ const PORT = process.env.PORT || 5001;
 console.log('Starting server on port:', PORT);
 
 // Sync database and start server
-sequelize.sync({ alter: true })
+db.sequelize.sync({ alter: true })
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
   })
   .catch(err => {
-    console.error('Unable to connect to the database:', err);
+    console.error('Unable to sync database:', err);
   });
