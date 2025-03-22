@@ -40,10 +40,14 @@ module.exports = (sequelize) => {
             for (let row = 0; row < 5; row++) {
               const num = value[row][col];
               
-              // Skip validation for FREE space
-              if (num === 'FREE') {
-                if (row === 2 && col === 2) continue;
-                throw new Error('FREE space must be in the center');
+              // Skip validation for center space (FREE or 0)
+              if ((num === 'FREE' || num === '0' || num === 0) && row === 2 && col === 2) {
+                continue;
+              }
+
+              // Check if it's FREE in wrong position
+              if (num === 'FREE' || num === '0' || num === 0) {
+                throw new Error('FREE/0 space must be in the center');
               }
 
               // Validate number

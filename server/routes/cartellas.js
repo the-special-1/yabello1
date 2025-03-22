@@ -47,7 +47,7 @@ router.post('/generate', auth, authorize(['superadmin', 'agent']), async (req, r
 });
 
 // Create a new cartella
-router.post('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     const { id, numbers, branchId } = req.body;
 
@@ -59,9 +59,9 @@ router.post('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
     });
 
     // Validate required fields
-    if (!id || !branchId || !numbers) {
-      console.error('Missing required fields:', { id, branchId, numbers });
-      return res.status(400).json({ error: 'Cartella ID, branch, and numbers are required' });
+    if (!id || !numbers) {
+      console.error('Missing required fields:', { id, numbers });
+      return res.status(400).json({ error: 'Cartella ID and numbers are required' });
     }
 
     // Validate ID is numeric and within limits
@@ -70,29 +70,48 @@ router.post('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
       return res.status(400).json({ error: 'Cartella ID must be numeric and at most 10 digits' });
     }
 
+    // If branchId is not provided, use user's branch for agents or throw error for users
+    let targetBranchId = branchId;
+    if (!targetBranchId) {
+      if (req.user.role === 'agent') {
+        targetBranchId = req.user.branchId;
+      } else if (req.user.role === 'user') {
+        // For regular users, use their agent's branch
+        const user = await db.User.findByPk(req.user.id);
+        targetBranchId = user.branchId;
+      } else if (req.user.role !== 'superadmin') {
+        return res.status(400).json({ error: 'Branch ID is required' });
+      }
+    }
+
     // Check if cartella ID already exists in the same branch
     const existingCartella = await db.Cartella.findOne({
       where: {
         id,
-        branchId
+        branchId: targetBranchId
       }
     });
     if (existingCartella) {
-      console.error('Duplicate cartella ID in branch:', { id, branchId });
+      console.error('Duplicate cartella ID in branch:', { id, branchId: targetBranchId });
       return res.status(400).json({ error: 'A cartella with this ID already exists in this branch' });
     }
 
     // Verify branch exists and is active
     const branch = await db.Branch.findOne({
       where: {
-        id: branchId,
+        id: targetBranchId,
         status: 'active'
       }
     });
 
     if (!branch) {
-      console.error('Branch not found or inactive:', branchId);
+      console.error('Branch not found or inactive:', targetBranchId);
       return res.status(400).json({ error: 'Branch not found or inactive' });
+    }
+
+    // Check if user has permission to create cartella in this branch
+    if (req.user.role === 'agent' && branch.id !== req.user.branchId) {
+      return res.status(403).json({ error: 'Not authorized to create cartella in this branch' });
     }
 
     // Validate numbers grid structure
@@ -106,48 +125,21 @@ router.post('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
         console.error('Invalid row structure:', numbers[i]);
         return res.status(400).json({ error: 'Each row must have exactly 5 numbers' });
       }
-
-      for (let j = 0; j < 5; j++) {
-        if (i === 2 && j === 2) {
-          if (numbers[i][j] !== 'FREE') {
-            return res.status(400).json({ error: 'Center space must be FREE' });
-          }
-          continue;
-        }
-        const num = numbers[i][j];
-        if (!Number.isInteger(num) || num < 1 || num > 75) {
-          console.error('Invalid number:', { row: i, col: j, value: num });
-          return res.status(400).json({ error: 'Numbers must be integers between 1 and 75' });
-        }
-      }
     }
 
-    // Check for duplicate numbers
-    const flatNumbers = numbers.flat().filter((num, index) => {
-      const row = Math.floor(index / 5);
-      const col = index % 5;
-      return !(row === 2 && col === 2);
-    });
-
-    if (new Set(flatNumbers).size !== flatNumbers.length) {
-      console.error('Duplicate numbers found:', flatNumbers);
-      return res.status(400).json({ error: 'Duplicate numbers are not allowed' });
-    }
-
-    // Create cartella
+    // Create the cartella
     const cartella = await db.Cartella.create({
       id,
-      branchId,
       numbers,
+      branchId: targetBranchId,
       createdBy: req.user.id,
-      status: 'available'
+      markedNumbers: Array(5).fill().map(() => Array(5).fill(false))
     });
 
-    console.log('Cartella created successfully:', cartella.id);
     res.status(201).json(cartella);
   } catch (error) {
     console.error('Create cartella error:', error);
-    res.status(400).json({ error: error.message || 'Failed to create cartella' });
+    res.status(500).json({ error: error.message || 'Failed to create cartella' });
   }
 });
 
@@ -188,6 +180,23 @@ router.get('/branch/current', auth, authorize(['superadmin', 'agent']), async (r
   } catch (error) {
     console.error('Get cartellas error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user's cartellas
+router.get('/user', auth, async (req, res) => {
+  try {
+    const cartellas = await db.Cartella.findAll({
+      where: {
+        createdBy: req.user.id
+      },
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json(cartellas);
+  } catch (error) {
+    console.error('Get user cartellas error:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch cartellas' });
   }
 });
 
@@ -254,6 +263,43 @@ router.put('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) =>
   } catch (error) {
     console.error('Update cartella error:', error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Update a cartella
+router.put('/:id/:branchId', auth, async (req, res) => {
+  const t = await db.sequelize.transaction();
+  try {
+    const { numbers } = req.body;
+    const cartella = await db.Cartella.findOne({
+      where: {
+        id: req.params.id,
+        branchId: req.params.branchId
+      },
+      transaction: t
+    });
+
+    if (!cartella) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Cartella not found' });
+    }
+
+    // Check ownership
+    if (cartella.createdBy !== req.user.id && req.user.role !== 'superadmin') {
+      await t.rollback();
+      return res.status(403).json({ error: 'Not authorized to update this cartella' });
+    }
+
+    // Update cartella
+    cartella.numbers = numbers;
+    await cartella.save({ transaction: t });
+    await t.commit();
+
+    res.json(cartella);
+  } catch (error) {
+    await t.rollback();
+    console.error('Update cartella error:', error);
+    res.status(500).json({ error: error.message || 'Failed to update cartella' });
   }
 });
 
