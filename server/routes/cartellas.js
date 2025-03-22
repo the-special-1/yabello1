@@ -186,10 +186,21 @@ router.get('/branch/current', auth, authorize(['superadmin', 'agent']), async (r
 // Get user's cartellas
 router.get('/user', auth, async (req, res) => {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
     const cartellas = await db.Cartella.findAll({
       where: {
         createdBy: req.user.id
       },
+      include: [
+        {
+          model: db.Branch,
+          as: 'branch',
+          attributes: ['id', 'name']
+        }
+      ],
       order: [['createdAt', 'DESC']]
     });
 
@@ -298,6 +309,43 @@ router.put('/:id/:branchId', auth, async (req, res) => {
     res.json(cartella);
   } catch (error) {
     await t.rollback();
+    console.error('Update cartella error:', error);
+    res.status(500).json({ error: error.message || 'Failed to update cartella' });
+  }
+});
+
+// Update cartella numbers
+router.patch('/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { numbers } = req.body;
+
+    // Find the cartella
+    const cartella = await db.Cartella.findByPk(id);
+    if (!cartella) {
+      return res.status(404).json({ error: 'Cartella not found' });
+    }
+
+    // Check ownership
+    if (cartella.createdBy !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to edit this cartella' });
+    }
+
+    // Validate numbers grid structure
+    if (!Array.isArray(numbers) || numbers.length !== 5) {
+      return res.status(400).json({ error: 'Grid must be a 5x5 array' });
+    }
+
+    for (let i = 0; i < 5; i++) {
+      if (!Array.isArray(numbers[i]) || numbers[i].length !== 5) {
+        return res.status(400).json({ error: 'Each row must have exactly 5 numbers' });
+      }
+    }
+
+    // Update the cartella
+    await cartella.update({ numbers });
+    res.json(cartella);
+  } catch (error) {
     console.error('Update cartella error:', error);
     res.status(500).json({ error: error.message || 'Failed to update cartella' });
   }
