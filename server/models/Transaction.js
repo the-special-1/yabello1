@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes, Deferrable } = require('sequelize');
 
 module.exports = (sequelize) => {
   const Transaction = sequelize.define('Transaction', {
@@ -30,18 +30,20 @@ module.exports = (sequelize) => {
     },
     senderId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'Users',
-        key: 'id'
+        key: 'id',
+        deferrable: Deferrable.INITIALLY_IMMEDIATE
       }
     },
     receiverId: {
       type: DataTypes.UUID,
-      allowNull: true, // Allow null for system transactions
+      allowNull: true,
       references: {
         model: 'Users',
-        key: 'id'
+        key: 'id',
+        deferrable: Deferrable.INITIALLY_IMMEDIATE
       }
     },
     description: {
@@ -70,13 +72,17 @@ module.exports = (sequelize) => {
 
   Transaction.associate = (models) => {
     Transaction.belongsTo(models.User, {
+      as: 'sender',
       foreignKey: 'senderId',
-      as: 'sender'
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE'
     });
 
     Transaction.belongsTo(models.User, {
+      as: 'receiver',
       foreignKey: 'receiverId',
-      as: 'receiver'
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE'
     });
   };
 
