@@ -9,9 +9,8 @@ import {
   Box,
   Typography,
   FormControl,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
+  Select,
+  MenuItem,
   Stack,
   TextField,
   Alert,
@@ -22,18 +21,20 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useAuth } from '../context/AuthContext';
 import CartellasModal from './CartellasModal';
+import CartellaCircleView from './CartellaCircleView';
 
 const PATTERNS = [
-  'Full House',
-  'Top Line',
-  'Middle Line',
-  'Bottom Line',
-  'Four Corners',
-  'T Pattern',
-  'X Pattern',
-  'L Pattern'
+  { name: 'Full House', description: 'Full house pattern' },
+  { name: 'Top Line', description: 'Top line pattern' },
+  { name: 'Middle Line', description: 'Middle line pattern' },
+  { name: 'Bottom Line', description: 'Bottom line pattern' },
+  { name: 'Four Corners', description: 'Four corners pattern' },
+  { name: 'T Pattern', description: 'T pattern' },
+  { name: 'X Pattern', description: 'X pattern' },
+  { name: 'L Pattern', description: 'L pattern' }
 ];
 
 function TabPanel(props) {
@@ -56,7 +57,7 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
   const [selectedPattern, setSelectedPattern] = useState('');
   const [betAmount, setBetAmount] = useState(10);
   const [availableCartellas, setAvailableCartellas] = useState([]);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [userBalance, setUserBalance] = useState(0);
   const [tabValue, setTabValue] = useState(0);
   const [showNewCartellaModal, setShowNewCartellaModal] = useState(false);
@@ -145,11 +146,23 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
       setError('Insufficient balance');
       return;
     }
-    onSelect({
-      cartellas: selectedCartellas,
-      pattern: selectedPattern,
-      betAmount
-    });
+    
+    try {
+      console.log('Selected pattern:', selectedPattern); // Debug log
+      onSelect({
+        cartellas: selectedCartellas,
+        pattern: selectedPattern,
+        betAmount
+      });
+      onClose(); // Close the dialog after successful submission
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handlePatternChange = (event) => {
+    setSelectedPattern(event.target.value);
+    setError(''); // Clear any existing errors
   };
 
   return (
@@ -180,6 +193,31 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
                   Balance: {userBalance} ETB
                 </Typography>
               </Paper>
+              {selectedCartellas.length > 0 && selectedPattern && (
+                <Button
+                  variant="contained"
+                  color="error"
+                  size="large"
+                  startIcon={<PlayArrowIcon sx={{ fontSize: 24 }} />}
+                  onClick={handleSubmit}
+                  sx={{ 
+                    minWidth: 150,
+                    height: 45,
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                    backgroundColor: '#ff1744',
+                    boxShadow: 4,
+                    '&:hover': {
+                      backgroundColor: '#d50000',
+                      boxShadow: 6,
+                      transform: 'scale(1.05)'
+                    },
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  START GAME
+                </Button>
+              )}
               <IconButton onClick={onClose} sx={{ color: 'white' }}>
                 <CloseIcon />
               </IconButton>
@@ -228,142 +266,86 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
             </Button>
           </Box>
 
-          <Grid container spacing={3}>
-            {availableCartellas.map((cartella) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={cartella.id}>
-                <Paper
-                  elevation={selectedCartellas.some(c => c.id === cartella.id) ? 8 : 2}
-                  sx={{
-                    p: 3,
-                    cursor: 'pointer',
-                    border: '1px solid',
-                    borderColor: selectedCartellas.some(c => c.id === cartella.id)
-                      ? 'primary.main'
-                      : 'transparent',
-                    bgcolor: selectedCartellas.some(c => c.id === cartella.id)
-                      ? 'primary.light'
-                      : 'white',
-                    '&:hover': {
-                      boxShadow: 6,
-                      borderColor: 'primary.main',
-                      transform: 'translateY(-2px)',
-                      transition: 'all 0.2s'
-                    }
-                  }}
-                  onClick={() => handleCartellaToggle(cartella)}
-                >
-                  <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
-                    Cartella #{cartella.id}
-                  </Typography>
-                  <Grid container spacing={1}>
-                    {cartella.numbers.map((row, i) => (
-                      row.map((num, j) => (
-                        <Grid item xs={2.4} key={`${i}-${j}`}>
-                          <Paper
-                            sx={{
-                              p: 1.5,
-                              textAlign: 'center',
-                              fontWeight: 'bold',
-                              bgcolor: num === 'FREE' ? 'primary.main' : 'grey.100',
-                              color: num === 'FREE' ? 'white' : 'text.primary',
-                              border: 1,
-                              borderColor: 'grey.300'
-                            }}
-                          >
-                            {num === 'FREE' ? '0' : num}
-                          </Paper>
-                        </Grid>
-                      ))
-                    ))}
-                  </Grid>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" color="primary" sx={{ mb: 2 }}>Available Cartellas:</Typography>
+            <CartellaCircleView 
+              cartellas={availableCartellas}
+              selectedCartella={selectedCartellas[0]}
+              onSelect={handleCartellaToggle}
+            />
+          </Box>
 
-          <Paper sx={{ mt: 4, p: 3, boxShadow: 3 }}>
-            <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom color="primary">
-                Select Pattern:
-              </Typography>
-              <Box sx={{ 
-                display: 'flex', 
-                flexWrap: 'wrap', 
-                gap: 2,
-                bgcolor: 'background.paper',
-                p: 2,
-                borderRadius: 1,
-                border: '1px solid',
-                borderColor: 'divider'
-              }}>
-                {PATTERNS.map((pattern) => (
-                  <FormControlLabel
-                    key={pattern}
-                    value={pattern}
-                    control={
-                      <Radio 
-                        sx={{
-                          '&.Mui-checked': {
-                            color: 'primary.main'
-                          }
-                        }}
-                      />
-                    }
-                    label={
-                      <Typography 
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: selectedPattern === pattern ? 'bold' : 'normal',
-                          color: selectedPattern === pattern ? 'primary.main' : 'text.primary'
-                        }}
-                      >
-                        {pattern}
-                      </Typography>
-                    }
-                  />
-                ))}
-              </Box>
-            </FormControl>
-
-            <Stack 
-              direction={{ xs: 'column', sm: 'row' }} 
-              spacing={3} 
-              alignItems="center"
-              sx={{
-                bgcolor: 'background.paper',
-                p: 2,
-                borderRadius: 1,
-                border: '1px solid',
-                borderColor: 'divider'
-              }}
-            >
-              <TextField
-                label="Bet Amount (ETB)"
-                type="number"
-                value={betAmount}
-                onChange={(e) => setBetAmount(Number(e.target.value))}
-                inputProps={{ min: 10 }}
-                sx={{ 
-                  minWidth: 200,
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: 'white'
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" color="primary" sx={{ mb: 1 }}>Select Pattern:</Typography>
+            <FormControl sx={{ minWidth: 200 }}>
+              <Select
+                value={selectedPattern}
+                onChange={handlePatternChange}
+                displayEmpty
+                size="small"
+                sx={{
+                  '& .MuiSelect-select': {
+                    py: 1
                   }
                 }}
-              />
-              <Typography variant="h6" color="primary" fontWeight="bold">
-                Total Bet: {totalBetAmount} ETB
-              </Typography>
-              <Typography variant="h6" color="success.main" fontWeight="bold">
-                Balance: {userBalance} ETB
-              </Typography>
-            </Stack>
-          </Paper>
+              >
+                <MenuItem value="" disabled>
+                  <em>Choose a pattern</em>
+                </MenuItem>
+                {PATTERNS.map((pattern) => (
+                  <MenuItem key={pattern.name} value={pattern.name}>
+                    {pattern.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Stack 
+            direction={{ xs: 'column', sm: 'row' }} 
+            spacing={3} 
+            alignItems="center"
+            sx={{
+              bgcolor: 'background.paper',
+              p: 2,
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
+            <TextField
+              label="Bet Amount (ETB)"
+              type="number"
+              value={betAmount}
+              onChange={(e) => setBetAmount(Number(e.target.value))}
+              inputProps={{ min: 10 }}
+              sx={{ 
+                minWidth: 200,
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'white'
+                }
+              }}
+            />
+            <Typography variant="h6" color="primary" fontWeight="bold">
+              Total Bet: {totalBetAmount} ETB
+            </Typography>
+            <Typography variant="h6" color="success.main" fontWeight="bold">
+              Balance: {userBalance} ETB
+            </Typography>
+          </Stack>
         </DialogContent>
 
         <DialogActions sx={{ 
           p: 3, 
           bgcolor: 'grey.100',
-          borderTop: '1px solid rgba(0, 0, 0, 0.12)'
+          borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+          gap: 2
         }}>
           <Button 
             onClick={onClose} 
@@ -372,21 +354,6 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
             sx={{ minWidth: 120 }}
           >
             Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            size="large"
-            disabled={selectedCartellas.length === 0 || !selectedPattern || totalBetAmount > userBalance}
-            sx={{ 
-              minWidth: 120,
-              boxShadow: 2,
-              '&:not(:disabled):hover': {
-                boxShadow: 4
-              }
-            }}
-          >
-            Start Game
           </Button>
         </DialogActions>
       </Dialog>
