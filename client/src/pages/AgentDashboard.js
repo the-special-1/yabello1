@@ -60,7 +60,6 @@ const AgentDashboard = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    commission: '',
   });
   const [creditTransfer, setCreditTransfer] = useState({
     userId: '',
@@ -117,15 +116,11 @@ const AgentDashboard = () => {
   const handleCreateUser = async () => {
     try {
       setError('');
-      const payload = {
-        ...formData,
-        commission: formData.commission ? parseFloat(formData.commission) : 0
-      };
-      await axios.post('/api/users/create-user', payload);
+      await axios.post('/api/users/create-user', formData);
       
       setSuccess('User created successfully');
       setOpenDialog(false);
-      setFormData({ username: '', password: '', commission: '' });
+      setFormData({ username: '', password: '' });
       fetchUsers();
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to create user');
@@ -161,16 +156,14 @@ const AgentDashboard = () => {
   const handleEditUser = async () => {
     try {
       setError('');
-      const payload = {
+      await axios.put(`/api/users/${selectedUser.id}`, {
         username: formData.username,
-        ...(formData.password ? { password: formData.password } : {}),
-        commission: formData.commission ? parseFloat(formData.commission) : 0
-      };
-      await axios.put(`/api/users/${selectedUser.id}`, payload);
+        ...(formData.password ? { password: formData.password } : {})
+      });
       
       setSuccess('User updated successfully');
       setOpenEditDialog(false);
-      setFormData({ username: '', password: '', commission: '' });
+      setFormData({ username: '', password: '' });
       setSelectedUser(null);
       fetchUsers();
     } catch (error) {
@@ -194,7 +187,7 @@ const AgentDashboard = () => {
 
   const openEdit = (user) => {
     setSelectedUser(user);
-    setFormData({ username: user.username, password: '', commission: user.commission });
+    setFormData({ username: user.username, password: '' });
     setOpenEditDialog(true);
   };
 
@@ -292,7 +285,6 @@ const AgentDashboard = () => {
                     <TableRow>
                       <TableCell>Username</TableCell>
                       <TableCell>Credits</TableCell>
-                      <TableCell>Commission</TableCell>
                       <TableCell>Status</TableCell>
                       <TableCell>Actions</TableCell>
                     </TableRow>
@@ -302,7 +294,6 @@ const AgentDashboard = () => {
                       <TableRow key={user.id}>
                         <TableCell>{user.username}</TableCell>
                         <TableCell>{user.credits} ETB</TableCell>
-                        <TableCell>{user.commission}%</TableCell>
                         <TableCell>{user.status}</TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -376,17 +367,6 @@ const AgentDashboard = () => {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Commission (%)"
-                type="number"
-                value={formData.commission}
-                onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
-                InputProps={{
-                  inputProps: { min: 0, max: 100 }
-                }}
               />
             </Box>
           </DialogContent>
@@ -414,17 +394,6 @@ const AgentDashboard = () => {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 helperText="Leave blank to keep current password"
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Commission (%)"
-                type="number"
-                value={formData.commission}
-                onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
-                InputProps={{
-                  inputProps: { min: 0, max: 100 }
-                }}
               />
             </Box>
           </DialogContent>

@@ -348,18 +348,10 @@ router.post('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
 router.post('/create-user', auth, authorize(['agent']), async (req, res) => {
   const t = await db.sequelize.transaction();
   try {
-    console.log('Create user request body:', req.body);
-    const { username, password, commission = 0, credits = 0 } = req.body;
+    const { username, password, credits = 0 } = req.body;
 
     if (!username || !password) {
       throw new Error('Username and password are required');
-    }
-
-    // Validate commission
-    const commissionValue = parseFloat(commission);
-    console.log('Commission value:', commissionValue);
-    if (isNaN(commissionValue) || commissionValue < 0 || commissionValue > 100) {
-      throw new Error('Commission must be a number between 0 and 100');
     }
 
     // Check if username exists
@@ -379,7 +371,7 @@ router.post('/create-user', auth, authorize(['agent']), async (req, res) => {
       role: 'user',
       branchId: req.user.branchId,
       credits,
-      commission: commissionValue,
+      commission: 0,
       status: 'active',
       createdBy: req.user.id
     }, { transaction: t });
