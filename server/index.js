@@ -48,33 +48,31 @@ console.log('Starting server on port:', PORT);
 // Create superadmin user
 const createSuperAdmin = async () => {
   try {
-    // Use a fixed password for superadmin (this is just for initial setup)
-    const password = '$2a$10$YourFixedSaltAndHash';
-    
-    // First check if superadmin exists
+    // Check if superadmin already exists
     const existingAdmin = await db.User.findOne({
       where: { username: 'superadmin' }
     });
 
     if (existingAdmin) {
-      console.log('Superadmin already exists, updating password...');
-      await existingAdmin.update({ password });
-      console.log('Superadmin password updated successfully');
+      console.log('Superadmin already exists');
       return;
     }
 
-    // Create new superadmin if doesn't exist
-    await db.User.create({
+    // Create new superadmin if it doesn't exist
+    const hashedPassword = await bcrypt.hash(process.env.SUPERADMIN_PASSWORD || 'superadmin123', 10);
+    const superadmin = await db.User.create({
       username: 'superadmin',
-      password,
+      password: hashedPassword,
       role: 'superadmin',
       status: 'active',
       credits: 0,
       commission: 0
     });
-    console.log('Superadmin user created successfully');
+
+    console.log('Superadmin created successfully');
+    return superadmin;
   } catch (error) {
-    console.error('Error with superadmin:', error);
+    console.error('Error creating superadmin:', error);
     throw error;
   }
 };
@@ -82,24 +80,14 @@ const createSuperAdmin = async () => {
 // Initialize database and start server
 (async () => {
   try {
-    // First, force sync to recreate tables
-    await db.sequelize.sync({ force: true });
+    // Sync database without forcing recreation
+    await db.sequelize.sync();
+    console.log('Database synchronized successfully');
     
-    // Create superadmin user
+    // Ensure superadmin exists
     await createSuperAdmin();
-
-    // Log the superadmin details
-    const admin = await db.User.findOne({
-      where: { username: 'superadmin' }
-    });
-    console.log('Superadmin details:', {
-      id: admin.id,
-      username: admin.username,
-      role: admin.role,
-      status: admin.status
-    });
     
-    // Then start the server
+    // Start the server
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
