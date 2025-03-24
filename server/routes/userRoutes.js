@@ -61,7 +61,7 @@ router.get('/my-users', auth, async (req, res) => {
         branchId: user.branchId,
         role: 'user'
       },
-      attributes: ['id', 'username', 'credits', 'status', 'createdAt']
+      attributes: ['id', 'username', 'credits', 'status', 'createdAt', 'cut']
     });
 
     res.json(users);

@@ -289,6 +289,7 @@ const AgentDashboard = () => {
                     <TableRow>
                       <TableCell>Username</TableCell>
                       <TableCell>Credits</TableCell>
+                      <TableCell>Cut (%)</TableCell>
                       <TableCell>Status</TableCell>
                       <TableCell>Actions</TableCell>
                     </TableRow>
@@ -298,6 +299,7 @@ const AgentDashboard = () => {
                       <TableRow key={user.id}>
                         <TableCell>{user.username}</TableCell>
                         <TableCell>{user.credits} ETB</TableCell>
+                        <TableCell>{user.cut}%</TableCell>
                         <TableCell>{user.status}</TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
