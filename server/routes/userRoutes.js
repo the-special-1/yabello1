@@ -82,7 +82,7 @@ router.post('/create-user', auth, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
-    const { username, password } = req.body;
+    const { username, password, cut } = req.body;
 
     // Check if username already exists
     const existingUser = await db.User.findOne({
@@ -94,11 +94,18 @@ router.post('/create-user', auth, async (req, res) => {
       return res.status(400).json({ message: 'Username already exists' });
     }
 
+    // Validate cut percentage
+    if (cut < 0 || cut > 100) {
+      await t.rollback();
+      return res.status(400).json({ message: 'Cut percentage must be between 0 and 100' });
+    }
+
     // Create new user
     const newUser = await db.User.create({
       username,
       password,
       role: 'user',
+      cut,
       branchId: agent.branchId,
       createdBy: agent.id,
       credits: process.env.DEFAULT_USER_CREDITS || 0

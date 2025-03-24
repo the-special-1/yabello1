@@ -96,6 +96,18 @@ module.exports = (sequelize) => {
       validate: {
         isIn: [['active', 'inactive']]
       }
+    },
+    cut: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.00,
+      get() {
+        const value = this.getDataValue('cut');
+        return value === null ? null : parseFloat(value);
+      },
+      validate: {
+        min: 0,
+        max: 100
+      }
     }
   }, {
     modelName: 'User',

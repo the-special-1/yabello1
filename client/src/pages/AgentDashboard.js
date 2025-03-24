@@ -60,6 +60,7 @@ const AgentDashboard = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
+    cut: '0',
   });
   const [creditTransfer, setCreditTransfer] = useState({
     userId: '',
@@ -116,11 +117,14 @@ const AgentDashboard = () => {
   const handleCreateUser = async () => {
     try {
       setError('');
-      await axios.post('/api/users/create-user', formData);
+      await axios.post('/api/users/create-user', {
+        ...formData,
+        cut: parseFloat(formData.cut)
+      });
       
       setSuccess('User created successfully');
       setOpenDialog(false);
-      setFormData({ username: '', password: '' });
+      setFormData({ username: '', password: '', cut: '0' });
       fetchUsers();
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to create user');
@@ -367,6 +371,16 @@ const AgentDashboard = () => {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Cut Percentage"
+                type="number"
+                value={formData.cut}
+                onChange={(e) => setFormData({ ...formData, cut: e.target.value })}
+                inputProps={{ min: 0, max: 100, step: 0.01 }}
+                helperText="Enter a value between 0 and 100"
               />
             </Box>
           </DialogContent>
