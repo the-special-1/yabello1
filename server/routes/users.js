@@ -118,24 +118,10 @@ router.get('/my-users', auth, authorize(['superadmin', 'agent']), async (req, re
 
     const users = await db.User.findAll({
       where,
-      attributes: ['id', 'username', 'role', 'credits', 'commission', 'status', 'branchId', 'createdBy', 'createdAt']
+      attributes: { exclude: ['password'] }
     });
 
-    // Format the response
-    const formattedUsers = users.map(user => ({
-      id: user.id,
-      username: user.username,
-      role: user.role,
-      credits: parseFloat(user.credits) || 0,
-      commission: parseFloat(user.commission) || 0, // Convert commission to number
-      status: user.status,
-      branchId: user.branchId,
-      createdBy: user.createdBy,
-      createdAt: user.createdAt
-    }));
-
-    console.log('Formatted users:', formattedUsers); // Debug log
-    res.json(formattedUsers);
+    res.json(users);
   } catch (error) {
     console.error('Get my users error:', error);
     res.status(500).json({ error: error.message });
@@ -492,29 +478,43 @@ router.put('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) =>
 router.delete('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   const t = await db.sequelize.transaction();
   try {
-    const userToDelete = await db.User.findByPk(req.params.id, { transaction: t });
+    const userToDelete = await db.User.findByPk(req.params.id, {
+      include: [
+        { model: db.Branch, as: 'branch' },
+        { model: db.Transaction, as: 'sentTransactions' },
+        { model: db.Transaction, as: 'receivedTransactions' }
+      ],
+      transaction: t
+    });
 
     if (!userToDelete) {
       throw new Error('User not found');
     }
 
-    // Check if user has sufficient permissions to delete
+    // Validate permissions
     if (req.user.role === 'agent') {
-      if (userToDelete.createdBy !== req.user.id || userToDelete.role !== 'user') {
+      // Check both branch and creator
+      if (userToDelete.branch.id !== req.user.branchId || 
+          userToDelete.createdBy !== req.user.id || 
+          userToDelete.role !== 'user') {
         throw new Error('Unauthorized to delete this user');
       }
     }
 
-    // Check if the user has any credits left
-    if (parseFloat(userToDelete.credits) > 0) {
-      throw new Error('Cannot delete user with remaining credits');
-    }
+    // Delete all transactions first
+    await db.Transaction.destroy({
+      where: {
+        [db.Sequelize.Op.or]: [
+          { senderId: userToDelete.id },
+          { receiverId: userToDelete.id }
+        ]
+      },
+      transaction: t
+    });
 
-    // Delete the user
+    // Then delete the user
     await userToDelete.destroy({ transaction: t });
     await t.commit();
-
-    console.log(`User ${userToDelete.username} deleted successfully`); // Debug log
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     await t.rollback();
