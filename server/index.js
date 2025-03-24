@@ -82,29 +82,22 @@ const createSuperAdmin = async () => {
 // Initialize database and start server
 (async () => {
   try {
-    // First check database connection
-    await db.sequelize.authenticate();
-    console.log('Database connection established');
-
-    // Sync database without force to preserve data
-    await db.sequelize.sync({ alter: true });
-    console.log('Database synced');
-
-    // Create superadmin if not exists
+    // First, force sync to recreate tables
+    await db.sequelize.sync({ force: true });
+    
+    // Create superadmin user
     await createSuperAdmin();
 
     // Log the superadmin details
     const admin = await db.User.findOne({
       where: { username: 'superadmin' }
     });
-    if (admin) {
-      console.log('Superadmin details:', {
-        id: admin.id,
-        username: admin.username,
-        role: admin.role,
-        status: admin.status
-      });
-    }
+    console.log('Superadmin details:', {
+      id: admin.id,
+      username: admin.username,
+      role: admin.role,
+      status: admin.status
+    });
     
     // Then start the server
     app.listen(PORT, () => {
