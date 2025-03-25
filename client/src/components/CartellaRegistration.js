@@ -189,6 +189,10 @@ const CartellaRegistration = ({ open, onSelect }) => {
       setError('Please select a pattern');
       return;
     }
+    if (!betAmount) {
+      setError('Please select a bet amount');
+      return;
+    }
     if (totalBetAmount > userBalance) {
       setError('Insufficient balance');
       return;
