@@ -13,15 +13,15 @@ const CartellaCircleView = ({ cartellas, selectedCartellas, onSelect }) => {
           key={cartella.id}
           onClick={() => onSelect(cartella)}
           sx={{
-            width: 90,
-            height: 90,
+            width: 80,
+            height: 80,
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            backgroundColor: isSelected(cartella) ? '#FFD700' : '#8B0000', 
-            border: '3px solid #FFD700', 
+            backgroundColor: isSelected(cartella) ? '#FF8C00' : '#8B0000',
+            border: `3px solid ${isSelected(cartella) ? '#FF8C00' : '#FFD700'}`,
             color: isSelected(cartella) ? '#000' : '#fff',
             fontWeight: 'bold',
             fontSize: '2rem',
@@ -29,7 +29,7 @@ const CartellaCircleView = ({ cartellas, selectedCartellas, onSelect }) => {
             '&:hover': {
               transform: 'scale(1.05)',
               boxShadow: isSelected(cartella) ?
-                '0 0 20px rgba(255, 215, 0, 0.7)' :
+                '0 0 20px rgba(255, 140, 0, 0.7)' :
                 '0 4px 8px rgba(0,0,0,0.3)'
             }
           }}
@@ -39,7 +39,7 @@ const CartellaCircleView = ({ cartellas, selectedCartellas, onSelect }) => {
             sx={{
               color: isSelected(cartella) ? '#000' : '#fff',
               fontWeight: 'bold',
-              fontSize: '2rem',
+              fontSize: '2.5rem',
               fontFamily: "'Times New Roman', serif"
             }}
           >

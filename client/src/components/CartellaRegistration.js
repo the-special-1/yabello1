@@ -19,6 +19,7 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestoreIcon from '@mui/icons-material/Restore';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useAuth } from '../context/AuthContext';
 import CartellasModal from './CartellasModal';
 import CartellaCircleView from './CartellaCircleView';
@@ -60,7 +61,7 @@ function TabPanel(props) {
 
 const CartellaRegistration = ({ open, onSelect }) => {
   const [selectedCartellas, setSelectedCartellas] = useState([]);
-  const [selectedPattern, setSelectedPattern] = useState('');
+  const [selectedPattern, setSelectedPattern] = useState('Any 1 Line');  
   const [betAmount, setBetAmount] = useState('');  
   const [availableCartellas, setAvailableCartellas] = useState([]);
   const [error, setError] = useState('');
@@ -342,7 +343,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
               width: '100%'  
             }}>
               {/* Section title */}
-              <Typography variant="h6" sx={{ mb: 2, color: 'white', pl: 2, fontFamily: 'inherit' }}>
+              <Typography variant="h4" sx={{ mb: 2, color: 'white', pl: 2, fontFamily: 'inherit' }}>
               ካርድ ቁጥሮች
               </Typography>
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -373,7 +374,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
                   alignItems: 'center'
                 }}>
                   {/* Section title */}
-                  <Typography variant="h6" sx={{ mb: 2, color: 'white', fontFamily: 'inherit' }}>
+                  <Typography variant="h4" sx={{ mb: 2, color: 'white', fontFamily: 'inherit' }}>
                     ካርድ ቁጥሮት መመዝገቡን ይመልከቱ
                   </Typography>
                   {/* Selected cartellas display */}
@@ -388,22 +389,22 @@ const CartellaRegistration = ({ open, onSelect }) => {
                       <Box
                         key={cartella.id}
                         sx={{
-                          width: 90,
-                          height: 90,
+                          width: 80,
+                          height: 80,
                           borderRadius: '50%',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: '#FFD700',
-                          border: '3px solid #FFD700',
+                          backgroundColor: '#FF8C00',
+                          border: '3px solid #FF8C00',
                           color: '#000',
                           fontWeight: 'bold',
-                          fontSize: '2rem',
+                          fontSize: '2.5rem',
                           fontFamily: "'Times New Roman', serif",
                           transition: 'all 0.2s',
                           '&:hover': {
                             transform: 'scale(1.05)',
-                            boxShadow: '0 0 20px rgba(255, 215, 0, 0.7)'
+                            boxShadow: '0 0 20px rgba(255, 140, 0, 0.7)'
                           }
                         }}
                       >
@@ -415,7 +416,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
                   {/* Dropdowns */}
                   <Box sx={{ 
                     display: 'flex', 
-                    gap: 2, 
+                    gap: 0, 
                     width: '100%',
                     justifyContent: 'center'
                   }}>
@@ -426,6 +427,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
                         onChange={(e) => setBetAmount(e.target.value)}
                         size="small"
                         displayEmpty
+                        IconComponent={KeyboardArrowDownIcon}
                         MenuProps={{
                           PaperProps: {
                             sx: {
@@ -444,18 +446,27 @@ const CartellaRegistration = ({ open, onSelect }) => {
                           backgroundColor: 'white',
                           '& .MuiSelect-select': {
                             py: 0,
-                            color: 'black'
+                            pr: '24px !important',
+                            color: 'black',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1
+                          },
+                          '& .MuiSvgIcon-root': {
+                            position: 'relative',
+                            right: 0,
+                            ml: 1
                           }
                         }}
                       >
                         <MenuItem value="" disabled>
-                          <Typography sx={{ color: 'rgba(0, 0, 0, 0.6)', fontFamily: 'inherit' }}>
+                          <Typography sx={{ color: 'rgba(0, 0, 0, 0.6)', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}>
                             የብር መጠን
                           </Typography>
                         </MenuItem>
                         {[10, 20, 50, 100, 200, 500].map((amount) => (
                           <MenuItem key={amount} value={amount}>
-                            <Typography sx={{ color: 'black', fontFamily: 'inherit' }}>
+                            <Typography sx={{ color: 'black', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}>
                               {amount} ETB
                             </Typography>
                           </MenuItem>
@@ -466,9 +477,10 @@ const CartellaRegistration = ({ open, onSelect }) => {
                     {/* Pattern dropdown */}
                     <FormControl sx={{ flex: 2, minWidth: 200 }}>
                       <Select
-                        value={selectedPattern || 'Any 1 Line'}
+                        value={selectedPattern}
                         onChange={(e) => setSelectedPattern(e.target.value)}
                         size="small"
+                        IconComponent={KeyboardArrowDownIcon}
                         MenuProps={{
                           PaperProps: {
                             sx: {
@@ -491,43 +503,39 @@ const CartellaRegistration = ({ open, onSelect }) => {
                           }
                         }}
                       >
-                        <MenuItem value="" disabled>
-                          <Typography sx={{ color: 'black', fontFamily: 'inherit' }}>
-                            Choose pattern
-                          </Typography>
-                        </MenuItem>                        {PATTERNS.map((pattern) => (
-                        <MenuItem key={pattern.name} value={pattern.name}>
-                          <Typography sx={{ color: 'black', fontFamily: 'inherit' }}>
-                            {pattern.name}
-                          </Typography>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
+                        {PATTERNS.map((pattern) => (
+                          <MenuItem key={pattern.name} value={pattern.name}>
+                            <Typography sx={{ color: 'black', fontFamily: 'inherit' }}>
+                              {pattern.name}
+                            </Typography>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
 
-                {/* Play button */}
-                <Button
-                  variant="contained"
-                  onClick={handleSubmit}
-                  startIcon={<PlayArrowIcon />}
-                  sx={{
-                    minWidth: 120,
-                    height: 36,
-                    fontWeight: 'bold',
-                    backgroundColor: '#1976d2',
-                    boxShadow: 2,
-                    opacity: (!selectedPattern || selectedCartellas.length === 0) ? 0.7 : 1,
-                    '&:hover': {
-                      backgroundColor: '#1565c0',
-                      transform: (!selectedPattern || selectedCartellas.length === 0) ? 'none' : 'scale(1.02)'
-                    },
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  PLAY
-                </Button>
-              </Box>
+                  {/* Play button */}
+                  <Button
+                    variant="contained"
+                    onClick={handleSubmit}
+                    startIcon={<PlayArrowIcon />}
+                    sx={{
+                      minWidth: 120,
+                      height: 36,
+                      fontWeight: 'bold',
+                      backgroundColor: '#1976d2',
+                      boxShadow: 2,
+                      opacity: (!selectedPattern || selectedCartellas.length === 0) ? 0.7 : 1,
+                      '&:hover': {
+                        backgroundColor: '#1565c0',
+                        transform: (!selectedPattern || selectedCartellas.length === 0) ? 'none' : 'scale(1.02)'
+                      },
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    PLAY
+                  </Button>
+                </Box>
               )}
             </Box>
           </Box>
