@@ -1,45 +1,52 @@
 import React from 'react';
-import { Box, Typography, Grid } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-const CartellaCircleView = ({ cartellas, selectedCartella, onSelect }) => {
+const CartellaCircleView = ({ cartellas, selectedCartellas, onSelect }) => {
+  const isSelected = (cartella) => {
+    return selectedCartellas.some(selected => selected.id === cartella.id);
+  };
+
   return (
-    <Grid container spacing={2} sx={{ p: 2 }}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', p: 1 }}>
       {cartellas.map((cartella) => (
-        <Grid item key={cartella.id}>
-          <Box
-            onClick={() => onSelect(cartella)}
+        <Box
+          key={cartella.id}
+          onClick={() => onSelect(cartella)}
+          sx={{
+            width: 90,
+            height: 90,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            backgroundColor: isSelected(cartella) ? '#FFD700' : '#8B0000', 
+            border: '3px solid #FFD700', 
+            color: isSelected(cartella) ? '#000' : '#fff',
+            fontWeight: 'bold',
+            fontSize: '2rem',
+            transition: 'all 0.2s',
+            '&:hover': {
+              transform: 'scale(1.05)',
+              boxShadow: isSelected(cartella) ?
+                '0 0 20px rgba(255, 215, 0, 0.7)' :
+                '0 4px 8px rgba(0,0,0,0.3)'
+            }
+          }}
+        >
+          <Typography
+            variant="body2"
             sx={{
-              width: 50,
-              height: 50,
-              borderRadius: '50%',
-              backgroundColor: selectedCartella?.id === cartella.id ? 'primary.dark' : 'primary.main',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              border: selectedCartella?.id === cartella.id ? '2px solid #fff' : 'none',
-              boxShadow: selectedCartella?.id === cartella.id ? 3 : 1,
-              '&:hover': {
-                transform: 'scale(1.1)',
-                boxShadow: 3
-              }
+              color: isSelected(cartella) ? '#000' : '#fff',
+              fontWeight: 'bold',
+              fontSize: '2rem'
             }}
           >
-            <Typography
-              variant="body2"
-              sx={{
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '0.8rem'
-              }}
-            >
-              {cartella.id}
-            </Typography>
-          </Box>
-        </Grid>
+            {cartella.id}
+          </Typography>
+        </Box>
       ))}
-    </Grid>
+    </Box>
   );
 };
 

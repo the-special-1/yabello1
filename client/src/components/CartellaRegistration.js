@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   Button,
   Grid,
   Box,
@@ -11,30 +10,37 @@ import {
   FormControl,
   Select,
   MenuItem,
-  Stack,
   TextField,
   Alert,
   IconButton,
-  Tabs,
-  Tab,
   Paper
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import RestoreIcon from '@mui/icons-material/Restore';
 import { useAuth } from '../context/AuthContext';
 import CartellasModal from './CartellasModal';
 import CartellaCircleView from './CartellaCircleView';
 
 const PATTERNS = [
-  { name: 'Full House', description: 'Full house pattern' },
-  { name: 'Top Line', description: 'Top line pattern' },
-  { name: 'Middle Line', description: 'Middle line pattern' },
-  { name: 'Bottom Line', description: 'Bottom line pattern' },
-  { name: 'Four Corners', description: 'Four corners pattern' },
-  { name: 'T Pattern', description: 'T pattern' },
-  { name: 'X Pattern', description: 'X pattern' },
-  { name: 'L Pattern', description: 'L pattern' }
+  { name: 'Any 1 Line', description: 'Complete any single line' },
+  { name: 'Any 2 Lines', description: 'Complete any two lines' },
+  { name: 'Any Vertical', description: 'Complete any vertical line' },
+  { name: 'Any Horizontal', description: 'Complete any horizontal line' },
+  { name: 'T Pattern', description: 'Complete T shape' },
+  { name: 'Reverse T', description: 'Complete upside-down T shape' },
+  { name: 'X Pattern', description: 'Complete X shape' },
+  { name: 'L Pattern', description: 'Complete L shape' },
+  { name: 'Reverse L', description: 'Complete reversed L shape' },
+  { name: 'Half Above', description: 'Complete top half' },
+  { name: 'Half Below', description: 'Complete bottom half' },
+  { name: 'Half Left', description: 'Complete left half' },
+  { name: 'Half Right', description: 'Complete right half' },
+  { name: 'G and O', description: 'Complete G and O columns' },
+  { name: 'B and O', description: 'Complete B and O columns' },
+  { name: 'Mark', description: 'Complete mark pattern' },
+  { name: 'T Cross', description: 'Complete T cross pattern' }
 ];
 
 function TabPanel(props) {
@@ -61,7 +67,43 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
   const [userBalance, setUserBalance] = useState(0);
   const [tabValue, setTabValue] = useState(0);
   const [showNewCartellaModal, setShowNewCartellaModal] = useState(false);
+  const [roundCount, setRoundCount] = useState(() => {
+    const saved = localStorage.getItem('bingoRoundCount');
+    return saved ? parseInt(saved) : 1;
+  });
   const { user } = useAuth();
+
+  // Add state for previous game settings and current state backup
+  const [previousSettings, setPreviousSettings] = useState(() => {
+    const saved = localStorage.getItem('previousGameSettings');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [stateBeforeContinue, setStateBeforeContinue] = useState(null);
+  const [isContinueActive, setIsContinueActive] = useState(false);
+
+  // Toggle between continue and initial state
+  const handleContinue = () => {
+    if (!isContinueActive && previousSettings) {
+      // Save current state before applying continue
+      setStateBeforeContinue({
+        cartellas: selectedCartellas,
+        pattern: selectedPattern,
+        betAmount: betAmount
+      });
+      
+      // Apply previous settings
+      setSelectedCartellas(previousSettings.cartellas);
+      setSelectedPattern(previousSettings.pattern);
+      setBetAmount(previousSettings.betAmount);
+      setIsContinueActive(true);
+    } else if (stateBeforeContinue) {
+      // Restore state from before continue was clicked
+      setSelectedCartellas(stateBeforeContinue.cartellas);
+      setSelectedPattern(stateBeforeContinue.pattern);
+      setBetAmount(stateBeforeContinue.betAmount);
+      setIsContinueActive(false);
+    }
+  };
 
   const totalBetAmount = selectedCartellas.length * betAmount;
 
@@ -79,7 +121,7 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
   const fetchCartellas = async () => {
     try {
       console.log('Fetching cartellas...');
-      const response = await fetch('/api/cartellas/branch', {
+      const response = await fetch('/api/cartellas/available', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -90,11 +132,11 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
         throw new Error(data.message || 'Failed to fetch cartellas');
       }
 
-      const data = await response.json();
-      console.log('Parsed cartellas:', data);
+      const { cartellas } = await response.json();
+      console.log('Full cartella object example:', cartellas[0]); // Log first cartella
       
       // Filter out cartellas that are already registered in a game
-      const filteredCartellas = data.filter(cartella => 
+      const filteredCartellas = cartellas.filter(cartella => 
         !['playing', 'won', 'lost'].includes(cartella.status)
       );
       
@@ -125,6 +167,7 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
   };
 
   const handleCartellaToggle = (cartella) => {
+    console.log('Selected cartella:', cartella); // Log selected cartella
     const isSelected = selectedCartellas.some(c => c.id === cartella.id);
     if (isSelected) {
       setSelectedCartellas(selectedCartellas.filter(c => c.id !== cartella.id));
@@ -147,6 +190,20 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
       return;
     }
     
+    // Increment round count
+    const newRoundCount = roundCount + 1;
+    setRoundCount(newRoundCount);
+    localStorage.setItem('bingoRoundCount', newRoundCount.toString());
+
+    // Save current settings
+    const currentSettings = {
+      cartellas: selectedCartellas,
+      pattern: selectedPattern,
+      betAmount: betAmount
+    };
+    localStorage.setItem('previousGameSettings', JSON.stringify(currentSettings));
+    setPreviousSettings(currentSettings);
+
     try {
       console.log('Selected pattern:', selectedPattern); // Debug log
       onSelect({
@@ -170,192 +227,280 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
       <Dialog 
         open={open} 
         onClose={onClose}
-        maxWidth={false}
         fullScreen
         PaperProps={{
-          style: {
-            backgroundColor: '#f5f5f5'  
+          sx: {
+            bgcolor: '#000000'  // pure black
           }
         }}
       >
-        <DialogTitle sx={{ 
-          bgcolor: 'primary.main', 
-          color: 'white',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.12)'
-        }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h5" fontWeight="bold">
-              Select Cartellas
+        <DialogTitle 
+          sx={{ 
+            bgcolor: 'white',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            p: 2,
+            position: 'sticky',
+            top: 0,
+            zIndex: 1200
+          }}
+        >
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => setShowNewCartellaModal(true)}
+            size="small"
+          >
+            Register New Cartella
+          </Button>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent 
+          sx={{ 
+            display: 'flex',
+            flexDirection: 'column',
+            p: 4,
+            pt: 8,
+            height: '100%'
+          }}
+        >
+          {/* Round counter and Continue button */}
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 3,
+            mb: 6
+          }}>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                color: '#FFD700',
+                fontWeight: 'bold',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+              }}
+            >
+              Round {roundCount}
             </Typography>
-            <Box display="flex" alignItems="center" gap={2}>
-              <Paper sx={{ p: 1, bgcolor: 'rgba(255, 255, 255, 0.9)' }}>
-                <Typography variant="subtitle1" color="primary" fontWeight="bold">
-                  Balance: {userBalance} ETB
-                </Typography>
-              </Paper>
-              {selectedCartellas.length > 0 && selectedPattern && (
+
+            <Button
+              variant="contained"
+              size="medium"
+              onClick={handleContinue}
+              disabled={!previousSettings}
+              sx={{
+                bgcolor: isContinueActive ? '#d32f2f' : '#f44336',
+                color: 'white',
+                fontWeight: 'bold',
+                px: 3,
+                '&:hover': {
+                  bgcolor: isContinueActive ? '#b71c1c' : '#d32f2f',
+                  transform: 'scale(1.02)'
+                },
+                '&:disabled': {
+                  bgcolor: '#666',
+                  color: '#999'
+                }
+              }}
+            >
+              Continue
+            </Button>
+          </Box>
+
+          {/* Main content */}
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            flex: 1
+          }}>
+            {/* Left half - Cartellas */}
+            <Box sx={{ 
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}>
+              <CartellaCircleView 
+                cartellas={availableCartellas}
+                selectedCartellas={selectedCartellas}
+                onSelect={handleCartellaToggle}
+              />
+            </Box>
+
+            {/* Right half - Controls */}
+            <Box sx={{ 
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 3,
+              pt: 6
+            }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                gap: 3,
+                width: '80%',
+                maxWidth: 600,
+                alignItems: 'center'
+              }}>
+                {/* Selected cartellas display */}
+                <Box sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  justifyContent: 'center',
+                  mb: 2
+                }}>
+                  {selectedCartellas.map((cartella) => (
+                    <Box
+                      key={cartella.id}
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#8B0000',
+                        border: '2px solid #FFD700',
+                        color: '#fff',
+                        fontSize: '1rem',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {cartella.id}
+                    </Box>
+                  ))}
+                </Box>
+
+                {/* Dropdowns */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: 2,
+                  width: '100%',
+                  justifyContent: 'center'
+                }}>
+                  <FormControl sx={{ flex: 1 }}>
+                    <Select
+                      value={betAmount}
+                      onChange={(e) => setBetAmount(e.target.value)}
+                      size="small"
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            bgcolor: 'white',
+                            '& .MuiMenuItem-root': {
+                              height: 35,
+                              '&:hover, &.Mui-selected, &.Mui-selected:hover': {
+                                bgcolor: 'rgba(0, 0, 0, 0.08)',
+                              }
+                            }
+                          }
+                        }
+                      }}
+                      sx={{
+                        bgcolor: 'white',
+                        height: 35,
+                        '& .MuiSelect-select': {
+                          py: 0,
+                          color: 'black'
+                        }
+                      }}
+                    >
+                      {[10, 20, 50, 100, 200, 500].map((amount) => (
+                        <MenuItem key={amount} value={amount}>
+                          <Typography sx={{ color: 'black' }}>
+                            {amount} ETB
+                          </Typography>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <FormControl sx={{ flex: 2 }}>
+                    <Select
+                      value={selectedPattern}
+                      onChange={handlePatternChange}
+                      displayEmpty
+                      size="small"
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            bgcolor: 'white',
+                            '& .MuiMenuItem-root': {
+                              height: 35,
+                              '&:hover, &.Mui-selected, &.Mui-selected:hover': {
+                                bgcolor: 'rgba(0, 0, 0, 0.08)',
+                              }
+                            }
+                          }
+                        }
+                      }}
+                      sx={{
+                        bgcolor: 'white',
+                        height: 35,
+                        '& .MuiSelect-select': {
+                          py: 0,
+                          color: 'black'
+                        }
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        <Typography sx={{ color: 'black' }}>
+                          Choose pattern
+                        </Typography>
+                      </MenuItem>
+                      {PATTERNS.map((pattern) => (
+                        <MenuItem key={pattern.name} value={pattern.name}>
+                          <Typography sx={{ color: 'black' }}>
+                            {pattern.name}
+                          </Typography>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
                 <Button
-                  variant="contained"
-                  color="error"
-                  size="large"
-                  startIcon={<PlayArrowIcon sx={{ fontSize: 24 }} />}
                   onClick={handleSubmit}
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  startIcon={<PlayArrowIcon />}
                   sx={{ 
-                    minWidth: 150,
-                    height: 45,
+                    minWidth: 120,
+                    height: 36,
                     fontWeight: 'bold',
-                    fontSize: '1rem',
-                    backgroundColor: '#ff1744',
-                    boxShadow: 4,
+                    backgroundColor: '#1976d2',
+                    boxShadow: 2,
+                    opacity: (!selectedPattern || selectedCartellas.length === 0) ? 0.7 : 1,
                     '&:hover': {
-                      backgroundColor: '#d50000',
-                      boxShadow: 6,
-                      transform: 'scale(1.05)'
+                      backgroundColor: '#1565c0',
+                      transform: (!selectedPattern || selectedCartellas.length === 0) ? 'none' : 'scale(1.02)'
                     },
                     transition: 'all 0.2s'
                   }}
                 >
-                  START GAME
+                  PLAY
                 </Button>
+              </Box>
+
+              {error && (
+                <Alert severity="error" sx={{ width: '80%', maxWidth: 600 }}>
+                  {error}
+                </Alert>
               )}
-              <IconButton onClick={onClose} sx={{ color: 'white' }}>
-                <CloseIcon />
-              </IconButton>
             </Box>
           </Box>
-        </DialogTitle>
-
-        <DialogContent sx={{ p: 4 }}>
-          {error && (
-            <Alert 
-              severity="error" 
-              sx={{ 
-                mb: 3,
-                boxShadow: 1
-              }} 
-              onClose={() => setError('')}
-            >
-              {error}
-            </Alert>
-          )}
-
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'flex-end', 
-            mb: 3,
-            position: 'sticky',
-            top: 0,
-            zIndex: 1,
-            bgcolor: 'background.paper',
-            py: 2,
-            borderBottom: '1px solid rgba(0, 0, 0, 0.12)'
-          }}>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<AddIcon />}
-              onClick={() => setShowNewCartellaModal(true)}
-              sx={{ 
-                boxShadow: 2,
-                '&:hover': {
-                  boxShadow: 4
-                }
-              }}
-            >
-              Register New Cartella
-            </Button>
-          </Box>
-
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" color="primary" sx={{ mb: 2 }}>Available Cartellas:</Typography>
-            <CartellaCircleView 
-              cartellas={availableCartellas}
-              selectedCartella={selectedCartellas[0]}
-              onSelect={handleCartellaToggle}
-            />
-          </Box>
-
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" color="primary" sx={{ mb: 1 }}>Select Pattern:</Typography>
-            <FormControl sx={{ minWidth: 200 }}>
-              <Select
-                value={selectedPattern}
-                onChange={handlePatternChange}
-                displayEmpty
-                size="small"
-                sx={{
-                  '& .MuiSelect-select': {
-                    py: 1
-                  }
-                }}
-              >
-                <MenuItem value="" disabled>
-                  <em>Choose a pattern</em>
-                </MenuItem>
-                {PATTERNS.map((pattern) => (
-                  <MenuItem key={pattern.name} value={pattern.name}>
-                    {pattern.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            spacing={3} 
-            alignItems="center"
-            sx={{
-              bgcolor: 'background.paper',
-              p: 2,
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'divider'
-            }}
-          >
-            <TextField
-              label="Bet Amount (ETB)"
-              type="number"
-              value={betAmount}
-              onChange={(e) => setBetAmount(Number(e.target.value))}
-              inputProps={{ min: 10 }}
-              sx={{ 
-                minWidth: 200,
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: 'white'
-                }
-              }}
-            />
-            <Typography variant="h6" color="primary" fontWeight="bold">
-              Total Bet: {totalBetAmount} ETB
-            </Typography>
-            <Typography variant="h6" color="success.main" fontWeight="bold">
-              Balance: {userBalance} ETB
-            </Typography>
-          </Stack>
         </DialogContent>
-
-        <DialogActions sx={{ 
-          p: 3, 
-          bgcolor: 'grey.100',
-          borderTop: '1px solid rgba(0, 0, 0, 0.12)',
-          gap: 2
-        }}>
-          <Button 
-            onClick={onClose} 
-            variant="outlined"
-            size="large"
-            sx={{ minWidth: 120 }}
-          >
-            Cancel
-          </Button>
-        </DialogActions>
       </Dialog>
 
       {showNewCartellaModal && (
