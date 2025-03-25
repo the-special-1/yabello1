@@ -71,6 +71,24 @@ router.get('/my-users', auth, async (req, res) => {
   }
 });
 
+// Get current user's data including cut
+router.get('/my-data', auth, async (req, res) => {
+  try {
+    const user = await db.User.findByPk(req.user.id, {
+      attributes: ['id', 'username', 'credits', 'status', 'cut', 'role']
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    res.status(500).json({ message: 'Error fetching user data' });
+  }
+});
+
 // Create a new user under the agent's branch
 router.post('/create-user', auth, async (req, res) => {
   const t = await db.sequelize.transaction();

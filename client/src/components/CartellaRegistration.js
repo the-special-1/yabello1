@@ -69,6 +69,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
   const [availableCartellas, setAvailableCartellas] = useState([]);
   const [error, setError] = useState('');
   const [userBalance, setUserBalance] = useState(0);
+  const [userCut, setUserCut] = useState(0);
   const [tabValue, setTabValue] = useState(0);
   const [showNewCartellaModal, setShowNewCartellaModal] = useState(false);
   const [roundCount, setRoundCount] = useState(() => {
@@ -109,12 +110,11 @@ const CartellaRegistration = ({ open, onSelect }) => {
     }
   };
 
-  const totalBetAmount = selectedCartellas.length * (betAmount || 0);
-
   useEffect(() => {
     if (open) {
       fetchCartellas();
       fetchUserBalance();
+      fetchUserCut();
     }
   }, [open]);
 
@@ -170,6 +170,29 @@ const CartellaRegistration = ({ open, onSelect }) => {
     }
   };
 
+  const fetchUserCut = async () => {
+    try {
+      const response = await fetch('/api/users/my-data', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch user cut');
+      }
+      const data = await response.json();
+      console.log('User data received:', data);
+      // Use the user's cut value from their profile
+      const cutValue = data.cut;
+      console.log('Setting user cut to:', cutValue);
+      setUserCut(cutValue);
+    } catch (err) {
+      console.error('Error fetching user cut:', err);
+      setError('Failed to fetch user cut');
+    }
+  };
+
   const handleCartellaToggle = (cartella) => {
     console.log('Selected cartella:', cartella); // Log selected cartella
     const isSelected = selectedCartellas.some(c => c.id === cartella.id);
@@ -193,7 +216,21 @@ const CartellaRegistration = ({ open, onSelect }) => {
       setError('Please select a bet amount');
       return;
     }
-    if (totalBetAmount > userBalance) {
+
+    const rawTotalBet = selectedCartellas.length * betAmount;
+    const cutAmount = rawTotalBet * (userCut / 100); // Calculate the cut amount
+    const adjustedTotalBet = rawTotalBet - cutAmount; // Subtract the cut from total
+
+    console.log('Calculation details:', {
+      numberOfCartellas: selectedCartellas.length,
+      betPerCartella: betAmount,
+      rawTotalBet: rawTotalBet,
+      userCutPercentage: userCut,
+      cutAmount: cutAmount,
+      adjustedTotalBet: adjustedTotalBet
+    });
+    
+    if (adjustedTotalBet > userBalance) {
       setError('Insufficient balance');
       return;
     }
@@ -207,17 +244,19 @@ const CartellaRegistration = ({ open, onSelect }) => {
     const currentSettings = {
       cartellas: selectedCartellas,
       pattern: selectedPattern,
-      betAmount: betAmount
+      betAmount: betAmount,
+      totalBet: adjustedTotalBet // Pass the adjusted total bet
     };
     localStorage.setItem('previousGameSettings', JSON.stringify(currentSettings));
     setPreviousSettings(currentSettings);
 
     try {
-      console.log('Selected pattern:', selectedPattern); // Debug log
+      console.log('Selected pattern:', selectedPattern);
       onSelect({
         cartellas: selectedCartellas,
         pattern: selectedPattern,
-        betAmount
+        betAmount: betAmount,
+        totalBet: adjustedTotalBet // Pass the adjusted total bet
       });
     } catch (error) {
       setError(error.message);
