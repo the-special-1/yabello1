@@ -97,7 +97,7 @@ const BingoGame = () => {
     setDrawSpeed(3000 - newValue);
   };
 
-  const handleCartellaSelect = async ({ cartellas, pattern, betAmount }) => {
+  const handleCartellaSelect = async ({ cartellas, pattern, betAmount, totalBet }) => {
     try {
       const response = await fetch('/api/cartellas/place-bet', {
         method: 'POST',
@@ -120,7 +120,7 @@ const BingoGame = () => {
       const data = await response.json();
       setActiveCartellas(cartellas);
       setGamePattern(pattern);
-      setTotalBetAmount(cartellas.length * betAmount);
+      setTotalBetAmount(totalBet); 
       setShowCartellaRegistration(false);
     } catch (error) {
       console.error('Error placing bet:', error);
@@ -166,7 +166,42 @@ const BingoGame = () => {
         fullWidth
       >
         <DialogContent>
-          <Box sx={{ mt: 3, mb: 3 }}>
+          {/* Top buttons for Register and Logout */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'flex-end',
+            gap: 2,
+            mb: 2
+          }}>
+            <Button
+              variant="text"
+              onClick={() => setShowCartellaRegistration(true)}
+              sx={{
+                color: 'primary.main',
+                fontSize: '1.1rem',
+                fontWeight: 'bold'
+              }}
+            >
+              Register
+            </Button>
+            <Button
+              variant="text"
+              onClick={() => {
+                localStorage.removeItem('token');
+                navigate('/login');
+              }}
+              sx={{
+                color: 'error.main',
+                fontSize: '1.1rem',
+                fontWeight: 'bold'
+              }}
+            >
+              Logout
+            </Button>
+          </Box>
+
+          {/* Cartella Grid */}
+          <Box sx={{ mt: 2, mb: 3 }}>
             <Paper 
               elevation={3}
               sx={{ 
@@ -242,28 +277,34 @@ const BingoGame = () => {
             </Paper>
           </Box>
 
-          <Stack direction="row" spacing={2} justifyContent="center">
+          {/* Final Adjusted Bet Amount */}
+          <Typography
+            variant="h6"
+            align="center"
+            sx={{
+              mb: 3,
+              fontWeight: 'bold',
+              color: 'primary.main'
+            }}
+          >
+            Final Bet Amount (After Cut): {totalBetAmount} ETB
+          </Typography>
+
+          {/* Start Button */}
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <Button
               variant="contained"
-              onClick={() => setShowCartellaRegistration(true)}
+              onClick={handleCloseModal}
+              sx={{
+                minWidth: 200,
+                py: 1.5,
+                fontSize: '1.2rem',
+                fontWeight: 'bold'
+              }}
             >
-              Register
+              START
             </Button>
-            <Button
-              variant="contained"
-              onClick={() => setShowStartModal(false)}
-            >
-              Continue
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={handleLogout}
-              startIcon={<LogoutIcon />}
-            >
-              Logout
-            </Button>
-          </Stack>
+          </Box>
         </DialogContent>
       </Dialog>
 
