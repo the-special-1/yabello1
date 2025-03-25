@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogTitle,
@@ -20,6 +21,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestoreIcon from '@mui/icons-material/Restore';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAuth } from '../context/AuthContext';
 import CartellasModal from './CartellasModal';
 import CartellaCircleView from './CartellaCircleView';
@@ -60,6 +62,7 @@ function TabPanel(props) {
 }
 
 const CartellaRegistration = ({ open, onSelect }) => {
+  const navigate = useNavigate();
   const [selectedCartellas, setSelectedCartellas] = useState([]);
   const [selectedPattern, setSelectedPattern] = useState('Any 1 Line');  
   const [betAmount, setBetAmount] = useState('');  
@@ -245,8 +248,14 @@ const CartellaRegistration = ({ open, onSelect }) => {
           minHeight: '48px',  
           fontFamily: 'inherit'
         }}>
-          {/* Left side - Phone image */}
+          {/* Left side - Phone image and back button */}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton 
+              onClick={() => navigate('/bingogame')}
+              sx={{ mr: 1, color: 'black' }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
             <img 
               src="/phoneimage.png" 
               alt="Phone"
