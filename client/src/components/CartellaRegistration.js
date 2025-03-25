@@ -277,8 +277,8 @@ const CartellaRegistration = ({ open, onSelect }) => {
           sx={{ 
             display: 'flex',
             flexDirection: 'column',
-            p: 4,
-            pt: 8,
+            p: 0,
+            pt: 0,
             height: '100%'
           }}
         >
@@ -287,8 +287,8 @@ const CartellaRegistration = ({ open, onSelect }) => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 3,
-            mb: 6
+            gap: 0,
+            mb: 0
           }}>
             <Typography 
               variant="h4" 
@@ -332,7 +332,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
             display: 'flex',
             flexDirection: 'row',
             width: '100%',
-            gap: 2
+            gap: 0
           }}>
             {/* Left half - Cartellas */}
             <Box sx={{ 
@@ -343,7 +343,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
               width: '100%'  
             }}>
               {/* Section title */}
-              <Typography variant="h4" sx={{ mb: 2, color: 'white', pl: 2, fontFamily: 'inherit' }}>
+              <Typography variant="h4" sx={{ mb: 0, color: 'white', pl: 0, fontFamily: 'inherit' }}>
               ካርድ ቁጥሮች
               </Typography>
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -361,34 +361,33 @@ const CartellaRegistration = ({ open, onSelect }) => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'flex-start',
-              pt: 2
+              gap: 0
             }}>
               {selectedCartellas.length > 0 && (
                 <Box sx={{
+                  width: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 3,
-                  width: '100%',
-                  maxWidth: 400,
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  gap: 0
                 }}>
-                  {/* Section title */}
-                  <Typography variant="h4" sx={{ mb: 2, color: 'white', fontFamily: 'inherit' }}>
-                    ካርድ ቁጥሮት መመዝገቡን ይመልከቱ
-                  </Typography>
                   {/* Selected cartellas display */}
+                  <Typography variant="h4" sx={{ mb: 2, color: 'white', fontFamily: 'inherit' }}>
+                    ካርድ ቁጥሮት መመዝገቡን<br/>ይመልከቱ
+                  </Typography>
                   <Box sx={{
                     display: 'flex',
                     flexWrap: 'wrap',
-                    gap: 1,
+                    gap: 0,
                     justifyContent: 'center',
-                    width: '100%'
+                    width: '100%',
+                    pb: 0
                   }}>
                     {selectedCartellas.map((cartella) => (
                       <Box
                         key={cartella.id}
                         sx={{
+                       
                           width: 80,
                           height: 80,
                           borderRadius: '50%',
@@ -416,12 +415,14 @@ const CartellaRegistration = ({ open, onSelect }) => {
                   {/* Dropdowns */}
                   <Box sx={{ 
                     display: 'flex', 
-                    gap: 0, 
-                    width: '100%',
-                    justifyContent: 'center'
+                    gap: 0,
+                    width: '30px',
+                    justifyContent: 'center',
+                    mt: 0,
+                    pt: 0
                   }}>
                     {/* Bet amount dropdown */}
-                    <FormControl sx={{ flex: 1, minWidth: 120 }}>
+                    <FormControl sx={{ flex: 1, minWidth: 170 }}>
                       <Select
                         value={betAmount}
                         onChange={(e) => setBetAmount(e.target.value)}
@@ -460,13 +461,14 @@ const CartellaRegistration = ({ open, onSelect }) => {
                         }}
                       >
                         <MenuItem value="" disabled>
-                          <Typography sx={{ color: 'rgba(0, 0, 0, 0.6)', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}>
+                          <Typography sx={{ color: 'black', fontFamily: 'inherit', display: 'flex',
+                             alignItems: 'center', fontSize: '1.5rem', fontWeight: 'bold' }}>
                             የብር መጠን
                           </Typography>
                         </MenuItem>
                         {[10, 20, 50, 100, 200, 500].map((amount) => (
                           <MenuItem key={amount} value={amount}>
-                            <Typography sx={{ color: 'black', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}>
+                            <Typography sx={{ color: 'black', fontFamily: 'inherit', display: 'flex', alignItems: 'center', fontSize: '1.5rem', fontWeight: 'bold' }}>
                               {amount} ETB
                             </Typography>
                           </MenuItem>
@@ -505,7 +507,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
                       >
                         {PATTERNS.map((pattern) => (
                           <MenuItem key={pattern.name} value={pattern.name}>
-                            <Typography sx={{ color: 'black', fontFamily: 'inherit' }}>
+                            <Typography sx={{ color: 'black', fontFamily: 'inherit', fontSize: '1.5rem', fontWeight: 'bold' }}>
                               {pattern.name}
                             </Typography>
                           </MenuItem>
@@ -518,13 +520,14 @@ const CartellaRegistration = ({ open, onSelect }) => {
                   <Button
                     variant="contained"
                     onClick={handleSubmit}
-                    startIcon={<PlayArrowIcon />}
+                    // startIcon={<PlayArrowIcon />}
                     sx={{
                       minWidth: 120,
-                      height: 36,
-                      fontWeight: 'bold',
-                      backgroundColor: '#1976d2',
+                      height: 50,
+                     fontSize: '1.5rem',
+                      backgroundColor: 'blue',
                       boxShadow: 2,
+                      mt: 0,
                       opacity: (!selectedPattern || selectedCartellas.length === 0) ? 0.7 : 1,
                       '&:hover': {
                         backgroundColor: '#1565c0',
