@@ -37,6 +37,7 @@ const BingoGame = () => {
   const [checkedCartella, setCheckedCartella] = useState(null);
   const [showCheckModal, setShowCheckModal] = useState(false);
   const [totalBetAmount, setTotalBetAmount] = useState(0);
+  const [roundCount, setRoundCount] = useState(1);
   const navigate = useNavigate();
   const { logout } = useAuth();
 
@@ -162,149 +163,204 @@ const BingoGame = () => {
       <Dialog
         open={showStartModal}
         onClose={() => {}}
-        maxWidth="sm"
+        maxWidth="xs"
         fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#f5f5f5',
+            overflow: 'hidden',
+            maxHeight: '80vh',
+            m: 1,
+            borderRadius: 0
+          }
+        }}
       >
-        <DialogContent>
-          {/* Top buttons for Register and Logout */}
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'flex-end',
-            gap: 2,
-            mb: 2
-          }}>
-            <Button
-              variant="text"
-              onClick={() => setShowCartellaRegistration(true)}
-              sx={{
-                color: 'primary.main',
-                fontSize: '1.1rem',
-                fontWeight: 'bold'
-              }}
-            >
-              Register
-            </Button>
-            <Button
-              variant="text"
-              onClick={() => {
-                localStorage.removeItem('token');
-                navigate('/login');
-              }}
-              sx={{
-                color: 'error.main',
-                fontSize: '1.1rem',
-                fontWeight: 'bold'
-              }}
-            >
-              Logout
-            </Button>
-          </Box>
-
-          {/* Cartella Grid */}
-          <Box sx={{ mt: 2, mb: 3 }}>
-            <Paper 
-              elevation={3}
+        {/* Header with Register/Logout and Round */}
+        <Box sx={{ 
+          bgcolor: '#1a1a1a',
+          py: 1,
+          px: 2,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          {/* Left side - Register/Logout/Report */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography 
+              onClick={handleLogout}
               sx={{ 
-                p: 2,
-                backgroundColor: 'background.paper',
-                border: '2px solid',
-                borderColor: 'primary.main',
-                borderRadius: 2,
-                maxWidth: 300,
-                mx: 'auto',
-                animation: 'fadeIn 0.5s ease-out',
-                '@keyframes fadeIn': {
-                  '0%': {
-                    opacity: 0,
-                    transform: 'translateY(20px)'
-                  },
-                  '100%': {
-                    opacity: 1,
-                    transform: 'translateY(0)'
-                  }
+                color: 'white',
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                '&:hover': {
+                  textDecoration: 'underline'
                 }
               }}
             >
-              <Grid container spacing={1}>
-                {sampleCartella.map((row, rowIndex) => (
-                  <Grid item xs={12} key={rowIndex}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      '& > *': { flex: 1 }
-                    }}>
-                      {row.map((number, colIndex) => (
-                        <Paper
-                          key={colIndex}
-                          elevation={1}
-                          sx={{
-                            p: 1.5,
-                            m: 0.5,
-                            textAlign: 'center',
-                            backgroundColor: number === 'FREE' ? 'primary.light' : 'background.default',
-                            color: number === 'FREE' ? 'white' : 'text.primary',
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            fontWeight: number === 'FREE' ? 'bold' : 'normal',
-                            fontSize: '0.9rem',
-                            minWidth: '32px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            animation: `pop 0.3s ease-out ${(rowIndex * 5 + colIndex) * 0.05}s`,
-                            '@keyframes pop': {
-                              '0%': {
-                                opacity: 0,
-                                transform: 'scale(0.5)'
-                              },
-                              '70%': {
-                                transform: 'scale(1.1)'
-                              },
-                              '100%': {
-                                opacity: 1,
-                                transform: 'scale(1)'
-                              }
-                            }
-                          }}
-                        >
-                          {number}
-                        </Paper>
-                      ))}
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Paper>
-          </Box>
-
-          {/* Final Adjusted Bet Amount */}
-          <Typography
-            variant="h6"
-            align="center"
-            sx={{
-              mb: 3,
-              fontWeight: 'bold',
-              color: 'primary.main'
-            }}
-          >
-            Final Bet Amount (After Cut): {totalBetAmount} ETB
-          </Typography>
-
-          {/* Start Button */}
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <Button
-              variant="contained"
-              onClick={handleCloseModal}
-              sx={{
-                minWidth: 200,
-                py: 1.5,
-                fontSize: '1.2rem',
-                fontWeight: 'bold'
+              Logout
+            </Typography>
+            <Typography sx={{ color: 'white', fontSize: '0.9rem' }}>/</Typography>
+            <Typography 
+              onClick={() => setShowCartellaRegistration(true)}
+              sx={{ 
+                color: 'white',
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
               }}
             >
-              START
-            </Button>
+              Register Card
+            </Typography>
+            <Typography sx={{ color: 'white', fontSize: '0.9rem' }}>/</Typography>
+            <Typography sx={{ 
+              color: 'white',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              '&:hover': {
+                textDecoration: 'underline'
+              }
+            }}>
+              Report
+            </Typography>
           </Box>
+
+          {/* Right side - Round count */}
+          <Typography sx={{ 
+            color: 'white',
+            fontSize: '0.9rem'
+          }}>
+            Round {roundCount}
+          </Typography>
+        </Box>
+
+        <DialogContent sx={{ bgcolor: '#f5f5f5', p: 2 }}>
+          {/* Amharic Text */}
+          <Typography
+            align="center"
+            sx={{
+              mb: 2,
+              fontSize: '1.2rem',
+              color: '#666'
+            }}
+          >
+            የጨዋታው ትእዛዝ
+          </Typography>
+
+          {/* Cartella Grid with BINGO header */}
+          <Box sx={{ 
+            width: '100%',
+            maxWidth: 300,
+            mx: 'auto',
+            mb: 2
+          }}>
+            {/* BINGO Header */}
+            <Box sx={{ 
+              bgcolor: '#ffa000',
+              display: 'flex',
+              justifyContent: 'space-between',
+              mb: '1px'
+            }}>
+              {['B', 'I', 'N', 'G', 'O'].map((letter) => (
+                <Typography
+                  key={letter}
+                  sx={{
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    color: 'red',
+                    width: '20%',
+                    textAlign: 'center',
+                    py: 0.5
+                  }}
+                >
+                  {letter}
+                </Typography>
+              ))}
+            </Box>
+
+            {/* Numbers Grid */}
+            <Box>
+              {[
+                [12, 16, 33, 56, 61],
+                [1, 26, 44, 55, 71],
+                [3, 23, 'free', 46, 72],
+                [5, 17, 37, 49, 74],
+                [15, 28, 42, 60, 75]
+              ].map((row, rowIndex) => (
+                <Box
+                  key={rowIndex}
+                  sx={{ 
+                    display: 'flex',
+                    '& > div': {
+                      width: '20%',
+                      height: 40,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid #ddd',
+                      borderTop: 0,
+                      borderRight: 0,
+                      bgcolor: rowIndex % 2 === 0 ? '#fff3e0' : '#fff',
+                      '&:last-child': {
+                        borderRight: '1px solid #ddd'
+                      }
+                    }
+                  }}
+                >
+                  {row.map((number, colIndex) => (
+                    <Box key={colIndex}>
+                      <Typography sx={{
+                        fontSize: '1.1rem',
+                        color: '#333',
+                        textTransform: number === 'free' ? 'lowercase' : 'none'
+                      }}>
+                        {number}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ))}
+            </Box>
+
+            {/* Bet Amount in Amharic */}
+            {totalBetAmount > 0 && (
+              <Typography
+                align="center"
+                sx={{
+                  mt: 3,
+                  mb: 2,
+                  fontSize: '2rem',
+                  color: '#666',
+                  fontFamily: 'sans-serif'
+                }}
+              >
+                {totalBetAmount} ወሰጅ
+              </Typography>
+            )}
+
+            {/* Start Button */}
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                onClick={handleCloseModal}
+                sx={{
+                  minWidth: 200,
+                  py: 1,
+                  fontSize: '1.2rem',
+                  bgcolor: '#800000',
+                  '&:hover': {
+                    bgcolor: '#600000'
+                  },
+                  borderRadius: 0
+                }}
+              >
+                Start
+              </Button>
+            </Box>
+          </Box>
+
+          {/* Start Button */}
         </DialogContent>
       </Dialog>
 
