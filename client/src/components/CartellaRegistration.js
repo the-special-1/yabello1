@@ -315,19 +315,20 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
           </Box>
 
           {/* Main content */}
-          <Box sx={{
+          <Box sx={{ 
             display: 'flex',
             flexDirection: 'row',
-            flex: 1
+            width: '100%',
+            gap: 2
           }}>
             {/* Left half - Cartellas */}
             <Box sx={{ 
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
+              alignItems: 'center'
             }}>
-              <CartellaCircleView 
+              <CartellaCircleView
                 cartellas={availableCartellas}
                 selectedCartellas={selectedCartellas}
                 onSelect={handleCartellaToggle}
@@ -340,163 +341,167 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 3,
-              pt: 6
+              justifyContent: 'flex-start',
+              pt: 2
             }}>
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column',
-                gap: 3,
-                width: '80%',
-                maxWidth: 600,
-                alignItems: 'center'
-              }}>
-                {/* Selected cartellas display */}
+              {/* Controls - Only visible when at least one cartella is selected */}
+              {selectedCartellas.length > 0 && (
                 <Box sx={{
                   display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 1,
-                  justifyContent: 'center',
-                  mb: 2
-                }}>
-                  {selectedCartellas.map((cartella) => (
-                    <Box
-                      key={cartella.id}
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: '#8B0000',
-                        border: '2px solid #FFD700',
-                        color: '#fff',
-                        fontSize: '1rem',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      {cartella.id}
-                    </Box>
-                  ))}
-                </Box>
-
-                {/* Dropdowns */}
-                <Box sx={{ 
-                  display: 'flex', 
-                  gap: 2,
+                  flexDirection: 'column',
+                  gap: 3,
                   width: '100%',
-                  justifyContent: 'center'
+                  maxWidth: 400,
+                  alignItems: 'center'
                 }}>
-                  <FormControl sx={{ flex: 1 }}>
-                    <Select
-                      value={betAmount}
-                      onChange={(e) => setBetAmount(e.target.value)}
-                      size="small"
-                      MenuProps={{
-                        PaperProps: {
-                          sx: {
-                            bgcolor: 'white',
-                            '& .MuiMenuItem-root': {
-                              height: 35,
-                              '&:hover, &.Mui-selected, &.Mui-selected:hover': {
-                                bgcolor: 'rgba(0, 0, 0, 0.08)',
-                              }
-                            }
+                  {/* Selected cartellas display */}
+                  <Box sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    justifyContent: 'center',
+                    width: '100%'
+                  }}>
+                    {selectedCartellas.map((cartella) => (
+                      <Box
+                        key={cartella.id}
+                        sx={{
+                          width: 90,
+                          height: 90,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#FFD700',
+                          border: '3px solid #FFD700',
+                          color: '#000',
+                          fontWeight: 'bold',
+                          fontSize: '2rem',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                            boxShadow: '0 0 20px rgba(255, 215, 0, 0.7)'
                           }
-                        }
-                      }}
-                      sx={{
-                        bgcolor: 'white',
-                        height: 35,
-                        '& .MuiSelect-select': {
-                          py: 0,
-                          color: 'black'
-                        }
-                      }}
-                    >
-                      {[10, 20, 50, 100, 200, 500].map((amount) => (
-                        <MenuItem key={amount} value={amount}>
-                          <Typography sx={{ color: 'black' }}>
-                            {amount} ETB
-                          </Typography>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                        }}
+                      >
+                        {cartella.id}
+                      </Box>
+                    ))}
+                  </Box>
 
-                  <FormControl sx={{ flex: 2 }}>
-                    <Select
-                      value={selectedPattern}
-                      onChange={handlePatternChange}
-                      displayEmpty
-                      size="small"
-                      MenuProps={{
-                        PaperProps: {
-                          sx: {
-                            bgcolor: 'white',
-                            '& .MuiMenuItem-root': {
-                              height: 35,
-                              '&:hover, &.Mui-selected, &.Mui-selected:hover': {
-                                bgcolor: 'rgba(0, 0, 0, 0.08)',
+                  {/* Dropdowns */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 2, 
+                    width: '100%',
+                    justifyContent: 'center'
+                  }}>
+                    {/* Bet amount dropdown */}
+                    <FormControl sx={{ flex: 1, minWidth: 120 }}>
+                      <Select
+                        value={betAmount}
+                        onChange={(e) => setBetAmount(e.target.value)}
+                        displayEmpty
+                        size="small"
+                        MenuProps={{
+                          PaperProps: {
+                            sx: {
+                              bgcolor: 'white',
+                              '& .MuiMenuItem-root': {
+                                height: 35,
+                                '&:hover, &.Mui-selected, &.Mui-selected:hover': {
+                                  bgcolor: 'rgba(0, 0, 0, 0.08)',
+                                }
                               }
                             }
                           }
-                        }
-                      }}
-                      sx={{
-                        bgcolor: 'white',
-                        height: 35,
-                        '& .MuiSelect-select': {
-                          py: 0,
-                          color: 'black'
-                        }
-                      }}
-                    >
-                      <MenuItem value="" disabled>
-                        <Typography sx={{ color: 'black' }}>
-                          Choose pattern
-                        </Typography>
-                      </MenuItem>
-                      {PATTERNS.map((pattern) => (
-                        <MenuItem key={pattern.name} value={pattern.name}>
+                        }}
+                        sx={{
+                          height: 35,
+                          backgroundColor: 'white',
+                          '& .MuiSelect-select': {
+                            py: 0,
+                            color: 'black'
+                          }
+                        }}
+                      >
+                        {[10, 20, 50, 100, 200, 500].map((amount) => (
+                          <MenuItem key={amount} value={amount}>
+                            <Typography sx={{ color: 'black' }}>
+                              {amount} ETB
+                            </Typography>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    {/* Pattern dropdown */}
+                    <FormControl sx={{ flex: 2, minWidth: 200 }}>
+                      <Select
+                        value={selectedPattern}
+                        onChange={(e) => setSelectedPattern(e.target.value)}
+                        displayEmpty
+                        size="small"
+                        MenuProps={{
+                          PaperProps: {
+                            sx: {
+                              bgcolor: 'white',
+                              '& .MuiMenuItem-root': {
+                                height: 35,
+                                '&:hover, &.Mui-selected, &.Mui-selected:hover': {
+                                  bgcolor: 'rgba(0, 0, 0, 0.08)',
+                                }
+                              }
+                            }
+                          }
+                        }}
+                        sx={{
+                          height: 35,
+                          backgroundColor: 'white',
+                          '& .MuiSelect-select': {
+                            py: 0,
+                            color: 'black'
+                          }
+                        }}
+                      >
+                        <MenuItem value="" disabled>
                           <Typography sx={{ color: 'black' }}>
-                            {pattern.name}
+                            Choose pattern
                           </Typography>
                         </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                        {PATTERNS.map((pattern) => (
+                          <MenuItem key={pattern.name} value={pattern.name}>
+                            <Typography sx={{ color: 'black' }}>
+                              {pattern.name}
+                            </Typography>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+
+                  {/* Play button */}
+                  <Button
+                    variant="contained"
+                    onClick={handleSubmit}
+                    startIcon={<PlayArrowIcon />}
+                    sx={{
+                      minWidth: 120,
+                      height: 36,
+                      fontWeight: 'bold',
+                      backgroundColor: '#1976d2',
+                      boxShadow: 2,
+                      opacity: (!selectedPattern || selectedCartellas.length === 0) ? 0.7 : 1,
+                      '&:hover': {
+                        backgroundColor: '#1565c0',
+                        transform: (!selectedPattern || selectedCartellas.length === 0) ? 'none' : 'scale(1.02)'
+                      },
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    PLAY
+                  </Button>
                 </Box>
-
-                <Button
-                  onClick={handleSubmit}
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  startIcon={<PlayArrowIcon />}
-                  sx={{ 
-                    minWidth: 120,
-                    height: 36,
-                    fontWeight: 'bold',
-                    backgroundColor: '#1976d2',
-                    boxShadow: 2,
-                    opacity: (!selectedPattern || selectedCartellas.length === 0) ? 0.7 : 1,
-                    '&:hover': {
-                      backgroundColor: '#1565c0',
-                      transform: (!selectedPattern || selectedCartellas.length === 0) ? 'none' : 'scale(1.02)'
-                    },
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  PLAY
-                </Button>
-              </Box>
-
-              {error && (
-                <Alert severity="error" sx={{ width: '80%', maxWidth: 600 }}>
-                  {error}
-                </Alert>
               )}
             </Box>
           </Box>
