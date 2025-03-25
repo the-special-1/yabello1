@@ -13,6 +13,7 @@ import AgentDashboard from './pages/AgentDashboard';
 import UserDashboard from './pages/UserDashboard';
 import BingoGame from './pages/BingoGame';
 import CartellaManagement from './pages/CartellaManagement';
+import Report from './pages/Report';
 
 const theme = createTheme({
   palette: {
@@ -119,6 +120,15 @@ function App() {
                 element={
                   <PrivateRoute roles={['superadmin', 'agent']}>
                     <CartellaManagement />
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/report"
+                element={
+                  <PrivateRoute>
+                    <Report />
                   </PrivateRoute>
                 }
               />

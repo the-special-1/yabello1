@@ -214,14 +214,17 @@ const BingoGame = () => {
               Register Card
             </Typography>
             <Typography sx={{ color: 'white', fontSize: '0.9rem' }}>/</Typography>
-            <Typography sx={{ 
-              color: 'white',
-              fontSize: '0.9rem',
-              cursor: 'pointer',
-              '&:hover': {
-                textDecoration: 'underline'
-              }
-            }}>
+            <Typography 
+              onClick={() => navigate('/report')}
+              sx={{ 
+                color: 'white',
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
+              }}
+            >
               Report
             </Typography>
           </Box>
