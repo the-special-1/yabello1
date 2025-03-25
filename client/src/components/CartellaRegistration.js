@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogTitle,
@@ -21,7 +20,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestoreIcon from '@mui/icons-material/Restore';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAuth } from '../context/AuthContext';
 import CartellasModal from './CartellasModal';
 import CartellaCircleView from './CartellaCircleView';
@@ -62,7 +60,6 @@ function TabPanel(props) {
 }
 
 const CartellaRegistration = ({ open, onSelect }) => {
-  const navigate = useNavigate();
   const [selectedCartellas, setSelectedCartellas] = useState([]);
   const [selectedPattern, setSelectedPattern] = useState('Any 1 Line');  
   const [betAmount, setBetAmount] = useState('');  
@@ -210,12 +207,10 @@ const CartellaRegistration = ({ open, onSelect }) => {
 
     try {
       console.log('Selected pattern:', selectedPattern); // Debug log
-      navigate('/game', { 
-        state: { 
-          cartellas: selectedCartellas,
-          pattern: selectedPattern,
-          betAmount: betAmount
-        }
+      onSelect({
+        cartellas: selectedCartellas,
+        pattern: selectedPattern,
+        betAmount
       });
     } catch (error) {
       setError(error.message);
@@ -225,11 +220,6 @@ const CartellaRegistration = ({ open, onSelect }) => {
   const handlePatternChange = (event) => {
     setSelectedPattern(event.target.value);
     setError(''); // Clear any existing errors
-  };
-
-  const handleBack = () => {
-    // Navigate first, then close dialog
-    navigate('/');
   };
 
   return (
@@ -255,20 +245,8 @@ const CartellaRegistration = ({ open, onSelect }) => {
           minHeight: '48px',  
           fontFamily: 'inherit'
         }}>
-          {/* Left side - Back button and Phone image */}
+          {/* Left side - Phone image */}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton
-              onClick={handleBack}
-              sx={{
-                color: 'black',
-                mr: 1,
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.1)'
-                }
-              }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
             <img 
               src="/phoneimage.png" 
               alt="Phone"
@@ -289,7 +267,6 @@ const CartellaRegistration = ({ open, onSelect }) => {
               fontSize: '1.25rem',
               fontFamily: 'inherit',
               textDecoration: 'none',
-              marginLeft: 'auto'
             }}
           >
             Register New Card

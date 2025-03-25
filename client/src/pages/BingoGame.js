@@ -97,16 +97,7 @@ const BingoGame = () => {
     setDrawSpeed(3000 - newValue);
   };
 
-  const handleCartellaSelect = async ({ cartellas, pattern, betAmount, cancelled } = {}) => {
-    if (cancelled) {
-      navigate(-1); // Go back if cancelled
-      return;
-    }
-
-    if (!cartellas || !pattern || !betAmount) {
-      return; // Exit early if any required data is missing
-    }
-
+  const handleCartellaSelect = async ({ cartellas, pattern, betAmount }) => {
     try {
       const response = await fetch('/api/cartellas/place-bet', {
         method: 'POST',
