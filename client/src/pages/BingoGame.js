@@ -338,7 +338,7 @@ const BingoGame = () => {
                   fontFamily: 'sans-serif'
                 }}
               >
-                {totalBetAmount} ወሰጅ
+                {totalBetAmount} ወሳጅ
               </Typography>
             )}
 

@@ -14,6 +14,7 @@ import UserDashboard from './pages/UserDashboard';
 import BingoGame from './pages/BingoGame';
 import CartellaManagement from './pages/CartellaManagement';
 import Report from './pages/Report';
+import DailyReport from './pages/DailyReport';
 
 const theme = createTheme({
   palette: {
@@ -129,6 +130,15 @@ function App() {
                 element={
                   <PrivateRoute>
                     <Report />
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/daily-report"
+                element={
+                  <PrivateRoute>
+                    <DailyReport />
                   </PrivateRoute>
                 }
               />

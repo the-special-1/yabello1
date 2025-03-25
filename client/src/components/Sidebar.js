@@ -6,7 +6,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import AssessmentIcon from '@mui/icons-material/Assessment';
+import PersonIcon from '@mui/icons-material/Person';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
@@ -14,8 +14,8 @@ const Sidebar = () => {
   const location = useLocation();
 
   const menuItems = [
-    { text: 'Report', icon: <AssessmentIcon />, path: '/report' },
-    { text: 'Daily Report', icon: <AssessmentIcon />, path: '/daily-report' },
+    { text: 'Report', icon: <PersonIcon />, path: '/report' },
+    { text: 'Daily Report', icon: <PersonIcon />, path: '/daily-report' },
   ];
 
   return (
@@ -26,7 +26,7 @@ const Sidebar = () => {
         color: 'white',
         position: 'fixed',
         left: 0,
-        top: 64, // Height of header
+        top: 150, // Height of header
         bottom: 0,
         zIndex: 1
       }}
