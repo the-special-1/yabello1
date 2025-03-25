@@ -234,32 +234,45 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
           }
         }}
       >
-        <DialogTitle 
-          sx={{ 
-            bgcolor: 'white',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            p: 2,
-            position: 'sticky',
-            top: 0,
-            zIndex: 1200
-          }}
-        >
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => setShowNewCartellaModal(true)}
-            size="small"
-          >
-            Register New Cartella
-          </Button>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon />
-          </IconButton>
+        <DialogTitle sx={{ 
+          backgroundColor: '#fff', 
+          color: '#000',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: '1px solid #ddd',
+          p: 2
+        }}>
+          {/* Left side - Phone number */}
+          <Typography sx={{ 
+            color: '#000',
+            fontSize: '1rem',
+            fontWeight: 'bold'
+          }}>
+            +251 911 123456
+          </Typography>
+
+          {/* Right side - Register link and close */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Typography 
+              onClick={() => setShowNewCartellaModal(true)}
+              sx={{ 
+                color: '#000',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                textDecoration: 'none',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
+              }}
+            >
+              Register New Card
+            </Typography>
+            <IconButton onClick={onClose} size="small" sx={{ color: '#000', ml: 1 }}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </DialogTitle>
 
         <DialogContent 
