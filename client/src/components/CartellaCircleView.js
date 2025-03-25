@@ -39,7 +39,8 @@ const CartellaCircleView = ({ cartellas, selectedCartellas, onSelect }) => {
             sx={{
               color: isSelected(cartella) ? '#000' : '#fff',
               fontWeight: 'bold',
-              fontSize: '2rem'
+              fontSize: '2rem',
+              fontFamily: "'Times New Roman', serif"
             }}
           >
             {cartella.id}

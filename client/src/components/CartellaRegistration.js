@@ -58,10 +58,10 @@ function TabPanel(props) {
   );
 }
 
-const CartellaRegistration = ({ open, onClose, onSelect }) => {
+const CartellaRegistration = ({ open, onSelect }) => {
   const [selectedCartellas, setSelectedCartellas] = useState([]);
   const [selectedPattern, setSelectedPattern] = useState('');
-  const [betAmount, setBetAmount] = useState(10);
+  const [betAmount, setBetAmount] = useState('');  
   const [availableCartellas, setAvailableCartellas] = useState([]);
   const [error, setError] = useState('');
   const [userBalance, setUserBalance] = useState(0);
@@ -105,7 +105,7 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
     }
   };
 
-  const totalBetAmount = selectedCartellas.length * betAmount;
+  const totalBetAmount = selectedCartellas.length * (betAmount || 0);
 
   useEffect(() => {
     if (open) {
@@ -211,7 +211,6 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
         pattern: selectedPattern,
         betAmount
       });
-      onClose(); // Close the dialog after successful submission
     } catch (error) {
       setError(error.message);
     }
@@ -226,11 +225,11 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
     <>
       <Dialog 
         open={open} 
-        onClose={onClose}
         fullScreen
         PaperProps={{
           sx: {
-            bgcolor: '#000000'  // pure black
+            bgcolor: '#000000',  // pure black
+            fontFamily: "'Times New Roman', serif"  // Default font for all text
           }
         }}
       >
@@ -241,38 +240,36 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
           justifyContent: 'space-between',
           alignItems: 'center',
           borderBottom: '1px solid #ddd',
-          p: 2
+          p: 1,  
+          minHeight: '48px',  
+          fontFamily: 'inherit'
         }}>
-          {/* Left side - Phone number */}
-          <Typography sx={{ 
-            color: '#000',
-            fontSize: '1rem',
-            fontWeight: 'bold'
-          }}>
-            +251 911 123456
-          </Typography>
-
-          {/* Right side - Register link and close */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Typography 
-              onClick={() => setShowNewCartellaModal(true)}
-              sx={{ 
-                color: '#000',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                textDecoration: 'none',
-                '&:hover': {
-                  textDecoration: 'underline'
-                }
+          {/* Left side - Phone image */}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <img 
+              src="/phoneimage.png" 
+              alt="Phone"
+              style={{
+                height: '36px',
+                width: 'auto',
+                marginRight: '8px'
               }}
-            >
-              Register New Card
-            </Typography>
-            <IconButton onClick={onClose} size="small" sx={{ color: '#000', ml: 1 }}>
-              <CloseIcon />
-            </IconButton>
+            />
           </Box>
+
+          {/* Right side - Register link */}
+          <Typography 
+            onClick={() => setShowNewCartellaModal(true)}
+            sx={{ 
+              color: '#000',
+              cursor: 'pointer',
+              fontSize: '1.25rem',
+              fontFamily: 'inherit',
+              textDecoration: 'none',
+            }}
+          >
+            Register New Card
+          </Typography>
         </DialogTitle>
 
         <DialogContent 
@@ -295,9 +292,11 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
             <Typography 
               variant="h4" 
               sx={{ 
-                color: '#FFD700',
+                color: '#ffffff',
                 fontWeight: 'bold',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                left:10,
+                fontFamily: 'inherit'
               }}
             >
               Round {roundCount}
@@ -339,13 +338,20 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center'
+              alignItems: 'flex-start',  
+              width: '100%'  
             }}>
-              <CartellaCircleView
-                cartellas={availableCartellas}
-                selectedCartellas={selectedCartellas}
-                onSelect={handleCartellaToggle}
-              />
+              {/* Section title */}
+              <Typography variant="h6" sx={{ mb: 2, color: 'white', pl: 2, fontFamily: 'inherit' }}>
+              ካርድ ቁጥሮች
+              </Typography>
+              <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                <CartellaCircleView
+                  cartellas={availableCartellas}
+                  selectedCartellas={selectedCartellas}
+                  onSelect={handleCartellaToggle}
+                />
+              </Box>
             </Box>
 
             {/* Right half - Controls */}
@@ -357,7 +363,6 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
               justifyContent: 'flex-start',
               pt: 2
             }}>
-              {/* Controls - Only visible when at least one cartella is selected */}
               {selectedCartellas.length > 0 && (
                 <Box sx={{
                   display: 'flex',
@@ -367,6 +372,10 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
                   maxWidth: 400,
                   alignItems: 'center'
                 }}>
+                  {/* Section title */}
+                  <Typography variant="h6" sx={{ mb: 2, color: 'white', fontFamily: 'inherit' }}>
+                    ካርድ ቁጥሮት መመዝገቡን ይመልከቱ
+                  </Typography>
                   {/* Selected cartellas display */}
                   <Box sx={{
                     display: 'flex',
@@ -390,6 +399,7 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
                           color: '#000',
                           fontWeight: 'bold',
                           fontSize: '2rem',
+                          fontFamily: "'Times New Roman', serif",
                           transition: 'all 0.2s',
                           '&:hover': {
                             transform: 'scale(1.05)',
@@ -414,8 +424,8 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
                       <Select
                         value={betAmount}
                         onChange={(e) => setBetAmount(e.target.value)}
-                        displayEmpty
                         size="small"
+                        displayEmpty
                         MenuProps={{
                           PaperProps: {
                             sx: {
@@ -438,9 +448,14 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
                           }
                         }}
                       >
+                        <MenuItem value="" disabled>
+                          <Typography sx={{ color: 'rgba(0, 0, 0, 0.6)', fontFamily: 'inherit' }}>
+                            የብር መጠን
+                          </Typography>
+                        </MenuItem>
                         {[10, 20, 50, 100, 200, 500].map((amount) => (
                           <MenuItem key={amount} value={amount}>
-                            <Typography sx={{ color: 'black' }}>
+                            <Typography sx={{ color: 'black', fontFamily: 'inherit' }}>
                               {amount} ETB
                             </Typography>
                           </MenuItem>
@@ -451,9 +466,8 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
                     {/* Pattern dropdown */}
                     <FormControl sx={{ flex: 2, minWidth: 200 }}>
                       <Select
-                        value={selectedPattern}
+                        value={selectedPattern || 'Any 1 Line'}
                         onChange={(e) => setSelectedPattern(e.target.value)}
-                        displayEmpty
                         size="small"
                         MenuProps={{
                           PaperProps: {
@@ -478,43 +492,42 @@ const CartellaRegistration = ({ open, onClose, onSelect }) => {
                         }}
                       >
                         <MenuItem value="" disabled>
-                          <Typography sx={{ color: 'black' }}>
+                          <Typography sx={{ color: 'black', fontFamily: 'inherit' }}>
                             Choose pattern
                           </Typography>
+                        </MenuItem>                        {PATTERNS.map((pattern) => (
+                        <MenuItem key={pattern.name} value={pattern.name}>
+                          <Typography sx={{ color: 'black', fontFamily: 'inherit' }}>
+                            {pattern.name}
+                          </Typography>
                         </MenuItem>
-                        {PATTERNS.map((pattern) => (
-                          <MenuItem key={pattern.name} value={pattern.name}>
-                            <Typography sx={{ color: 'black' }}>
-                              {pattern.name}
-                            </Typography>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-
-                  {/* Play button */}
-                  <Button
-                    variant="contained"
-                    onClick={handleSubmit}
-                    startIcon={<PlayArrowIcon />}
-                    sx={{
-                      minWidth: 120,
-                      height: 36,
-                      fontWeight: 'bold',
-                      backgroundColor: '#1976d2',
-                      boxShadow: 2,
-                      opacity: (!selectedPattern || selectedCartellas.length === 0) ? 0.7 : 1,
-                      '&:hover': {
-                        backgroundColor: '#1565c0',
-                        transform: (!selectedPattern || selectedCartellas.length === 0) ? 'none' : 'scale(1.02)'
-                      },
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    PLAY
-                  </Button>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </Box>
+
+                {/* Play button */}
+                <Button
+                  variant="contained"
+                  onClick={handleSubmit}
+                  startIcon={<PlayArrowIcon />}
+                  sx={{
+                    minWidth: 120,
+                    height: 36,
+                    fontWeight: 'bold',
+                    backgroundColor: '#1976d2',
+                    boxShadow: 2,
+                    opacity: (!selectedPattern || selectedCartellas.length === 0) ? 0.7 : 1,
+                    '&:hover': {
+                      backgroundColor: '#1565c0',
+                      transform: (!selectedPattern || selectedCartellas.length === 0) ? 'none' : 'scale(1.02)'
+                    },
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  PLAY
+                </Button>
+              </Box>
               )}
             </Box>
           </Box>
