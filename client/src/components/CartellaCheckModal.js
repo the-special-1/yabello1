@@ -1,7 +1,17 @@
 import React from 'react';
-import { Modal, Box, Typography, Grid, Paper } from '@mui/material';
+import { Modal, Box, Typography, Grid, Paper, Button } from '@mui/material';
 
-const CartellaCheckModal = ({ open, onClose, cartella, cartellaNumber, drawnNumbers, winningPattern, isWinner }) => {
+const CartellaCheckModal = ({ 
+  open, 
+  onClose, 
+  cartella, 
+  cartellaNumber, 
+  drawnNumbers, 
+  winningPattern, 
+  isWinner,
+  onAdditional,
+  onNewBingo 
+}) => {
   const modalStyle = {
     position: 'absolute',
     top: '50%',
@@ -15,65 +25,101 @@ const CartellaCheckModal = ({ open, onClose, cartella, cartellaNumber, drawnNumb
     borderRadius: 2
   };
 
+  const handleGoodBingo = () => {
+    console.log('Good Bingo clicked - Sound will be added later');
+  };
+
+  const handleNotBingo = () => {
+    console.log('Not Bingo clicked - Sound will be added later');
+  };
+
   // Function to check if a number is part of the winning pattern
   const isWinningNumber = (number, rowIndex, colIndex) => {
     if (!isWinner || !winningPattern) return false;
     
-    // Free cell is always a winner when the pattern is won
-    if (number === 'free') return isWinner;
-
+    const isMiddleCell = rowIndex === 2 && colIndex === 2;
+    
     // For Any 1 Line and Any 2 Lines, we need to find the first winning line(s)
     switch (winningPattern) {
       case 'Any 1 Line': {
-        // Check rows
+        let firstWinningLine = null;
+        
+        // Check rows first
         for (let row = 0; row < 5; row++) {
-          if (cartella.numbers[row].every(num => num === 'free' || drawnNumbers.includes(num))) {
-            if (row === rowIndex) return true;
+          if (cartella.numbers[row].every(num => (num === 'free' || drawnNumbers.includes(num)))) {
+            firstWinningLine = { type: 'row', index: row };
             break;
           }
         }
-        // Check columns
-        for (let col = 0; col < 5; col++) {
-          if (cartella.numbers.every(row => row[col] === 'free' || drawnNumbers.includes(row[col]))) {
-            if (col === colIndex) return true;
-            break;
+        
+        // If no winning row, check columns
+        if (!firstWinningLine) {
+          for (let col = 0; col < 5; col++) {
+            if (cartella.numbers.every(row => row[col] === 'free' || drawnNumbers.includes(row[col]))) {
+              firstWinningLine = { type: 'col', index: col };
+              break;
+            }
           }
         }
-        // Check diagonal
-        if (cartella.numbers.every((row, i) => row[i] === 'free' || drawnNumbers.includes(row[i]))) {
-          if (rowIndex === colIndex) return true;
+        
+        // If still no winner, check main diagonal
+        if (!firstWinningLine) {
+          if (cartella.numbers.every((row, i) => row[i] === 'free' || drawnNumbers.includes(row[i]))) {
+            firstWinningLine = { type: 'diag', index: 0 };
+          }
         }
-        // Check other diagonal
-        if (cartella.numbers.every((row, i) => row[4-i] === 'free' || drawnNumbers.includes(row[4-i]))) {
-          if (rowIndex + colIndex === 4) return true;
+        
+        // If still no winner, check other diagonal
+        if (!firstWinningLine) {
+          if (cartella.numbers.every((row, i) => row[4-i] === 'free' || drawnNumbers.includes(row[4-i]))) {
+            firstWinningLine = { type: 'diag', index: 1 };
+          }
+        }
+
+        // Check if current cell is in the first winning line
+        if (firstWinningLine) {
+          if (firstWinningLine.type === 'row') return rowIndex === firstWinningLine.index;
+          if (firstWinningLine.type === 'col') return colIndex === firstWinningLine.index;
+          if (firstWinningLine.type === 'diag') {
+            return firstWinningLine.index === 0 ? rowIndex === colIndex : rowIndex + colIndex === 4;
+          }
         }
         return false;
       }
 
       case 'Any 2 Lines': {
         let foundLines = [];
-        // Check rows
+        
+        // Check rows first
         for (let row = 0; row < 5 && foundLines.length < 2; row++) {
           if (cartella.numbers[row].every(num => num === 'free' || drawnNumbers.includes(num))) {
             foundLines.push({type: 'row', index: row});
           }
         }
-        // Check columns if needed
-        for (let col = 0; col < 5 && foundLines.length < 2; col++) {
-          if (cartella.numbers.every(row => row[col] === 'free' || drawnNumbers.includes(row[col]))) {
-            foundLines.push({type: 'col', index: col});
+        
+        // Check columns only if we need more lines
+        if (foundLines.length < 2) {
+          for (let col = 0; col < 5 && foundLines.length < 2; col++) {
+            if (cartella.numbers.every(row => row[col] === 'free' || drawnNumbers.includes(row[col]))) {
+              foundLines.push({type: 'col', index: col});
+            }
           }
         }
-        // Check diagonals if needed
-        if (foundLines.length < 2 && cartella.numbers.every((row, i) => row[i] === 'free' || drawnNumbers.includes(row[i]))) {
-          foundLines.push({type: 'diag', index: 0});
+        
+        // Check diagonals only if we still need more lines
+        if (foundLines.length < 2) {
+          if (cartella.numbers.every((row, i) => row[i] === 'free' || drawnNumbers.includes(row[i]))) {
+            foundLines.push({type: 'diag', index: 0});
+          }
         }
-        if (foundLines.length < 2 && cartella.numbers.every((row, i) => row[4-i] === 'free' || drawnNumbers.includes(row[4-i]))) {
-          foundLines.push({type: 'diag', index: 1});
+        if (foundLines.length < 2) {
+          if (cartella.numbers.every((row, i) => row[4-i] === 'free' || drawnNumbers.includes(row[4-i]))) {
+            foundLines.push({type: 'diag', index: 1});
+          }
         }
 
-        // Check if current cell is in any of the first two winning lines
-        return foundLines.some(line => {
+        // Check if current cell is in one of the first two winning lines
+        return foundLines.slice(0, 2).some(line => {
           if (line.type === 'row') return line.index === rowIndex;
           if (line.type === 'col') return line.index === colIndex;
           if (line.type === 'diag') {
@@ -210,6 +256,63 @@ const CartellaCheckModal = ({ open, onClose, cartella, cartellaNumber, drawnNumb
             </Grid>
           ))}
         </Grid>
+
+        {/* Action Buttons */}
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 1,
+          mt: 3 
+        }}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleGoodBingo}
+            sx={{ 
+              fontSize: '0.8rem',
+              whiteSpace: 'nowrap',
+              padding: '6px 8px'
+            }}
+          >
+            Good Bingo
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleNotBingo}
+            sx={{ 
+              fontSize: '0.8rem',
+              whiteSpace: 'nowrap',
+              padding: '6px 8px'
+            }}
+          >
+            Not Bingo
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onAdditional}
+            sx={{ 
+              fontSize: '0.8rem',
+              whiteSpace: 'nowrap',
+              padding: '6px 8px'
+            }}
+          >
+            Additional
+          </Button>
+          <Button
+            variant="contained"
+            color="warning"
+            onClick={onNewBingo}
+            sx={{ 
+              fontSize: '0.8rem',
+              whiteSpace: 'nowrap',
+              padding: '6px 8px'
+            }}
+          >
+            New Bingo
+          </Button>
+        </Box>
       </Box>
     </Modal>
   );

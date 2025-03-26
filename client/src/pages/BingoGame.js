@@ -49,13 +49,21 @@ const BingoGame = () => {
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
 
   const handleCheckCartella = () => {
-    const num = parseInt(checkNumber);
-    if (num && num > 0 && num <= activeCartellas.length) {
-      setCheckedCartella(activeCartellas[num - 1]);
-      setShowCheckModal(true);
-    } else {
-      setCheckedCartella(null);
+    const number = parseInt(checkNumber);
+    if (isNaN(number)) {
+      alert('Please enter a valid cartella number');
+      return;
     }
+    
+    // Find cartella by its actual ID/number
+    const cartella = activeCartellas.find(c => c.id === number.toString() || c.id === number);
+    if (!cartella) {
+      alert('Cartella not found or not registered for this game');
+      return;
+    }
+
+    setCheckedCartella(cartella);
+    setShowCheckModal(true);
   };
 
   const drawNumber = useCallback(() => {
@@ -479,33 +487,33 @@ const BingoGame = () => {
       <Paper sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
-            <Typography variant="h4" color="primary">
+            {/* <Typography variant="h4" color="primary">
               Bingo Game
-            </Typography>
+            </Typography> */}
             {gamePattern && (
               <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle1" color="primary.dark" gutterBottom>
+                {/* <Typography variant="subtitle1" color="primary.dark" gutterBottom>
                   Pattern: {gamePattern}
-                </Typography>
+                </Typography> */}
                 <Box sx={{ maxWidth: 200 }}>
                   <PatternVisualizer pattern={gamePattern} />
                 </Box>
               </Box>
             )}
-            {totalBetAmount > 0 && (
+            {/* {totalBetAmount > 0 && (
               <Typography variant="subtitle1" color="secondary">
                 Total Bet: {totalBetAmount} Birr
               </Typography>
-            )}
+            )} */}
           </Box>
-          <Button
+          {/* <Button
             variant="outlined"
             color="error"
             onClick={handleLogout}
             startIcon={<LogoutIcon />}
           >
             Logout
-          </Button>
+          </Button> */}
         </Box>
 
         <Box sx={{ textAlign: 'center', mb: 3 }}>
@@ -604,20 +612,11 @@ const BingoGame = () => {
               variant="outlined"
               size="small"
               value={checkNumber}
-              onChange={(e) => {
-                setCheckNumber(e.target.value);
-                if (!e.target.value) setCheckedCartella(null);
-              }}
+              onChange={(e) => setCheckNumber(e.target.value)}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   handleCheckCartella();
                 }
-              }}
-              type="number"
-              inputProps={{ 
-                min: 1, 
-                max: activeCartellas.length,
-                style: { textAlign: 'center' }
               }}
               sx={{ width: 150 }}
             />
@@ -640,6 +639,23 @@ const BingoGame = () => {
         drawnNumbers={drawnNumbers}
         winningPattern={gamePattern}
         isWinner={checkWin(checkedCartella)}
+        onAdditional={() => {
+          setShowCheckModal(false);
+          // Continue the game
+        }}
+        onNewBingo={() => {
+          setShowCheckModal(false);
+          // Reset ALL game state
+          setDrawnNumbers([]);
+          setRoundCount(1);
+          setGamePattern(null);
+          setGameStarted(false);
+          setShowStartModal(true);
+          setActiveCartellas([]);
+          setLastDrawn(null);
+          setIsDrawing(false);
+          setTotalBetAmount(0);
+        }}
       />
     </Container>
   );
