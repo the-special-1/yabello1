@@ -148,7 +148,6 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
         <Box sx={{ 
           flexGrow: 1, 
           p: 4, 
-          bgcolor: '#f5f5f5',
           overflowY: 'auto'
         }}>
           {error && (
@@ -166,7 +165,6 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
             sx={{ 
               p: 3,
               mb: 3,
-              bgcolor: 'white',
               borderRadius: 2
             }}
           >
@@ -219,7 +217,8 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
                               textAlign: 'center',
                               fontWeight: 'bold',
                               fontSize: '1.1rem',
-                              padding: '8px'
+                              padding: '8px',
+                              color: '#000'
                             },
                             min: 1,
                             max: 75
@@ -418,7 +417,7 @@ const CartellasModal = ({ open, onClose }) => {
         fullScreen
         PaperProps={{
           style: {
-            backgroundColor: '#f5f5f5'
+            backgroundColor: '#f5fbff'
           }
         }}
       >
@@ -467,7 +466,6 @@ const CartellasModal = ({ open, onClose }) => {
           <Box sx={{ 
             flexGrow: 1, 
             p: 4, 
-            bgcolor: '#f5f5f5',
             overflowY: 'auto'
           }}>
             {error && (
@@ -483,10 +481,7 @@ const CartellasModal = ({ open, onClose }) => {
             <Grid container spacing={4}>
               <Grid item xs={12}>
                 <Box sx={{ 
-                  bgcolor: 'white',
                   p: 4,
-                  borderRadius: 2,
-                  boxShadow: 3,
                   maxWidth: 600,
                   mx: 'auto'
                 }}>
@@ -494,19 +489,19 @@ const CartellasModal = ({ open, onClose }) => {
                     {/* Column Headers */}
                     <Grid container item xs={12} sx={{ mb: 1 }}>
                       <Grid item xs={2.4}>
-                        <Box sx={{ bgcolor: '#000080', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>B</Box>
+                        <Box sx={{ background: 'linear-gradient(90deg, #03012B, #02ADE5)', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>B</Box>
                       </Grid>
                       <Grid item xs={2.4}>
-                        <Box sx={{ bgcolor: '#800000', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>I</Box>
+                        <Box sx={{background: 'linear-gradient(90deg, #160220, #75090E)', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>I</Box>
                       </Grid>
                       <Grid item xs={2.4}>
-                        <Box sx={{ bgcolor: '#4B4B4B', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>N</Box>
+                        <Box sx={{background: 'linear-gradient(90deg, #E7EBF2, #E7EBF2)', color: 'black', p: 1, textAlign: 'center', fontWeight: 'bold' }}>N</Box>
                       </Grid>
                       <Grid item xs={2.4}>
-                        <Box sx={{ bgcolor: '#996515', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>G</Box>
+                        <Box sx={{background: 'linear-gradient(90deg, #694507, #D88A14)', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>G</Box>
                       </Grid>
                       <Grid item xs={2.4}>
-                        <Box sx={{ bgcolor: '#808080', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>O</Box>
+                        <Box sx={{ background: 'linear-gradient(90deg, #445666, #536575)', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>O</Box>
                       </Grid>
                     </Grid>
 
@@ -518,35 +513,35 @@ const CartellasModal = ({ open, onClose }) => {
                             {i === 2 && j === 2 ? (
                               <Paper
                                 sx={{
-                                  p: 1.5,
+                                  p: 0.3,
                                   textAlign: 'center',
-                                  bgcolor: '#f5f5f5',
+                                  bgcolor: 'white',
                                   color: '#4B4B4B',
                                   fontWeight: 'bold',
-                                  fontSize: '1.2rem',
-                                  border: '1px solid #ddd'
+                                  fontSize: '1.6rem',
+                                  // border: '1px solid #ddd'
                                 }}
                               >
                                 0
                               </Paper>
                             ) : (
                               <TextField
-                                size="small"
-                                value={num}
+                                                               value={num}
                                 onChange={(e) => handleNumberChange(i, j, e.target.value)}
                                 inputProps={{
                                   style: { 
                                     textAlign: 'center',
                                     fontWeight: 'bold',
                                     fontSize: '1.1rem',
-                                    padding: '8px'
+                                    padding: '8px',
+                                    color: '#000'
                                   },
                                   min: 1,
                                   max: 75
                                 }}
                                 type="number"
                                 sx={{
-                                  width: '100%',
+                                  width: 100,
                                   '& .MuiOutlinedInput-root': {
                                     bgcolor: 'white',
                                     '& fieldset': {
@@ -587,7 +582,8 @@ const CartellasModal = ({ open, onClose }) => {
                             },
                             '&.Mui-focused fieldset': {
                               borderColor: '#666',
-                            }
+                            },
+                            color: '#000'
                           }
                         }}
                       />
@@ -615,7 +611,7 @@ const CartellasModal = ({ open, onClose }) => {
               </Grid>
 
               <Grid item xs={12}>
-                <TableContainer component={Paper} sx={{ mb: 4, boxShadow: 3 }}>
+                <TableContainer component={Paper} sx={{ mb: 4, boxShadow: 3, bgcolor: '#f5fbff' }}>
                   <Table sx={{ 
                     borderCollapse: 'collapse',
                     '& th, & td': {
@@ -629,7 +625,7 @@ const CartellasModal = ({ open, onClose }) => {
                       <TableRow>
                         <TableCell 
                           sx={{ 
-                            bgcolor: '#8B4513', 
+                            background: 'linear-gradient(90deg, #694507, #D88A14)', 
                             color: 'white',
                             fontWeight: 'bold',
                             width: '60px',
@@ -641,7 +637,7 @@ const CartellasModal = ({ open, onClose }) => {
                         </TableCell>
                         <TableCell 
                           sx={{ 
-                            bgcolor: '#000080', 
+                            background: 'linear-gradient(90deg, #03012B, #02ADE5)',
                             color: 'white',
                             fontWeight: 'bold',
                             fontSize: '0.9rem',
@@ -652,7 +648,8 @@ const CartellasModal = ({ open, onClose }) => {
                         </TableCell>
                         <TableCell 
                           sx={{ 
-                            bgcolor: '#800000', 
+                          
+                           background: 'linear-gradient(90deg, #160220, #75090E)',
                             color: 'white',
                             fontWeight: 'bold',
                             fontSize: '0.9rem',
@@ -663,8 +660,8 @@ const CartellasModal = ({ open, onClose }) => {
                         </TableCell>
                         <TableCell 
                           sx={{ 
-                            bgcolor: '#4B4B4B', 
-                            color: 'white',
+                            background: 'linear-gradient(90deg, #E7EBF2, #E7EBF2)',
+                            color: 'black',
                             fontWeight: 'bold',
                             fontSize: '0.9rem',
                             padding: '8px'
@@ -674,7 +671,7 @@ const CartellasModal = ({ open, onClose }) => {
                         </TableCell>
                         <TableCell 
                           sx={{ 
-                            bgcolor: '#996515', 
+                            background: 'linear-gradient(90deg, #694507, #D88A14)',
                             color: 'white',
                             fontWeight: 'bold',
                             fontSize: '0.9rem',
@@ -685,7 +682,7 @@ const CartellasModal = ({ open, onClose }) => {
                         </TableCell>
                         <TableCell 
                           sx={{ 
-                            bgcolor: '#808080', 
+                            background: 'linear-gradient(90deg, #445666, #536575)',
                             color: 'white',
                             fontWeight: 'bold',
                             fontSize: '0.9rem',
@@ -696,7 +693,7 @@ const CartellasModal = ({ open, onClose }) => {
                         </TableCell>
                         <TableCell 
                           sx={{ 
-                            bgcolor: '#8B4513', 
+                            background: 'linear-gradient(90deg, #694507, #D88A14)',
                             color: 'white',
                             fontWeight: 'bold',
                             width: '60px',
@@ -719,10 +716,11 @@ const CartellasModal = ({ open, onClose }) => {
                         >
                           <TableCell 
                             sx={{ 
-                              color: '#666',
-                              fontWeight: 'bold',
-                              fontSize: '0.9rem',
-                              padding: '8px'
+                              color: '#566787',
+                              fontWeight: 'light',
+                              fontSize: '1.2rem',
+                              padding: '8px',
+                              bgcolor: '#f5fbff'
                             }}
                           >
                             {cartella.id}
@@ -730,39 +728,44 @@ const CartellasModal = ({ open, onClose }) => {
                           <TableCell sx={{ 
                             fontSize: '0.9rem', 
                             padding: '8px',
-                            color: '#000'
+                            color: '#000',
+                            bgcolor: '#f5fbff'
                           }}>
                             {getColumnNumbers(cartella.numbers, 0)}
                           </TableCell>
                           <TableCell sx={{ 
                             fontSize: '0.9rem', 
                             padding: '8px',
-                            color: '#000'
+                            color: '#000',
+                            bgcolor: '#f5fbff'
                           }}>
                             {getColumnNumbers(cartella.numbers, 1)}
                           </TableCell>
                           <TableCell sx={{ 
                             fontSize: '0.9rem', 
                             padding: '8px',
-                            color: '#000'
+                            color: '#000',
+                            bgcolor: '#f5fbff'
                           }}>
                             {getColumnNumbers(cartella.numbers, 2)}
                           </TableCell>
                           <TableCell sx={{ 
                             fontSize: '0.9rem', 
                             padding: '8px',
-                            color: '#000'
+                            color: '#000',
+                            bgcolor: '#f5fbff'
                           }}>
                             {getColumnNumbers(cartella.numbers, 3)}
                           </TableCell>
                           <TableCell sx={{ 
                             fontSize: '0.9rem', 
                             padding: '8px',
-                            color: '#000'
+                            color: '#000',
+                            bgcolor: '#f5fbff'
                           }}>
                             {getColumnNumbers(cartella.numbers, 4)}
                           </TableCell>
-                          <TableCell sx={{ padding: '4px' }}>
+                          <TableCell sx={{ padding: '4px', bgcolor: '#f5fbff' }}>
                             <IconButton
                               onClick={() => handleEditCartella(cartella)}
                               size="small"
