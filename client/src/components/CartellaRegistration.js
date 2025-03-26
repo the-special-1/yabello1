@@ -361,16 +361,18 @@ const CartellaRegistration = ({ open, onSelect }) => {
               onClick={handleContinue}
               disabled={!previousSettings}
               sx={{
-                bgcolor: isContinueActive ? '#d32f2f' : '#f44336',
+                bgcolor: isContinueActive ? '#790918' : '#790918',
                 color: 'white',
                 fontWeight: 'bold',
                 px: 3,
+                mt:2,
+                ml:30,
                 '&:hover': {
                   bgcolor: isContinueActive ? '#b71c1c' : '#d32f2f',
                   transform: 'scale(1.02)'
                 },
                 '&:disabled': {
-                  bgcolor: '#666',
+                  bgcolor: '#790918',
                   color: '#999'
                 }
               }}
@@ -446,7 +448,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: '#ffbd0a',
+                          backgroundImage: 'linear-gradient(90deg, yellow,orange, red)' ,
                           border: '3px solid #FF8C00',
                           color: '#000',
                           fontWeight: 'bold',

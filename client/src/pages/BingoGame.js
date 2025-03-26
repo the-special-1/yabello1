@@ -163,23 +163,26 @@ const BingoGame = () => {
       <Dialog
         open={showStartModal}
         onClose={() => {}}
-        maxWidth="xs"
+        minWidth='600px'
         fullWidth
         PaperProps={{
           sx: {
             bgcolor: '#f5f5f5',
             overflow: 'hidden',
             maxHeight: '80vh',
+            opacity: 0.9,
             m: 1,
-            borderRadius: 0
+            borderRadius: 0,
+            mt:-2
           }
         }}
       >
         {/* Header with Register/Logout and Round */}
         <Box sx={{ 
-          bgcolor: '#1a1a1a',
+          bgcolor: '#242424',
           py: 1,
           px: 2,
+          opacity: 0.9,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
@@ -190,7 +193,7 @@ const BingoGame = () => {
               onClick={handleLogout}
               sx={{ 
                 color: 'white',
-                fontSize: '0.9rem',
+                fontSize: '1.2rem',
                 cursor: 'pointer',
                 '&:hover': {
                   textDecoration: 'underline'
@@ -199,12 +202,12 @@ const BingoGame = () => {
             >
               Logout
             </Typography>
-            <Typography sx={{ color: 'white', fontSize: '0.9rem' }}>/</Typography>
+            <Typography sx={{ color: 'white', fontSize: '1.2rem' }}>/</Typography>
             <Typography 
               onClick={() => setShowCartellaRegistration(true)}
               sx={{ 
                 color: 'white',
-                fontSize: '0.9rem',
+                fontSize: '1.2rem',
                 cursor: 'pointer',
                 '&:hover': {
                   textDecoration: 'underline'
@@ -213,12 +216,12 @@ const BingoGame = () => {
             >
               Register Card
             </Typography>
-            <Typography sx={{ color: 'white', fontSize: '0.9rem' }}>/</Typography>
+            <Typography sx={{ color: 'white', fontSize: '1.2rem' }}>/</Typography>
             <Typography 
               onClick={() => navigate('/report')}
               sx={{ 
                 color: 'white',
-                fontSize: '0.9rem',
+                fontSize: '1.2rem',
                 cursor: 'pointer',
                 '&:hover': {
                   textDecoration: 'underline'
@@ -232,7 +235,7 @@ const BingoGame = () => {
           {/* Right side - Round count */}
           <Typography sx={{ 
             color: 'white',
-            fontSize: '0.9rem'
+            fontSize: '1.2rem'
           }}>
             Round {roundCount}
           </Typography>
@@ -243,9 +246,10 @@ const BingoGame = () => {
           <Typography
             align="center"
             sx={{
-              mb: 2,
-              fontSize: '1.2rem',
-              color: '#666'
+              // mb: 2,
+              fontSize: '1.9rem',
+              color: '#666',
+              fontWeight: 'bold',
             }}
           >
             የጨዋታው ትእዛዝ
@@ -254,27 +258,29 @@ const BingoGame = () => {
           {/* Cartella Grid with BINGO header */}
           <Box sx={{ 
             width: '100%',
-            maxWidth: 300,
+            maxWidth: 400,
             mx: 'auto',
             mb: 2
           }}>
             {/* BINGO Header */}
             <Box sx={{ 
-              bgcolor: '#ffa000',
+              bgcolor: '#E9AD01',
               display: 'flex',
               justifyContent: 'space-between',
-              mb: '1px'
+              mb: '1px',
+              opacity: 0.9,
             }}>
               {['B', 'I', 'N', 'G', 'O'].map((letter) => (
                 <Typography
                   key={letter}
                   sx={{
-                    fontSize: '1.5rem',
-                    fontWeight: 'bold',
+                    fontSize: '2rem',
+                    fontWeight: 'bolder',
                     color: 'red',
                     width: '20%',
                     textAlign: 'center',
-                    py: 0.5
+                    py: 0.5,
+                   
                   }}
                 >
                   {letter}
@@ -296,8 +302,8 @@ const BingoGame = () => {
                   sx={{ 
                     display: 'flex',
                     '& > div': {
-                      width: '20%',
-                      height: 40,
+                      width: '40%',
+                      height: 45,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -314,7 +320,8 @@ const BingoGame = () => {
                   {row.map((number, colIndex) => (
                     <Box key={colIndex}>
                       <Typography sx={{
-                        fontSize: '1.1rem',
+                        fontSize: '2rem',
+                        fontStyle:'sans-serif',
                         color: '#333',
                         textTransform: number === 'free' ? 'lowercase' : 'none'
                       }}>
@@ -331,11 +338,12 @@ const BingoGame = () => {
               <Typography
                 align="center"
                 sx={{
-                  mt: 3,
-                  mb: 2,
-                  fontSize: '2rem',
+                  // mt: 3,
+                  // mb: 2,
+                  fontSize: '4rem',
                   color: '#666',
-                  fontFamily: 'sans-serif'
+                  fontFamily: 'sans-serif',
+                  fontWeight: 'bold',
                 }}
               >
                 {totalBetAmount} ወሳጅ
@@ -349,7 +357,7 @@ const BingoGame = () => {
                 onClick={handleCloseModal}
                 sx={{
                   minWidth: 200,
-                  py: 1,
+                  // py: 1,
                   fontSize: '1.2rem',
                   bgcolor: '#800000',
                   '&:hover': {

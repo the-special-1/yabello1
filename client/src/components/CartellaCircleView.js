@@ -20,18 +20,18 @@ const CartellaCircleView = ({ cartellas, selectedCartellas, onSelect }) => {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            backgroundColor: isSelected(cartella) ? '#ffbd0a' : '#39080b',
-            border: `3px solid ${isSelected(cartella) ? '#FF8C00' : '#FFD700'}`,
+            backgroundImage: isSelected(cartella) ? 'linear-gradient(90deg, yellow,orange, red)' :'linear-gradient(90deg, #160220, #75090E)',
+            border: `2px solid ${isSelected(cartella) ? '#FF8C00' : '#FFD700'}`,
             color: isSelected(cartella) ? '#000' : '#fff',
-            fontWeight: 'bold',
-            fontSize: '2rem',
+            fontWeight: 'light',
+            fontSize: '24px',
             transition: 'all 0.2s',
-            '&:hover': {
-              transform: 'scale(1.05)',
-              boxShadow: isSelected(cartella) ?
-                '0 0 20px rgba(255, 140, 0, 0.7)' :
-                '0 4px 8px rgba(0,0,0,0.3)'
-            }
+            // '&:hover': {
+            //   transform: 'scale(1.05)',
+            //   boxShadow: isSelected(cartella) ?
+            //     '0 0 20px rgba(255, 140, 0, 0.7)' :
+            //     '0 4px 8px rgba(0,0,0,0.3)'
+            // }
           }}
         >
           <Typography
