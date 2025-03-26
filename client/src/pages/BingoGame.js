@@ -21,6 +21,12 @@ import { useAuth } from '../context/AuthContext';
 import CartellaRegistration from '../components/CartellaRegistration';
 import PatternVisualizer from '../components/PatternVisualizer';
 import CartellaCheckModal from '../components/CartellaCheckModal';
+import { motion } from 'framer-motion';
+
+const patternAnimations = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.5 } }
+};
 
 const BingoGame = () => {
   const [numbers] = useState(Array.from({ length: 75 }, (_, i) => i + 1));
@@ -40,6 +46,7 @@ const BingoGame = () => {
   const [roundCount, setRoundCount] = useState(1);
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
 
   const handleCheckCartella = () => {
     const num = parseInt(checkNumber);
@@ -540,7 +547,6 @@ const BingoGame = () => {
       <CartellaCheckModal
         open={showCheckModal}
         onClose={() => setShowCheckModal(false)}
-        cartella={checkedCartella}
         cartellaNumber={checkNumber}
         drawnNumbers={drawnNumbers}
       />
