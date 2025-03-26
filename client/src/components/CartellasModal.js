@@ -49,11 +49,17 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
 
   useEffect(() => {
     if (cartella) {
-      setEditedNumbers(cartella.numbers);
+      const numbers = [...cartella.numbers];
+      // Ensure middle cell is always 0
+      numbers[2][2] = '0';
+      setEditedNumbers(numbers);
     }
   }, [cartella]);
 
   const handleNumberChange = (row, col, value) => {
+    // Don't allow changing the middle cell
+    if (row === 2 && col === 2) return;
+    
     const updatedNumbers = [...editedNumbers];
     updatedNumbers[row][col] = value;
     setEditedNumbers(updatedNumbers);
@@ -331,6 +337,9 @@ const CartellasModal = ({ open, onClose }) => {
   };
 
   const handleNumberChange = (row, col, value) => {
+    // Don't allow changing the middle cell
+    if (row === 2 && col === 2) return;
+    
     const updatedNumbers = [...newCartella.numbers];
     updatedNumbers[row][col] = value;
     setNewCartella(prev => ({
@@ -391,6 +400,12 @@ const CartellasModal = ({ open, onClose }) => {
   // Helper function to get column numbers from transposed matrix
   const getColumnNumbers = (numbers, colIndex) => {
     const transposed = transposeMatrix(numbers);
+    if (colIndex === 2) { // For N column
+      const nColumn = transposed[colIndex];
+      // Set middle position to 0
+      nColumn[2] = '0';
+      return nColumn.join(',');
+    }
     return transposed[colIndex].filter(num => num !== '0').join(',');
   };
 
