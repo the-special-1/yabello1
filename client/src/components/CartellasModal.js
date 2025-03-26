@@ -725,7 +725,7 @@ const CartellasModal = ({ open, onClose }) => {
                               padding: '8px'
                             }}
                           >
-                            {index + 1}
+                            {cartella.id}
                           </TableCell>
                           <TableCell sx={{ 
                             fontSize: '0.9rem', 
