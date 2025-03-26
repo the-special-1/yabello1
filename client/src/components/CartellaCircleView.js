@@ -20,7 +20,7 @@ const CartellaCircleView = ({ cartellas, selectedCartellas, onSelect }) => {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            backgroundColor: isSelected(cartella) ? '#FF8C00' : '#8B0000',
+            backgroundColor: isSelected(cartella) ? '#ffbd0a' : '#39080b',
             border: `3px solid ${isSelected(cartella) ? '#FF8C00' : '#FFD700'}`,
             color: isSelected(cartella) ? '#000' : '#fff',
             fontWeight: 'bold',

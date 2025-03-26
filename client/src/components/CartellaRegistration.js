@@ -139,10 +139,10 @@ const CartellaRegistration = ({ open, onSelect }) => {
       const { cartellas } = await response.json();
       console.log('Full cartella object example:', cartellas[0]); // Log first cartella
       
-      // Filter out cartellas that are already registered in a game
-      const filteredCartellas = cartellas.filter(cartella => 
-        !['playing', 'won', 'lost'].includes(cartella.status)
-      );
+      // Filter and sort cartellas by ID
+      const filteredCartellas = cartellas
+        .filter(cartella => !['playing', 'won', 'lost'].includes(cartella.status))
+        .sort((a, b) => parseInt(a.id) - parseInt(b.id)); // Sort by ID in ascending order
       
       setAvailableCartellas(filteredCartellas || []);
     } catch (err) {
@@ -446,7 +446,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: '#FF8C00',
+                          backgroundColor: '#ffbd0a',
                           border: '3px solid #FF8C00',
                           color: '#000',
                           fontWeight: 'bold',
