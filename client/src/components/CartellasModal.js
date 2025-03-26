@@ -227,7 +227,6 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
 
 const CartellasModal = ({ open, onClose }) => {
   const { userBranch } = useAuth();
-  const [activeTab, setActiveTab] = useState(0);
   const [error, setError] = useState('');
   const [existingCartellas, setExistingCartellas] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -270,10 +269,6 @@ const CartellasModal = ({ open, onClose }) => {
     }
   };
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
-
   const handleNumberChange = (row, col, value) => {
     const updatedNumbers = [...newCartella.numbers];
     updatedNumbers[row][col] = value;
@@ -300,7 +295,6 @@ const CartellasModal = ({ open, onClose }) => {
       }
 
       await fetchCartellas();
-      setActiveTab(0);
       setError('');
       // Reset form
       setNewCartella({
@@ -361,13 +355,6 @@ const CartellasModal = ({ open, onClose }) => {
           </Box>
         </DialogTitle>
 
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'white' }}>
-          <Tabs value={activeTab} onChange={handleTabChange}>
-            <Tab label="Existing Cartellas" />
-            <Tab label="Create New Cartella" />
-          </Tabs>
-        </Box>
-
         <DialogContent sx={{ p: 4 }}>
           {error && (
             <Alert 
@@ -379,167 +366,174 @@ const CartellasModal = ({ open, onClose }) => {
             </Alert>
           )}
 
-          <TabPanel value={activeTab} index={0}>
-            <TableContainer component={Paper} sx={{ mb: 4, boxShadow: 3 }}>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: 'primary.main' }}>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Cartella ID</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Branch</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>B (1-15)</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>I (16-30)</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>N (31-45)</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>G (46-60)</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>O (61-75)</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {existingCartellas.map((cartella) => (
-                    <TableRow 
-                      key={cartella.id}
-                      sx={{ 
-                        '&:hover': { 
-                          bgcolor: 'action.hover',
-                          '& .edit-button': {
-                            opacity: 1
-                          }
-                        }
-                      }}
-                    >
-                      <TableCell sx={{ fontWeight: 'bold' }}>{cartella.id}</TableCell>
-                      <TableCell>{cartella.branch?.name || 'Unknown Branch'}</TableCell>
-                      <TableCell>{getColumnNumbers(cartella.numbers, 0)}</TableCell>
-                      <TableCell>{getColumnNumbers(cartella.numbers, 1)}</TableCell>
-                      <TableCell>{getColumnNumbers(cartella.numbers, 2)}</TableCell>
-                      <TableCell>{getColumnNumbers(cartella.numbers, 3)}</TableCell>
-                      <TableCell>{getColumnNumbers(cartella.numbers, 4)}</TableCell>
-                      <TableCell>
-                        <IconButton 
-                          onClick={() => handleEditCartella(cartella)}
-                          className="edit-button"
-                          sx={{ 
-                            opacity: 0,
-                            transition: 'opacity 0.2s',
-                            color: 'primary.main'
-                          }}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </TabPanel>
+          <Grid container spacing={4}>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom color="primary" fontWeight="bold" sx={{ mb: 3 }}>
+                Create New Cartella
+              </Typography>
+              <Box sx={{ 
+                bgcolor: 'white',
+                p: 4,
+                borderRadius: 2,
+                boxShadow: 3,
+                maxWidth: 600,
+                mx: 'auto'
+              }}>
+                <TextField
+                  fullWidth
+                  label="Cartella ID"
+                  value={newCartella.id}
+                  onChange={(e) => setNewCartella({ ...newCartella, id: e.target.value })}
+                  sx={{ 
+                    mb: 3,
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'grey.50'
+                    }
+                  }}
+                />
+                <Paper 
+                  elevation={3}
+                  sx={{ 
+                    p: 3, 
+                    mb: 3,
+                    border: '1px solid',
+                    borderColor: 'primary.main'
+                  }}
+                >
+                  <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
+                    Enter Numbers (1-75)
+                  </Typography>
+                  <Grid container spacing={1}>
+                    {newCartella.numbers.map((row, i) => (
+                      row.map((num, j) => (
+                        <Grid item xs={2.4} key={`${i}-${j}`}>
+                          {i === 2 && j === 2 ? (
+                            <Paper
+                              sx={{
+                                p: 2,
+                                textAlign: 'center',
+                                bgcolor: '#1976d2',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                boxShadow: 2,
+                                fontSize: '1.2rem'
+                              }}
+                            >
+                              0
+                            </Paper>
+                          ) : (
+                            <TextField
+                              size="small"
+                              value={num}
+                              onChange={(e) => handleNumberChange(i, j, e.target.value)}
+                              inputProps={{
+                                style: { 
+                                  textAlign: 'center',
+                                  fontWeight: 'bold',
+                                  fontSize: '1.1rem',
+                                  color: '#1976d2'
+                                },
+                                min: 1,
+                                max: 75
+                              }}
+                              type="number"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  bgcolor: 'white',
+                                  border: '2px solid',
+                                  borderColor: 'grey.300',
+                                  '&:hover': {
+                                    borderColor: 'primary.main'
+                                  },
+                                  '&.Mui-focused': {
+                                    borderColor: 'primary.main'
+                                  }
+                                }
+                              }}
+                            />
+                          )}
+                        </Grid>
+                      ))
+                    ))}
+                  </Grid>
+                </Paper>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateCartella}
+                  sx={{ 
+                    py: 1.5,
+                    boxShadow: 2,
+                    '&:hover': {
+                      boxShadow: 4
+                    }
+                  }}
+                >
+                  Register Cartella
+                </Button>
+              </Box>
+            </Grid>
 
-          <TabPanel value={activeTab} index={1}>
-            <Box sx={{ 
-              maxWidth: 600, 
-              mx: 'auto', 
-              mt: 4,
-              bgcolor: 'white',
-              p: 4,
-              borderRadius: 2,
-              boxShadow: 3
-            }}>
-              <TextField
-                fullWidth
-                label="Cartella ID"
-                value={newCartella.id}
-                onChange={(e) => setNewCartella({ ...newCartella, id: e.target.value })}
-                sx={{ 
-                  mb: 3,
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: 'grey.50'
-                  }
-                }}
-              />
-              <Paper 
-                elevation={3}
-                sx={{ 
-                  p: 3, 
-                  mb: 3,
-                  border: '1px solid',
-                  borderColor: 'primary.main'
-                }}
-              >
-                <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
-                  Enter Numbers (1-75)
-                </Typography>
-                <Grid container spacing={1}>
-                  {newCartella.numbers.map((row, i) => (
-                    row.map((num, j) => (
-                      <Grid item xs={2.4} key={`${i}-${j}`}>
-                        {i === 2 && j === 2 ? (
-                          <Paper
-                            sx={{
-                              p: 2,
-                              textAlign: 'center',
-                              bgcolor: '#1976d2',
-                              color: 'white',
-                              fontWeight: 'bold',
-                              boxShadow: 2,
-                              fontSize: '1.2rem'
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom color="primary" fontWeight="bold" sx={{ mb: 3 }}>
+                Existing Cartellas
+              </Typography>
+              <TableContainer component={Paper} sx={{ mb: 4, boxShadow: 3 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ bgcolor: 'primary.main' }}>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Cartella ID</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Branch</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>B (1-15)</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>I (16-30)</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>N (31-45)</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>G (46-60)</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>O (61-75)</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {existingCartellas.map((cartella) => (
+                      <TableRow 
+                        key={cartella.id}
+                        sx={{ 
+                          '&:hover': { 
+                            bgcolor: 'action.hover',
+                            '& .edit-button': {
+                              opacity: 1
+                            }
+                          }
+                        }}
+                      >
+                        <TableCell sx={{ fontWeight: 'bold' }}>{cartella.id}</TableCell>
+                        <TableCell>{cartella.branch?.name || 'Unknown Branch'}</TableCell>
+                        <TableCell>{getColumnNumbers(cartella.numbers, 0)}</TableCell>
+                        <TableCell>{getColumnNumbers(cartella.numbers, 1)}</TableCell>
+                        <TableCell>{getColumnNumbers(cartella.numbers, 2)}</TableCell>
+                        <TableCell>{getColumnNumbers(cartella.numbers, 3)}</TableCell>
+                        <TableCell>{getColumnNumbers(cartella.numbers, 4)}</TableCell>
+                        <TableCell>
+                          <IconButton 
+                            onClick={() => handleEditCartella(cartella)}
+                            className="edit-button"
+                            sx={{ 
+                              opacity: 0,
+                              transition: 'opacity 0.2s',
+                              color: 'primary.main'
                             }}
                           >
-                            0
-                          </Paper>
-                        ) : (
-                          <TextField
-                            size="small"
-                            value={num}
-                            onChange={(e) => handleNumberChange(i, j, e.target.value)}
-                            inputProps={{
-                              style: { 
-                                textAlign: 'center',
-                                fontWeight: 'bold',
-                                fontSize: '1.1rem',
-                                color: '#1976d2'
-                              },
-                              min: 1,
-                              max: 75
-                            }}
-                            type="number"
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                bgcolor: 'white',
-                                border: '2px solid',
-                                borderColor: 'grey.300',
-                                '&:hover': {
-                                  borderColor: 'primary.main'
-                                },
-                                '&.Mui-focused': {
-                                  borderColor: 'primary.main'
-                                }
-                              }
-                            }}
-                          />
-                        )}
-                      </Grid>
-                    ))
-                  ))}
-                </Grid>
-              </Paper>
-              <Button
-                variant="contained"
-                fullWidth
-                size="large"
-                startIcon={<AddIcon />}
-                onClick={handleCreateCartella}
-                sx={{ 
-                  py: 1.5,
-                  boxShadow: 2,
-                  '&:hover': {
-                    boxShadow: 4
-                  }
-                }}
-              >
-                Register Cartella
-              </Button>
-            </Box>
-          </TabPanel>
+                            <EditIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Grid>
+          </Grid>
         </DialogContent>
 
         <DialogActions sx={{ 
