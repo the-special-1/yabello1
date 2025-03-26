@@ -19,8 +19,8 @@ const CartellaCheckModal = ({ open, onClose, cartella, cartellaNumber, drawnNumb
   const isWinningNumber = (number, rowIndex, colIndex) => {
     if (!isWinner || !winningPattern) return false;
     
-    // Free cell is always a winner
-    if (number === 'free') return true;
+    // Free cell is always a winner when the pattern is won
+    if (number === 'free') return isWinner;
 
     // For Any 1 Line and Any 2 Lines, we need to find the first winning line(s)
     switch (winningPattern) {
@@ -136,16 +136,54 @@ const CartellaCheckModal = ({ open, onClose, cartella, cartellaNumber, drawnNumb
       aria-labelledby="cartella-check-modal"
     >
       <Box sx={modalStyle}>
-        <Typography variant="h5" gutterBottom align="center">
-          Cartella #{cartellaNumber}
+        <Typography variant="h5" gutterBottom align="center" sx={{ mb: 3 }}>
+          Card No. {cartellaNumber}
         </Typography>
+
+        {/* BINGO Header */}
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: 0,
+          mb: 0.5,
+          bgcolor: '#f5f5f5',
+          border: 1,
+          borderColor: '#ccc'
+        }}>
+          {['B', 'I', 'N', 'G', 'O'].map((letter) => (
+            <Box
+              key={letter}
+              sx={{
+                p: 0.5,
+                textAlign: 'center',
+                borderRight: letter !== 'O' ? 1 : 0,
+                borderColor: '#ccc'
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  color: '#1976d2',
+                  lineHeight: 1
+                }}
+              >
+                {letter}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+
+        {/* Grid */}
         <Grid container spacing={1}>
           {cartella.numbers.map((row, i) => (
             <Grid item xs={12} key={i}>
               <Grid container spacing={1}>
                 {row.map((number, j) => {
-                  const isWinning = number === 'free' || isWinningNumber(number, i, j);
-                  const isDrawn = number === 'free' || drawnNumbers.includes(number);
+                  const isMiddleCell = i === 2 && j === 2;
+                  const isDrawn = drawnNumbers.includes(number);
+                  const isWinningLine = isWinningNumber(number, i, j);
+                  const showBlue = isWinningLine && (isDrawn || isMiddleCell);
                   
                   return (
                     <Grid item xs={2.4} key={`${i}-${j}`}>
@@ -155,15 +193,15 @@ const CartellaCheckModal = ({ open, onClose, cartella, cartellaNumber, drawnNumb
                           p: 2,
                           textAlign: 'center',
                           fontSize: '1.2rem',
-                          fontWeight: isDrawn ? 900 : 'normal',
-                          backgroundColor: isWinning ? '#1976d2' : 
-                                        isDrawn ? '#ff4444' : 
+                          fontWeight: isDrawn || isMiddleCell ? 900 : 'normal',
+                          backgroundColor: showBlue ? '#1976d2' : 
+                                        isMiddleCell || isDrawn ? '#ff4444' : 
                                         'background.paper',
-                          color: isDrawn ? 'white' : 'text.primary',
+                          color: showBlue || isDrawn || isMiddleCell ? 'white' : 'text.primary',
                           transition: 'all 0.3s'
                         }}
                       >
-                        {number}
+                        {isMiddleCell ? 'free' : number}
                       </Paper>
                     </Grid>
                   );
