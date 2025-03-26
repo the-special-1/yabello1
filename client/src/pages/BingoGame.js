@@ -165,6 +165,94 @@ const BingoGame = () => {
     [5, 20, 34, 50, 65]
   ];
 
+  const checkWin = (cartella) => {
+    if (!cartella || !cartella.numbers || !gamePattern) return false;
+
+    const checkLine = (numbers) => numbers.every(num => num === 'free' || drawnNumbers.includes(num));
+    const getColumn = (colIndex) => cartella.numbers.map(row => row[colIndex]);
+    const getDiagonal = (reverse = false) => {
+      return cartella.numbers.map((row, i) => row[reverse ? 4 - i : i]);
+    };
+
+    switch (gamePattern) {
+      case 'Any 1 Line': {
+        // Check rows
+        if (cartella.numbers.some(row => checkLine(row))) return true;
+        // Check columns
+        for (let col = 0; col < 5; col++) {
+          if (checkLine(getColumn(col))) return true;
+        }
+        // Check diagonals
+        if (checkLine(getDiagonal()) || checkLine(getDiagonal(true))) return true;
+        return false;
+      }
+
+      case 'Any 2 Lines': {
+        let lineCount = 0;
+        // Check rows
+        lineCount += cartella.numbers.filter(row => checkLine(row)).length;
+        // Check columns
+        for (let col = 0; col < 5; col++) {
+          if (checkLine(getColumn(col))) lineCount++;
+        }
+        // Check diagonals
+        if (checkLine(getDiagonal())) lineCount++;
+        if (checkLine(getDiagonal(true))) lineCount++;
+        return lineCount >= 2;
+      }
+
+      case 'T Pattern':
+        return checkLine(cartella.numbers[0]) && // Top row
+               checkLine(getColumn(2)); // Middle column
+
+      case 'Reverse T':
+        return checkLine(cartella.numbers[4]) && // Bottom row
+               checkLine(getColumn(2)); // Middle column
+
+      case 'X Pattern':
+        return checkLine(getDiagonal()) && checkLine(getDiagonal(true));
+
+      case 'L Pattern':
+        return checkLine(cartella.numbers[4]) && // Bottom row
+               checkLine(getColumn(0)); // Left column
+
+      case 'Reverse L':
+        return checkLine(cartella.numbers[4]) && // Bottom row
+               checkLine(getColumn(4)); // Right column
+
+      case 'Half Above':
+        return cartella.numbers.slice(0, 3).every(row => checkLine(row));
+
+      case 'Half Below':
+        return cartella.numbers.slice(2).every(row => checkLine(row));
+
+      case 'Half Left':
+        return [0, 1, 2].every(col => checkLine(getColumn(col)));
+
+      case 'Half Right':
+        return [2, 3, 4].every(col => checkLine(getColumn(col)));
+
+      case 'G and O':
+        return checkLine(getColumn(3)) && checkLine(getColumn(4));
+
+      case 'B and O':
+        return checkLine(getColumn(0)) && checkLine(getColumn(4));
+
+      case 'Mark':
+        return checkLine(cartella.numbers[0]) && // Top row
+               checkLine(cartella.numbers[4]) && // Bottom row
+               checkLine(getColumn(0)) && // Left column
+               checkLine(getColumn(4)); // Right column
+
+      case 'T Cross':
+        return checkLine(cartella.numbers[2]) && // Middle row
+               checkLine(getColumn(2)); // Middle column
+
+      default:
+        return false;
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Dialog
@@ -547,8 +635,11 @@ const BingoGame = () => {
       <CartellaCheckModal
         open={showCheckModal}
         onClose={() => setShowCheckModal(false)}
+        cartella={checkedCartella}
         cartellaNumber={checkNumber}
         drawnNumbers={drawnNumbers}
+        winningPattern={gamePattern}
+        isWinner={checkWin(checkedCartella)}
       />
     </Container>
   );
