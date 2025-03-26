@@ -144,7 +144,10 @@ const CartellaRegistration = ({ open, onSelect }) => {
         !['playing', 'won', 'lost'].includes(cartella.status)
       );
       
-      setAvailableCartellas(filteredCartellas || []);
+      // Sort cartellas by ID
+      const sortedCartellas = filteredCartellas.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+      
+      setAvailableCartellas(sortedCartellas || []);
     } catch (err) {
       console.error('Error fetching cartellas:', err);
       setError(err.message);
