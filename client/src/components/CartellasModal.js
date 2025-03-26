@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   Button,
   Grid,
   Box,
@@ -18,14 +17,13 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tabs,
-  Tab
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import CartellaCircleView from './CartellaCircleView';
 
 const TabPanel = (props) => {
@@ -100,133 +98,162 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
       }}
     >
       <DialogTitle sx={{ 
-        bgcolor: 'primary.main', 
-        color: 'white',
-        borderBottom: '1px solid rgba(0, 0, 0, 0.12)'
+        bgcolor: 'white',
+        color: '#333',
+        boxShadow: 1,
+        height: 100,
+        display: 'flex',
+        alignItems: 'center',
+        p: 2
       }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h5" fontWeight="bold">
-            Edit Cartella #{cartella.id}
+        <Box display="flex" alignItems="center">
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              color: '#333',
+              fontSize: '1.25rem',
+              mr: 2,
+              cursor: 'pointer',
+              '&:hover': {
+                color: 'primary.main'
+              }
+            }}
+            onClick={onClose}
+          >
+            Play Bingo
           </Typography>
-          <IconButton onClick={onClose} sx={{ color: 'white' }}>
-            <CloseIcon />
-          </IconButton>
+          <img 
+            src="/logob.png" 
+            alt="Bingo Logo"
+            style={{ height: '100px', width: '600px' }}
+          />
         </Box>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 4 }}>
-        {error && (
-          <Alert 
-            severity="error" 
-            sx={{ mb: 3 }}
-            onClose={() => setError('')}
+      <DialogContent sx={{ p: 0, display: 'flex', height: 'calc(100vh - 100px)' }}>
+        <Box sx={{ 
+          width: 240, 
+          bgcolor: '#333',
+          borderRight: '1px solid rgba(0, 0, 0, 0.12)',
+          flexShrink: 0,
+          height: '100%'
+        }} />
+
+        <Box sx={{ 
+          flexGrow: 1, 
+          p: 4, 
+          bgcolor: '#f5f5f5',
+          overflowY: 'auto'
+        }}>
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ mb: 3 }}
+              onClose={() => setError('')}
+            >
+              {error}
+            </Alert>
+          )}
+
+          <Paper 
+            elevation={3}
+            sx={{ 
+              p: 3,
+              mb: 3,
+              border: '1px solid',
+              borderColor: 'primary.main'
+            }}
           >
-            {error}
-          </Alert>
-        )}
-
-        <Paper 
-          elevation={3}
-          sx={{ 
-            p: 3,
-            mb: 3,
-            border: '1px solid',
-            borderColor: 'primary.main'
-          }}
-        >
-          <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
-            Edit Numbers (1-75)
-          </Typography>
-          <Grid container spacing={1}>
-            {editedNumbers.map((row, i) => (
-              row.map((num, j) => (
-                <Grid item xs={2.4} key={`${i}-${j}`}>
-                  {i === 2 && j === 2 ? (
-                    <Paper
-                      sx={{
-                        p: 2,
-                        textAlign: 'center',
-                        bgcolor: '#1976d2',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        boxShadow: 2,
-                        fontSize: '1.2rem'
-                      }}
-                    >
-                      0
-                    </Paper>
-                  ) : (
-                    <TextField
-                      size="small"
-                      value={num}
-                      onChange={(e) => handleNumberChange(i, j, e.target.value)}
-                      inputProps={{
-                        style: { 
+            <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
+              Edit Numbers (1-75)
+            </Typography>
+            <Grid container spacing={1}>
+              {editedNumbers.map((row, i) => (
+                row.map((num, j) => (
+                  <Grid item xs={2.4} key={`${i}-${j}`}>
+                    {i === 2 && j === 2 ? (
+                      <Paper
+                        sx={{
+                          p: 2,
                           textAlign: 'center',
+                          bgcolor: '#1976d2',
+                          color: 'white',
                           fontWeight: 'bold',
-                          fontSize: '1.1rem',
-                          color: '#1976d2'
-                        },
-                        min: 1,
-                        max: 75
-                      }}
-                      type="number"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          bgcolor: 'white',
-                          border: '2px solid',
-                          borderColor: 'grey.300',
-                          '&:hover': {
-                            borderColor: 'primary.main'
+                          boxShadow: 2,
+                          fontSize: '1.2rem'
+                        }}
+                      >
+                        0
+                      </Paper>
+                    ) : (
+                      <TextField
+                        size="small"
+                        value={num}
+                        onChange={(e) => handleNumberChange(i, j, e.target.value)}
+                        inputProps={{
+                          style: { 
+                            textAlign: 'center',
+                            fontWeight: 'bold',
+                            fontSize: '1.1rem',
+                            color: '#1976d2'
                           },
-                          '&.Mui-focused': {
-                            borderColor: 'primary.main'
+                          min: 1,
+                          max: 75
+                        }}
+                        type="number"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            bgcolor: 'white',
+                            border: '2px solid',
+                            borderColor: 'grey.300',
+                            '&:hover': {
+                              borderColor: 'primary.main'
+                            },
+                            '&.Mui-focused': {
+                              borderColor: 'primary.main'
+                            }
                           }
-                        }
-                      }}
-                    />
-                  )}
-                </Grid>
-              ))
-            ))}
-          </Grid>
-        </Paper>
+                        }}
+                      />
+                    )}
+                  </Grid>
+                ))
+              ))}
+            </Grid>
+          </Paper>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button 
+              onClick={onClose} 
+              variant="outlined"
+              size="large"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              variant="contained"
+              size="large"
+              startIcon={<SaveIcon />}
+              sx={{ 
+                minWidth: 120,
+                boxShadow: 2,
+                '&:hover': {
+                  boxShadow: 4
+                }
+              }}
+            >
+              Save Changes
+            </Button>
+          </Box>
+        </Box>
       </DialogContent>
-
-      <DialogActions sx={{ 
-        p: 3, 
-        bgcolor: 'grey.100',
-        borderTop: '1px solid rgba(0, 0, 0, 0.12)'
-      }}>
-        <Button 
-          onClick={onClose} 
-          variant="outlined"
-          size="large"
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          size="large"
-          startIcon={<SaveIcon />}
-          sx={{ 
-            minWidth: 120,
-            boxShadow: 2,
-            '&:hover': {
-              boxShadow: 4
-            }
-          }}
-        >
-          Save Changes
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };
 
 const CartellasModal = ({ open, onClose }) => {
   const { userBranch } = useAuth();
+  const navigate = useNavigate();
   const [error, setError] = useState('');
   const [existingCartellas, setExistingCartellas] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -236,6 +263,11 @@ const CartellasModal = ({ open, onClose }) => {
     numbers: Array(5).fill().map(() => Array(5).fill('')),
     branchId: userBranch
   });
+
+  const handlePlayBingoClick = () => {
+    onClose();
+    navigate('/bingo-game');
+  };
 
   useEffect(() => {
     // Set center cell to 0
@@ -341,215 +373,254 @@ const CartellasModal = ({ open, onClose }) => {
         }}
       >
         <DialogTitle sx={{ 
-          bgcolor: 'primary.main', 
-          color: 'white',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.12)'
+          bgcolor: 'white',
+          color: '#333',
+          boxShadow: 1,
+          height: 100,
+          display: 'flex',
+          alignItems: 'center',
+          p: 2
         }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h5" fontWeight="bold">
-              Manage Cartellas
+          <Box display="flex" alignItems="center">
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                color: '#333',
+                fontSize: '1.25rem',
+                mr: 2,
+                cursor: 'pointer',
+                '&:hover': {
+                  color: 'primary.main'
+                }
+              }}
+              onClick={handlePlayBingoClick}
+            >
+              Play Bingo
             </Typography>
-            <IconButton onClick={onClose} sx={{ color: 'white' }}>
-              <CloseIcon />
-            </IconButton>
+            <img 
+              src="/logob.png" 
+              alt="Bingo Logo"
+              style={{ height: '100px', width: '600px' }}
+            />
           </Box>
         </DialogTitle>
 
-        <DialogContent sx={{ p: 4 }}>
-          {error && (
-            <Alert 
-              severity="error" 
-              sx={{ mb: 3 }}
-              onClose={() => setError('')}
-            >
-              {error}
-            </Alert>
-          )}
+        <DialogContent sx={{ p: 0, display: 'flex', height: 'calc(100vh - 100px)' }}>
+          <Box sx={{ 
+            width: 240, 
+            bgcolor: '#333',
+            borderRight: '1px solid rgba(0, 0, 0, 0.12)',
+            flexShrink: 0,
+            height: '100%'
+          }} />
 
-          <Grid container spacing={4}>
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom color="primary" fontWeight="bold" sx={{ mb: 3 }}>
-                Create New Cartella
-              </Typography>
-              <Box sx={{ 
-                bgcolor: 'white',
-                p: 4,
-                borderRadius: 2,
-                boxShadow: 3,
-                maxWidth: 600,
-                mx: 'auto'
-              }}>
-                <TextField
-                  fullWidth
-                  label="Cartella ID"
-                  value={newCartella.id}
-                  onChange={(e) => setNewCartella({ ...newCartella, id: e.target.value })}
-                  sx={{ 
-                    mb: 3,
-                    '& .MuiOutlinedInput-root': {
-                      bgcolor: 'grey.50'
-                    }
-                  }}
-                />
-                <Paper 
-                  elevation={3}
-                  sx={{ 
-                    p: 3, 
-                    mb: 3,
-                    border: '1px solid',
-                    borderColor: 'primary.main'
-                  }}
-                >
-                  <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
-                    Enter Numbers (1-75)
-                  </Typography>
-                  <Grid container spacing={1}>
-                    {newCartella.numbers.map((row, i) => (
-                      row.map((num, j) => (
-                        <Grid item xs={2.4} key={`${i}-${j}`}>
-                          {i === 2 && j === 2 ? (
-                            <Paper
-                              sx={{
-                                p: 2,
-                                textAlign: 'center',
-                                bgcolor: '#1976d2',
-                                color: 'white',
-                                fontWeight: 'bold',
-                                boxShadow: 2,
-                                fontSize: '1.2rem'
-                              }}
-                            >
-                              0
-                            </Paper>
-                          ) : (
-                            <TextField
-                              size="small"
-                              value={num}
-                              onChange={(e) => handleNumberChange(i, j, e.target.value)}
-                              inputProps={{
-                                style: { 
+          <Box sx={{ 
+            flexGrow: 1, 
+            p: 4, 
+            bgcolor: '#f5f5f5',
+            overflowY: 'auto'
+          }}>
+            {error && (
+              <Alert 
+                severity="error" 
+                sx={{ mb: 3 }}
+                onClose={() => setError('')}
+              >
+                {error}
+              </Alert>
+            )}
+
+            <Grid container spacing={4}>
+              <Grid item xs={12}>
+                <Box sx={{ 
+                  bgcolor: 'white',
+                  p: 4,
+                  borderRadius: 2,
+                  boxShadow: 3,
+                  maxWidth: 600,
+                  mx: 'auto'
+                }}>
+                  <Grid container spacing={0}>
+                    {/* Column Headers */}
+                    <Grid container item xs={12} sx={{ mb: 1 }}>
+                      <Grid item xs={2.4}>
+                        <Box sx={{ bgcolor: '#000080', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>B</Box>
+                      </Grid>
+                      <Grid item xs={2.4}>
+                        <Box sx={{ bgcolor: '#800000', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>I</Box>
+                      </Grid>
+                      <Grid item xs={2.4}>
+                        <Box sx={{ bgcolor: '#4B4B4B', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>N</Box>
+                      </Grid>
+                      <Grid item xs={2.4}>
+                        <Box sx={{ bgcolor: '#996515', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>G</Box>
+                      </Grid>
+                      <Grid item xs={2.4}>
+                        <Box sx={{ bgcolor: '#808080', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>O</Box>
+                      </Grid>
+                    </Grid>
+
+                    {/* Number Grid */}
+                    <Grid container item xs={12} spacing={0.5}>
+                      {newCartella.numbers.map((row, i) => (
+                        row.map((num, j) => (
+                          <Grid item xs={2.4} key={`${i}-${j}`}>
+                            {i === 2 && j === 2 ? (
+                              <Paper
+                                sx={{
+                                  p: 1.5,
                                   textAlign: 'center',
+                                  bgcolor: '#f5f5f5',
+                                  color: '#4B4B4B',
                                   fontWeight: 'bold',
-                                  fontSize: '1.1rem',
-                                  color: '#1976d2'
-                                },
-                                min: 1,
-                                max: 75
-                              }}
-                              type="number"
-                              sx={{
-                                '& .MuiOutlinedInput-root': {
-                                  bgcolor: 'white',
-                                  border: '2px solid',
-                                  borderColor: 'grey.300',
-                                  '&:hover': {
-                                    borderColor: 'primary.main'
+                                  fontSize: '1.2rem',
+                                  border: '1px solid #ddd'
+                                }}
+                              >
+                                0
+                              </Paper>
+                            ) : (
+                              <TextField
+                                size="small"
+                                value={num}
+                                onChange={(e) => handleNumberChange(i, j, e.target.value)}
+                                inputProps={{
+                                  style: { 
+                                    textAlign: 'center',
+                                    fontWeight: 'bold',
+                                    fontSize: '1.1rem',
+                                    padding: '8px'
                                   },
-                                  '&.Mui-focused': {
-                                    borderColor: 'primary.main'
+                                  min: 1,
+                                  max: 75
+                                }}
+                                type="number"
+                                sx={{
+                                  width: '100%',
+                                  '& .MuiOutlinedInput-root': {
+                                    bgcolor: 'white',
+                                    '& fieldset': {
+                                      borderColor: '#ddd',
+                                    },
+                                    '&:hover fieldset': {
+                                      borderColor: '#999',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                      borderColor: '#666',
+                                    }
                                   }
-                                }
-                              }}
-                            />
-                          )}
-                        </Grid>
-                      ))
-                    ))}
-                  </Grid>
-                </Paper>
-                <Button
-                  variant="contained"
-                  fullWidth
-                  size="large"
-                  startIcon={<AddIcon />}
-                  onClick={handleCreateCartella}
-                  sx={{ 
-                    py: 1.5,
-                    boxShadow: 2,
-                    '&:hover': {
-                      boxShadow: 4
-                    }
-                  }}
-                >
-                  Register Cartella
-                </Button>
-              </Box>
-            </Grid>
+                                }}
+                              />
+                            )}
+                          </Grid>
+                        ))
+                      ))}
+                    </Grid>
 
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom color="primary" fontWeight="bold" sx={{ mb: 3 }}>
-                Existing Cartellas
-              </Typography>
-              <TableContainer component={Paper} sx={{ mb: 4, boxShadow: 3 }}>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: 'primary.main' }}>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Cartella ID</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Branch</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>B (1-15)</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>I (16-30)</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>N (31-45)</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>G (46-60)</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>O (61-75)</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {existingCartellas.map((cartella) => (
-                      <TableRow 
-                        key={cartella.id}
+                    {/* Card Number Input */}
+                    <Grid item xs={12} sx={{ mt: 3 }}>
+                      <Typography variant="subtitle1" sx={{ mb: 1, color: '#666' }}>
+                        Card Number:
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        value={newCartella.id}
+                        onChange={(e) => setNewCartella({ ...newCartella, id: e.target.value })}
                         sx={{ 
-                          '&:hover': { 
-                            bgcolor: 'action.hover',
-                            '& .edit-button': {
-                              opacity: 1
+                          '& .MuiOutlinedInput-root': {
+                            bgcolor: 'white',
+                            '& fieldset': {
+                              borderColor: '#ddd',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: '#999',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#666',
                             }
                           }
                         }}
-                      >
-                        <TableCell sx={{ fontWeight: 'bold' }}>{cartella.id}</TableCell>
-                        <TableCell>{cartella.branch?.name || 'Unknown Branch'}</TableCell>
-                        <TableCell>{getColumnNumbers(cartella.numbers, 0)}</TableCell>
-                        <TableCell>{getColumnNumbers(cartella.numbers, 1)}</TableCell>
-                        <TableCell>{getColumnNumbers(cartella.numbers, 2)}</TableCell>
-                        <TableCell>{getColumnNumbers(cartella.numbers, 3)}</TableCell>
-                        <TableCell>{getColumnNumbers(cartella.numbers, 4)}</TableCell>
-                        <TableCell>
-                          <IconButton 
-                            onClick={() => handleEditCartella(cartella)}
-                            className="edit-button"
-                            sx={{ 
-                              opacity: 0,
-                              transition: 'opacity 0.2s',
-                              color: 'primary.main'
-                            }}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Grid>
-          </Grid>
-        </DialogContent>
+                      />
+                    </Grid>
 
-        <DialogActions sx={{ 
-          p: 3, 
-          bgcolor: 'grey.100',
-          borderTop: '1px solid rgba(0, 0, 0, 0.12)'
-        }}>
-          <Button 
-            onClick={onClose} 
-            variant="outlined"
-            size="large"
-            sx={{ minWidth: 120 }}
-          >
-            Close
-          </Button>
-        </DialogActions>
+                    {/* Submit Button */}
+                    <Grid item xs={12} sx={{ mt: 3, textAlign: 'center' }}>
+                      <Button
+                        variant="contained"
+                        onClick={handleCreateCartella}
+                        sx={{ 
+                          bgcolor: '#0277bd',
+                          px: 4,
+                          py: 1,
+                          '&:hover': {
+                            bgcolor: '#01579b'
+                          }
+                        }}
+                      >
+                        Submit
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12}>
+                <TableContainer component={Paper} sx={{ mb: 4, boxShadow: 3 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: 'primary.main' }}>
+                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Cartella ID</TableCell>
+                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Branch</TableCell>
+                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>B (1-15)</TableCell>
+                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>I (16-30)</TableCell>
+                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>N (31-45)</TableCell>
+                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>G (46-60)</TableCell>
+                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>O (61-75)</TableCell>
+                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {existingCartellas.map((cartella) => (
+                        <TableRow 
+                          key={cartella.id}
+                          sx={{ 
+                            '&:hover': { 
+                              bgcolor: 'action.hover',
+                              '& .edit-button': {
+                                opacity: 1
+                              }
+                            }
+                          }}
+                        >
+                          <TableCell sx={{ fontWeight: 'bold' }}>{cartella.id}</TableCell>
+                          <TableCell>{cartella.branch?.name || 'Unknown Branch'}</TableCell>
+                          <TableCell>{getColumnNumbers(cartella.numbers, 0)}</TableCell>
+                          <TableCell>{getColumnNumbers(cartella.numbers, 1)}</TableCell>
+                          <TableCell>{getColumnNumbers(cartella.numbers, 2)}</TableCell>
+                          <TableCell>{getColumnNumbers(cartella.numbers, 3)}</TableCell>
+                          <TableCell>{getColumnNumbers(cartella.numbers, 4)}</TableCell>
+                          <TableCell>
+                            <IconButton 
+                              onClick={() => handleEditCartella(cartella)}
+                              className="edit-button"
+                              sx={{ 
+                                opacity: 0,
+                                transition: 'opacity 0.2s',
+                                color: 'primary.main'
+                              }}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
       </Dialog>
 
       <EditCartellaDialog
