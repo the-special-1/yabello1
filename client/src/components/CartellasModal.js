@@ -160,65 +160,86 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
             sx={{ 
               p: 3,
               mb: 3,
-              border: '1px solid',
-              borderColor: 'primary.main'
+              bgcolor: 'white',
+              borderRadius: 2
             }}
           >
-            <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
-              Edit Numbers (1-75)
-            </Typography>
-            <Grid container spacing={1}>
-              {editedNumbers.map((row, i) => (
-                row.map((num, j) => (
-                  <Grid item xs={2.4} key={`${i}-${j}`}>
-                    {i === 2 && j === 2 ? (
-                      <Paper
-                        sx={{
-                          p: 2,
-                          textAlign: 'center',
-                          bgcolor: '#1976d2',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          boxShadow: 2,
-                          fontSize: '1.2rem'
-                        }}
-                      >
-                        0
-                      </Paper>
-                    ) : (
-                      <TextField
-                        size="small"
-                        value={num}
-                        onChange={(e) => handleNumberChange(i, j, e.target.value)}
-                        inputProps={{
-                          style: { 
+            <Grid container spacing={0}>
+              {/* Column Headers */}
+              <Grid container item xs={12} sx={{ mb: 1 }}>
+                <Grid item xs={2.4}>
+                  <Box sx={{ bgcolor: '#000080', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>B</Box>
+                </Grid>
+                <Grid item xs={2.4}>
+                  <Box sx={{ bgcolor: '#800000', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>I</Box>
+                </Grid>
+                <Grid item xs={2.4}>
+                  <Box sx={{ bgcolor: '#4B4B4B', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>N</Box>
+                </Grid>
+                <Grid item xs={2.4}>
+                  <Box sx={{ bgcolor: '#996515', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>G</Box>
+                </Grid>
+                <Grid item xs={2.4}>
+                  <Box sx={{ bgcolor: '#808080', color: 'white', p: 1, textAlign: 'center', fontWeight: 'bold' }}>O</Box>
+                </Grid>
+              </Grid>
+
+              {/* Number Grid */}
+              <Grid container item xs={12} spacing={0.5}>
+                {editedNumbers.map((row, i) => (
+                  row.map((num, j) => (
+                    <Grid item xs={2.4} key={`${i}-${j}`}>
+                      {i === 2 && j === 2 ? (
+                        <Paper
+                          sx={{
+                            p: 1.5,
                             textAlign: 'center',
+                            bgcolor: '#f5f5f5',
+                            color: '#4B4B4B',
                             fontWeight: 'bold',
-                            fontSize: '1.1rem',
-                            color: '#1976d2'
-                          },
-                          min: 1,
-                          max: 75
-                        }}
-                        type="number"
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            bgcolor: 'white',
-                            border: '2px solid',
-                            borderColor: 'grey.300',
-                            '&:hover': {
-                              borderColor: 'primary.main'
+                            fontSize: '1.2rem',
+                            border: '1px solid #ddd'
+                          }}
+                        >
+                          0
+                        </Paper>
+                      ) : (
+                        <TextField
+                          size="small"
+                          value={num}
+                          onChange={(e) => handleNumberChange(i, j, e.target.value)}
+                          inputProps={{
+                            style: { 
+                              textAlign: 'center',
+                              fontWeight: 'bold',
+                              fontSize: '1.1rem',
+                              padding: '8px'
                             },
-                            '&.Mui-focused': {
-                              borderColor: 'primary.main'
+                            min: 1,
+                            max: 75
+                          }}
+                          type="number"
+                          sx={{
+                            width: '100%',
+                            '& .MuiOutlinedInput-root': {
+                              bgcolor: 'white',
+                              '& fieldset': {
+                                borderColor: '#ddd',
+                              },
+                              '&:hover fieldset': {
+                                borderColor: '#999',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: '#666',
+                              }
                             }
-                          }
-                        }}
-                      />
-                    )}
-                  </Grid>
-                ))
-              ))}
+                          }}
+                        />
+                      )}
+                    </Grid>
+                  ))
+                ))}
+              </Grid>
             </Grid>
           </Paper>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
@@ -226,6 +247,14 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
               onClick={onClose} 
               variant="outlined"
               size="large"
+              sx={{
+                borderColor: '#ddd',
+                color: '#666',
+                '&:hover': {
+                  borderColor: '#999',
+                  bgcolor: 'rgba(0, 0, 0, 0.05)'
+                }
+              }}
             >
               Cancel
             </Button>
@@ -233,12 +262,12 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
               onClick={handleSave}
               variant="contained"
               size="large"
-              startIcon={<SaveIcon />}
               sx={{ 
-                minWidth: 120,
-                boxShadow: 2,
+                bgcolor: '#0277bd',
+                px: 4,
+                py: 1,
                 '&:hover': {
-                  boxShadow: 4
+                  bgcolor: '#01579b'
                 }
               }}
             >
@@ -354,9 +383,15 @@ const CartellasModal = ({ open, onClose }) => {
     await fetchCartellas();
   };
 
-  // Helper function to get column numbers
+  // Helper function to transpose the matrix (convert rows to columns)
+  const transposeMatrix = (matrix) => {
+    return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
+  };
+
+  // Helper function to get column numbers from transposed matrix
   const getColumnNumbers = (numbers, colIndex) => {
-    return numbers.map(row => row[colIndex]).filter(num => num !== '0').join(', ');
+    const transposed = transposeMatrix(numbers);
+    return transposed[colIndex].filter(num => num !== '0').join(',');
   };
 
   return (
@@ -566,50 +601,165 @@ const CartellasModal = ({ open, onClose }) => {
 
               <Grid item xs={12}>
                 <TableContainer component={Paper} sx={{ mb: 4, boxShadow: 3 }}>
-                  <Table>
+                  <Table sx={{ 
+                    borderCollapse: 'collapse',
+                    '& th, & td': {
+                      borderRight: '1px solid #ddd',
+                      '&:last-child': {
+                        borderRight: 'none'
+                      }
+                    }
+                  }}>
                     <TableHead>
-                      <TableRow sx={{ bgcolor: 'primary.main' }}>
-                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Cartella ID</TableCell>
-                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Branch</TableCell>
-                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>B (1-15)</TableCell>
-                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>I (16-30)</TableCell>
-                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>N (31-45)</TableCell>
-                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>G (46-60)</TableCell>
-                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>O (61-75)</TableCell>
-                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
+                      <TableRow>
+                        <TableCell 
+                          sx={{ 
+                            bgcolor: '#8B4513', 
+                            color: 'white',
+                            fontWeight: 'bold',
+                            width: '60px',
+                            fontSize: '0.9rem',
+                            padding: '8px'
+                          }}
+                        >
+                          card
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            bgcolor: '#000080', 
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem',
+                            padding: '8px'
+                          }}
+                        >
+                          B
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            bgcolor: '#800000', 
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem',
+                            padding: '8px'
+                          }}
+                        >
+                          I
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            bgcolor: '#4B4B4B', 
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem',
+                            padding: '8px'
+                          }}
+                        >
+                          N
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            bgcolor: '#996515', 
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem',
+                            padding: '8px'
+                          }}
+                        >
+                          G
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            bgcolor: '#808080', 
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem',
+                            padding: '8px'
+                          }}
+                        >
+                          O
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            bgcolor: '#8B4513', 
+                            color: 'white',
+                            fontWeight: 'bold',
+                            width: '60px',
+                            fontSize: '0.9rem',
+                            padding: '8px'
+                          }}
+                        >
+                          Action
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {existingCartellas.map((cartella) => (
+                      {existingCartellas.map((cartella, index) => (
                         <TableRow 
                           key={cartella.id}
-                          sx={{ 
-                            '&:hover': { 
-                              bgcolor: 'action.hover',
-                              '& .edit-button': {
-                                opacity: 1
-                              }
-                            }
+                          sx={{
+                            bgcolor: 'white',
+                            '&:hover': { bgcolor: '#f5f5f5' }
                           }}
                         >
-                          <TableCell sx={{ fontWeight: 'bold' }}>{cartella.id}</TableCell>
-                          <TableCell>{cartella.branch?.name || 'Unknown Branch'}</TableCell>
-                          <TableCell>{getColumnNumbers(cartella.numbers, 0)}</TableCell>
-                          <TableCell>{getColumnNumbers(cartella.numbers, 1)}</TableCell>
-                          <TableCell>{getColumnNumbers(cartella.numbers, 2)}</TableCell>
-                          <TableCell>{getColumnNumbers(cartella.numbers, 3)}</TableCell>
-                          <TableCell>{getColumnNumbers(cartella.numbers, 4)}</TableCell>
-                          <TableCell>
-                            <IconButton 
+                          <TableCell 
+                            sx={{ 
+                              color: '#666',
+                              fontWeight: 'bold',
+                              fontSize: '0.9rem',
+                              padding: '8px'
+                            }}
+                          >
+                            {index + 1}
+                          </TableCell>
+                          <TableCell sx={{ 
+                            fontSize: '0.9rem', 
+                            padding: '8px',
+                            color: '#000'
+                          }}>
+                            {getColumnNumbers(cartella.numbers, 0)}
+                          </TableCell>
+                          <TableCell sx={{ 
+                            fontSize: '0.9rem', 
+                            padding: '8px',
+                            color: '#000'
+                          }}>
+                            {getColumnNumbers(cartella.numbers, 1)}
+                          </TableCell>
+                          <TableCell sx={{ 
+                            fontSize: '0.9rem', 
+                            padding: '8px',
+                            color: '#000'
+                          }}>
+                            {getColumnNumbers(cartella.numbers, 2)}
+                          </TableCell>
+                          <TableCell sx={{ 
+                            fontSize: '0.9rem', 
+                            padding: '8px',
+                            color: '#000'
+                          }}>
+                            {getColumnNumbers(cartella.numbers, 3)}
+                          </TableCell>
+                          <TableCell sx={{ 
+                            fontSize: '0.9rem', 
+                            padding: '8px',
+                            color: '#000'
+                          }}>
+                            {getColumnNumbers(cartella.numbers, 4)}
+                          </TableCell>
+                          <TableCell sx={{ padding: '4px' }}>
+                            <IconButton
                               onClick={() => handleEditCartella(cartella)}
-                              className="edit-button"
+                              size="small"
                               sx={{ 
-                                opacity: 0,
-                                transition: 'opacity 0.2s',
-                                color: 'primary.main'
+                                color: '#0277bd',
+                                padding: '4px',
+                                '&:hover': { 
+                                  bgcolor: 'rgba(2, 119, 189, 0.1)' 
+                                }
                               }}
                             >
-                              <EditIcon />
+                              <EditIcon sx={{ fontSize: '1rem' }} />
                             </IconButton>
                           </TableCell>
                         </TableRow>
