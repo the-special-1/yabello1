@@ -553,13 +553,11 @@ const BingoGame = () => {
               Bingo Game
             </Typography> */}
             {gamePattern && (
-              <Box sx={{ mt: 2 }}>
-                {/* <Typography variant="subtitle1" color="primary.dark" gutterBottom>
-                  Pattern: {gamePattern}
-                </Typography> */}
-                <Box sx={{ maxWidth: 200 }}>
-                  <PatternVisualizer pattern={gamePattern} />
-                </Box>
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                <PatternVisualizer 
+                  pattern={gamePattern} 
+                  gameStarted={gameStarted}
+                />
               </Box>
             )}
             {/* {totalBetAmount > 0 && (

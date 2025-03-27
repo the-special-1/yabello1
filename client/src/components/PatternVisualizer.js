@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Grid, Box, Typography } from '@mui/material';
 
-const PatternVisualizer = ({ pattern }) => {
+const PatternVisualizer = ({ pattern, gameStarted }) => {
   const [currentPatternIndex, setCurrentPatternIndex] = useState(0);
   
   // Define patterns based on the selected pattern
@@ -118,93 +118,107 @@ const PatternVisualizer = ({ pattern }) => {
     }
   };
 
-  const shouldAnimate = ['Any 1 Line', 'Any 2 Lines', 'Any Vertical', 'Any Horizontal'].includes(pattern);
-  const patternArray = getPatternDots(pattern);
-
+  // Animation effect
   useEffect(() => {
-    if (shouldAnimate && patternArray.length > 1) {
+    if (pattern) {
+      const patterns = getPatternDots(pattern);
       const interval = setInterval(() => {
-        setCurrentPatternIndex((prev) => (prev + 1) % patternArray.length);
-      }, 1500);
-
+        setCurrentPatternIndex((prevIndex) => (prevIndex + 1) % patterns.length);
+      }, 1000);
       return () => clearInterval(interval);
     } else {
       setCurrentPatternIndex(0);
     }
-  }, [patternArray, shouldAnimate, pattern]);
+  }, [pattern]);
 
-  const dots = patternArray[currentPatternIndex] || Array(25).fill(false);
+  if (!pattern) return null;
+
+  const patterns = getPatternDots(pattern);
+  const currentPattern = patterns[currentPatternIndex];
 
   return (
-    <Box sx={{ width: 180, mx: 'auto' }}>
-      {/* BINGO Header */}
+    <Box sx={{ 
+      width: '100%',
+      maxWidth: 300,
+      margin: '0 auto',
+      mt: 2 
+    }}>
       <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(5, 1fr)',
-        gap: 0,
-        mb: 0.5,
-        bgcolor: '#f5f5f5',
-        border: 1,
-        borderColor: '#ccc'
+        display: 'table',
+        width: '100%',
+        borderSpacing: 0,
+        borderCollapse: 'collapse',
       }}>
-        {['B', 'I', 'N', 'G', 'O'].map((letter) => (
-          <Box
-            key={letter}
-            sx={{
-              p: 0.5,
-              textAlign: 'center',
-              borderRight: letter !== 'O' ? 1 : 0,
-              borderColor: '#ccc'
-            }}
-          >
-            <Typography
+        {/* BINGO Header */}
+        <Box sx={{ display: 'table-row' }}>
+          {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
+            <Box
+              key={letter}
               sx={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                color: '#1976d2',
-                lineHeight: 1
+                display: 'table-cell',
+                width: '20%',
+                background: '#000033',
+                p: 1,
+                textAlign: 'center',
+                border: '1px solid #fff',
               }}
             >
-              {letter}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
-
-      {/* Grid */}
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(5, 1fr)',
-        gap: 0,
-        border: 1,
-        borderColor: '#ccc'
-      }}>
-        {Array(25).fill(null).map((_, i) => (
-          <Box
-            key={i}
-            sx={{
-              aspectRatio: '1',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRight: (i + 1) % 5 !== 0 ? 1 : 0,
-              borderBottom: i < 20 ? 1 : 0,
-              borderColor: '#ccc',
-              bgcolor: '#fff',
-              p: 0.5
-            }}
-          >
-            {dots[i] && (
-              <Box
+              <Typography
+                align="center"
                 sx={{
-                  width: '90%',
-                  height: '90%',
-                  borderRadius: '50%',
-                  bgcolor: 'blue',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                  fontSize: '1.2rem',
+                  fontWeight: 'bold',
+                  color: 'white',
+                  lineHeight: 1
                 }}
-              />
-            )}
+              >
+                {letter}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+
+        {/* Pattern Grid */}
+        {Array(5).fill(null).map((_, row) => (
+          <Box key={row} sx={{ display: 'table-row' }}>
+            {Array(5).fill(null).map((_, col) => {
+              const index = row * 5 + col;
+              const isHighlighted = currentPattern && currentPattern[index];
+              
+              return (
+                <Box
+                  key={col}
+                  sx={{
+                    display: 'table-cell',
+                    position: 'relative',
+                    width: '20%',
+                    border: '1px solid #ccc',
+                    backgroundColor: 'white',
+                    p: 0,
+                    '&::after': {
+                      content: '""',
+                      display: 'block',
+                      paddingBottom: '100%'
+                    }
+                  }}
+                >
+                  {isHighlighted && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '80%',
+                        height: '80%',
+                        backgroundColor: 'blue',
+                        borderRadius: '50%'
+                      }}
+                    />
+                  )}
+                </Box>
+              );
+            })}
           </Box>
         ))}
       </Box>
