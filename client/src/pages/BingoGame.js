@@ -330,6 +330,8 @@ const BingoGame = () => {
     }
   };
 
+<<<<<<< HEAD
+=======
   const handleNewBingo = async () => {
     try {
       // Save round data
@@ -391,6 +393,7 @@ const BingoGame = () => {
     }
   }, [showStartModal]);
 
+>>>>>>> parent of ce4298d (Revert "sales report")
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Dialog
