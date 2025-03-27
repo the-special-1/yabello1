@@ -18,11 +18,15 @@ const CartellaCheckModal = ({
     left: '50%',
     transform: 'translate(-50%, -50%)',
     width: '90%',
-    maxWidth: 400,
-    bgcolor: 'background.paper',
+    maxWidth: 600,
+    bgcolor: 'white',
     boxShadow: 24,
-    p: 4,
-    borderRadius: 2
+    p: 2,
+    borderRadius: 1,
+    outline: 'none',
+    alignItems: 'center',
+    minHeight: '60vh',
+    opacity: 0.9,
   };
 
   const handleGoodBingo = () => {
@@ -182,35 +186,51 @@ const CartellaCheckModal = ({
       aria-labelledby="cartella-check-modal"
     >
       <Box sx={modalStyle}>
-        <Typography variant="h5" gutterBottom align="center" sx={{ mb: 3 }}>
-          Card No. {cartellaNumber}
-        </Typography>
+       
+          <Typography variant="h6" align="left" sx={{ color: 'black', fontWeight: 'light' }}>
+            Bingo
+          </Typography>
+        {/* Title Bar */}
+          <Box sx={{ 
+          bgcolor: '#0066cc',
+          mx: 0,
+          mt: 0,
+          mb: 2,
+          p: 1,
+          borderTopLeftRadius: 4,
+          borderTopRightRadius: 4
+        }}>
+          <Typography variant="h4" align="center" sx={{ color: 'white', fontWeight: 'bold' }}>
+            Card No: {cartellaNumber}
+          </Typography>
+        </Box>
 
         {/* BINGO Header */}
         <Box sx={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: 0,
-          mb: 0.5,
-          bgcolor: '#f5f5f5',
-          border: 1,
-          borderColor: '#ccc'
+          gap: 0.5,
+          mb: 0
         }}>
-          {['B', 'I', 'N', 'G', 'O'].map((letter) => (
+          {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
             <Box
               key={letter}
               sx={{
-                p: 0.5,
-                textAlign: 'center',
-                borderRight: letter !== 'O' ? 1 : 0,
-                borderColor: '#ccc'
+                background: i === 0 ? 'linear-gradient(135deg, #000066 0%, #0099ff 100%)' :
+                           i === 1 ? '#990000' :
+                           i === 2 ? '#009933' :
+                           i === 3 ? '#996600' :
+                           'linear-gradient(135deg, #666666 0%, #999999 100%)',
+                p: 1,
+                borderRadius: 1
               }}
             >
               <Typography
+                align="center"
                 sx={{
-                  fontSize: '1.2rem',
+                  fontSize: '2rem',
                   fontWeight: 'bold',
-                  color: '#1976d2',
+                  color: 'white',
                   lineHeight: 1
                 }}
               >
@@ -220,97 +240,136 @@ const CartellaCheckModal = ({
           ))}
         </Box>
 
-        {/* Grid */}
-        <Grid container spacing={1}>
+        {/* Numbers Grid */}
+        <Box sx={{ 
+          display: 'table',
+          width: '90%',
+          margin: '0 auto',
+          borderSpacing: 0,
+          borderCollapse: 'collapse',
+          my: 1,
+          minHeight: '60vh',
+        }}>
           {cartella.numbers.map((row, i) => (
-            <Grid item xs={12} key={i}>
-              <Grid container spacing={1}>
-                {row.map((number, j) => {
-                  const isMiddleCell = i === 2 && j === 2;
-                  const isDrawn = drawnNumbers.includes(number);
-                  const isWinningLine = isWinningNumber(number, i, j);
-                  const showBlue = isWinningLine && (isDrawn || isMiddleCell);
-                  
-                  return (
-                    <Grid item xs={2.4} key={`${i}-${j}`}>
-                      <Paper
-                        elevation={3}
-                        sx={{
-                          p: 2,
-                          textAlign: 'center',
-                          fontSize: '1.2rem',
-                          fontWeight: isDrawn || isMiddleCell ? 900 : 'normal',
-                          backgroundColor: showBlue ? '#1976d2' : 
-                                        isMiddleCell || isDrawn ? '#ff4444' : 
-                                        'background.paper',
-                          color: showBlue || isDrawn || isMiddleCell ? 'white' : 'text.primary',
-                          transition: 'all 0.3s'
-                        }}
-                      >
-                        {isMiddleCell ? 'free' : number}
-                      </Paper>
-                    </Grid>
-                  );
-                })}
-              </Grid>
-            </Grid>
+            <Box key={i} sx={{ display: 'table-row', height: '42px' }}>
+              {row.map((number, j) => {
+                const isMiddleCell = i === 2 && j === 2;
+                const isDrawn = drawnNumbers.includes(number);
+                const isWinningLine = isWinningNumber(number, i, j);
+                const showBlue = isWinningLine && (isDrawn || isMiddleCell);
+                
+                return (
+                  <Box 
+                    key={`${i}-${j}`} 
+                    sx={{ 
+                      display: 'table-cell',
+                      textAlign: 'center',
+                      verticalAlign: 'middle',
+                      width: '20%',
+                      position: 'relative',
+                      padding: 0,
+                      border: '1px solid #e0e0e0',
+                      backgroundColor: 'white'
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '80px',
+                        height: '80px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: isMiddleCell ? '0.9rem' : '2.5rem',
+                        fontWeight: 'bold',
+                        backgroundColor: showBlue ? 'blue' : 
+                                      isMiddleCell || isDrawn ? 'red' : 
+                                      'transparent',
+                        color: showBlue || isDrawn || isMiddleCell ? 'white' : 'black',
+                        borderRadius: '50%',
+                        zIndex: 1
+                      }}
+                    >
+                      {isMiddleCell ? 'free' : number}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
           ))}
-        </Grid>
+        </Box>
 
         {/* Action Buttons */}
         <Box sx={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: 1,
-          mt: 3 
+          mt: 2,
+          mx: 'auto',
+          width: '100%'
         }}>
           <Button
             variant="contained"
-            color="success"
             onClick={handleGoodBingo}
             sx={{ 
-              fontSize: '0.8rem',
-              whiteSpace: 'nowrap',
-              padding: '6px 8px'
+              bgcolor: '#009933',
+              '&:hover': { bgcolor: '#008029' },
+              fontSize: '0.9rem',
+              textTransform: 'none',
+              border: '2px solid #006622',
+              borderRadius: 0,
+              fontWeight: 'bolder',
             }}
           >
-            Good Bingo
+           GOOD BINGO
           </Button>
           <Button
             variant="contained"
-            color="error"
             onClick={handleNotBingo}
             sx={{ 
-              fontSize: '0.8rem',
-              whiteSpace: 'nowrap',
-              padding: '6px 8px'
+              bgcolor: '#800000',
+              '&:hover': { bgcolor: '#660000' },
+              fontSize: '0.9rem',
+              textTransform: 'none',
+              border: '2px solid #4d0000',
+              borderRadius: 0,
+              fontWeight: 'bolder',
             }}
           >
-            Not Bingo
+         NOT BINGO
           </Button>
           <Button
             variant="contained"
-            color="primary"
             onClick={onAdditional}
             sx={{ 
-              fontSize: '0.8rem',
-              whiteSpace: 'nowrap',
-              padding: '6px 8px'
+              bgcolor: '#009933',
+              '&:hover': { bgcolor: '#008029' },
+              fontSize: '0.9rem',
+              textTransform: 'none',
+              border: '2px solid #006622',
+              borderRadius: 0,
+              fontWeight: 'bolder',
             }}
           >
             Additional
           </Button>
           <Button
             variant="contained"
-            color="warning"
             onClick={onNewBingo}
             sx={{ 
-              fontSize: '0.8rem',
-              whiteSpace: 'nowrap',
-              padding: '6px 8px'
+              bgcolor: '#0000ff',
+              '&:hover': { bgcolor: '#0000cc' },
+              fontSize: '0.9rem',
+              textTransform: 'none',
+              border: '2px solid #0000cc',
+              borderRadius: 0,
+              fontWeight: 'bolder',
             }}
           >
-            New Bingo
+         NEW BINGO
           </Button>
         </Box>
       </Box>
