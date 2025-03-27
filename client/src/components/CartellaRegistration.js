@@ -25,6 +25,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAuth } from '../context/AuthContext';
 import CartellasModal from './CartellasModal';
 import CartellaCircleView from './CartellaCircleView';
+import { getRoundNumber } from '../utils/roundManager';
 
 const PATTERNS = [
   { name: 'Any 1 Line', description: 'Complete any single line' },
@@ -72,10 +73,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
   const [userCut, setUserCut] = useState(0);
   const [tabValue, setTabValue] = useState(0);
   const [showNewCartellaModal, setShowNewCartellaModal] = useState(false);
-  const [roundCount, setRoundCount] = useState(() => {
-    const saved = localStorage.getItem('bingoRoundCount');
-    return saved ? parseInt(saved) : 1;
-  });
+  const [currentRound, setCurrentRound] = useState(getRoundNumber());
   const { user } = useAuth();
 
   // Add state for previous game settings and current state backup
@@ -117,6 +115,14 @@ const CartellaRegistration = ({ open, onSelect }) => {
       fetchUserCut();
     }
   }, [open]);
+
+  useEffect(() => {
+    setCurrentRound(getRoundNumber());
+    const interval = setInterval(() => {
+      setCurrentRound(getRoundNumber());
+    }, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -235,11 +241,6 @@ const CartellaRegistration = ({ open, onSelect }) => {
       return;
     }
     
-    // Increment round count
-    const newRoundCount = roundCount + 1;
-    setRoundCount(newRoundCount);
-    localStorage.setItem('bingoRoundCount', newRoundCount.toString());
-
     // Save current settings
     const currentSettings = {
       cartellas: selectedCartellas,
@@ -352,7 +353,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
                 fontFamily: 'inherit'
               }}
             >
-              Round {roundCount}
+              Round {currentRound}
             </Typography>
 
             <Button
