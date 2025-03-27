@@ -70,7 +70,7 @@ const BingoGame = () => {
   });
   const [currentRound, setCurrentRound] = useState(getRoundNumber);
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
 
   // Update round number when component mounts and every minute
@@ -331,6 +331,7 @@ const BingoGame = () => {
   };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   const handleNewBingo = async () => {
     try {
@@ -384,6 +385,33 @@ const BingoGame = () => {
       console.error('Error saving round data:', error);
       alert('Failed to save round data. Please try again.');
     }
+=======
+  const handleNewBingo = () => {
+    // Reset game state
+    setDrawnNumbers([]);
+    setLastDrawn(null);
+    setGamePattern(null);
+    setGameStarted(false);
+    setIsDrawing(false);
+    setShowStartModal(true);
+    setTotalBetAmount(0);
+    setActiveCartellas([]);
+    setCheckedCartella(null);
+    
+    // Clear local storage
+    localStorage.removeItem('drawnNumbers');
+    localStorage.removeItem('lastDrawn');
+    localStorage.removeItem('gameStarted');
+    localStorage.removeItem('isDrawing');
+    localStorage.removeItem('gameInProgress');
+    localStorage.removeItem('activeCartellas');
+    localStorage.removeItem('gamePattern');
+    localStorage.removeItem('totalBetAmount');
+    
+    // Force round update before opening modal
+    incrementRound();
+    setCurrentRound(getRoundNumber());
+>>>>>>> parent of 6382aa2 (sales report)
   };
 
   // Update round number when game state changes
