@@ -30,23 +30,85 @@ const patternAnimations = {
 
 const BingoGame = () => {
   const [numbers] = useState(Array.from({ length: 75 }, (_, i) => i + 1));
-  const [drawnNumbers, setDrawnNumbers] = useState([]);
-  const [lastDrawn, setLastDrawn] = useState(null);
-  const [showStartModal, setShowStartModal] = useState(true);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [drawSpeed, setDrawSpeed] = useState(1000); // 1 second default
-  const [gameStarted, setGameStarted] = useState(false);
+  const [drawnNumbers, setDrawnNumbers] = useState(() => {
+    const saved = localStorage.getItem('drawnNumbers');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [lastDrawn, setLastDrawn] = useState(() => {
+    const saved = localStorage.getItem('lastDrawn');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [showStartModal, setShowStartModal] = useState(() => {
+    const gameInProgress = localStorage.getItem('gameInProgress');
+    return !gameInProgress;
+  });
+  const [isDrawing, setIsDrawing] = useState(() => {
+    const saved = localStorage.getItem('isDrawing');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [drawSpeed, setDrawSpeed] = useState(1000);
+  const [gameStarted, setGameStarted] = useState(() => {
+    const saved = localStorage.getItem('gameStarted');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [showCartellaRegistration, setShowCartellaRegistration] = useState(false);
-  const [activeCartellas, setActiveCartellas] = useState([]);
-  const [gamePattern, setGamePattern] = useState('');
+  const [activeCartellas, setActiveCartellas] = useState(() => {
+    const saved = localStorage.getItem('activeCartellas');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [gamePattern, setGamePattern] = useState(() => {
+    const saved = localStorage.getItem('gamePattern');
+    return saved || null;
+  });
   const [checkNumber, setCheckNumber] = useState('');
   const [checkedCartella, setCheckedCartella] = useState(null);
   const [showCheckModal, setShowCheckModal] = useState(false);
-  const [totalBetAmount, setTotalBetAmount] = useState(0);
-  const [roundCount, setRoundCount] = useState(1);
+  const [totalBetAmount, setTotalBetAmount] = useState(() => {
+    const saved = localStorage.getItem('totalBetAmount');
+    return saved ? parseFloat(saved) : 0;
+  });
+  const [roundCount, setRoundCount] = useState(() => {
+    const saved = localStorage.getItem('roundCount');
+    return saved ? parseInt(saved) : 1;
+  });
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
+
+  useEffect(() => {
+    localStorage.setItem('drawnNumbers', JSON.stringify(drawnNumbers));
+  }, [drawnNumbers]);
+
+  useEffect(() => {
+    localStorage.setItem('lastDrawn', JSON.stringify(lastDrawn));
+  }, [lastDrawn]);
+
+  useEffect(() => {
+    localStorage.setItem('gameStarted', JSON.stringify(gameStarted));
+    localStorage.setItem('gameInProgress', gameStarted ? 'true' : '');
+  }, [gameStarted]);
+
+  useEffect(() => {
+    localStorage.setItem('isDrawing', JSON.stringify(isDrawing));
+  }, [isDrawing]);
+
+  useEffect(() => {
+    localStorage.setItem('activeCartellas', JSON.stringify(activeCartellas));
+  }, [activeCartellas]);
+
+  useEffect(() => {
+    if (gamePattern) {
+      localStorage.setItem('gamePattern', gamePattern);
+    }
+  }, [gamePattern]);
+
+  useEffect(() => {
+    localStorage.setItem('totalBetAmount', totalBetAmount.toString());
+  }, [totalBetAmount]);
+
+  useEffect(() => {
+    localStorage.setItem('roundCount', roundCount.toString());
+  }, [roundCount]);
 
   const handleCheckCartella = () => {
     const number = parseInt(checkNumber);
@@ -645,7 +707,7 @@ const BingoGame = () => {
         }}
         onNewBingo={() => {
           setShowCheckModal(false);
-          // Reset ALL game state
+          // Reset game state
           setDrawnNumbers([]);
           setRoundCount(1);
           setGamePattern(null);
@@ -655,6 +717,16 @@ const BingoGame = () => {
           setLastDrawn(null);
           setIsDrawing(false);
           setTotalBetAmount(0);
+          // Clear all localStorage
+          localStorage.removeItem('drawnNumbers');
+          localStorage.removeItem('lastDrawn');
+          localStorage.removeItem('gameStarted');
+          localStorage.removeItem('gameInProgress');
+          localStorage.removeItem('isDrawing');
+          localStorage.removeItem('activeCartellas');
+          localStorage.removeItem('gamePattern');
+          localStorage.removeItem('totalBetAmount');
+          localStorage.removeItem('roundCount');
         }}
       />
     </Container>
