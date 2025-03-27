@@ -116,38 +116,13 @@ const CartellaRegistration = ({ open, onSelect }) => {
     }
   }, [open]);
 
-  // Update round number when modal opens and every minute
   useEffect(() => {
-    if (open) {
-      setCurrentRound(getRoundNumber());
-    }
-  }, [open]);
-
-  // Keep checking for round updates while modal is open
-  useEffect(() => {
-    if (!open) return;
-
     setCurrentRound(getRoundNumber());
     const interval = setInterval(() => {
       setCurrentRound(getRoundNumber());
-    }, 1000); // Check more frequently while modal is open
-    
+    }, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, [open]);
-
-  useEffect(() => {
-    if (open) {
-      // Reset states when modal opens
-      setError('');
-      setSelectedCartellas([]);
-      setSelectedPattern('Any 1 Line');
-      setBetAmount('');
-      setTabValue(0);
-      
-      // Force round number update
-      setCurrentRound(getRoundNumber());
-    }
-  }, [open]);
+  }, []);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);

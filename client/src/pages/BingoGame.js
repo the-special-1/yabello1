@@ -70,7 +70,7 @@ const BingoGame = () => {
   });
   const [currentRound, setCurrentRound] = useState(getRoundNumber);
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
 
   // Update round number when component mounts and every minute
@@ -169,6 +169,8 @@ const BingoGame = () => {
     setShowStartModal(false);
     localStorage.setItem('gameStarted', 'true');
     localStorage.setItem('gameInProgress', 'true');
+    incrementRound(); // Increment round when starting new game
+    setCurrentRound(getRoundNumber());
     setIsDrawing(true);
   };
 
@@ -328,31 +330,60 @@ const BingoGame = () => {
     }
   };
 
-  const handleNewBingo = () => {
-    // Reset game state
-    setDrawnNumbers([]);
-    setLastDrawn(null);
-    setGamePattern(null);
-    setGameStarted(false);
-    setIsDrawing(false);
-    setShowStartModal(true);
-    setTotalBetAmount(0);
-    setActiveCartellas([]);
-    setCheckedCartella(null);
-    
-    // Clear local storage
-    localStorage.removeItem('drawnNumbers');
-    localStorage.removeItem('lastDrawn');
-    localStorage.removeItem('gameStarted');
-    localStorage.removeItem('isDrawing');
-    localStorage.removeItem('gameInProgress');
-    localStorage.removeItem('activeCartellas');
-    localStorage.removeItem('gamePattern');
-    localStorage.removeItem('totalBetAmount');
-    
-    // Force round update before opening modal
-    incrementRound();
-    setCurrentRound(getRoundNumber());
+<<<<<<< HEAD
+=======
+  const handleNewBingo = async () => {
+    try {
+      // Save round data
+      const response = await fetch('http://localhost:5001/api/reports/save-round', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          round: currentRound,
+          price: totalBetAmount / activeCartellas.length, // Price per cartella
+          noPlayer: activeCartellas.length,
+          winnerPrice: totalBetAmount,
+          income: totalBetAmount * 0.1, // 10% commission
+          date: new Date().toISOString(),
+          branchId: user.branchId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save round data');
+      }
+
+      // Reset game state
+      setDrawnNumbers([]);
+      setLastDrawn(null);
+      setGamePattern(null);
+      setGameStarted(false);
+      setIsDrawing(false);
+      setShowStartModal(true);
+      setTotalBetAmount(0);
+      setActiveCartellas([]);
+      setCheckedCartella(null);
+      
+      // Clear local storage
+      localStorage.removeItem('drawnNumbers');
+      localStorage.removeItem('lastDrawn');
+      localStorage.removeItem('gameStarted');
+      localStorage.removeItem('isDrawing');
+      localStorage.removeItem('gameInProgress');
+      localStorage.removeItem('activeCartellas');
+      localStorage.removeItem('gamePattern');
+      localStorage.removeItem('totalBetAmount');
+      
+      // Force round update before opening modal
+      incrementRound();
+      setCurrentRound(getRoundNumber());
+    } catch (error) {
+      console.error('Error saving round data:', error);
+      alert('Failed to save round data. Please try again.');
+    }
   };
 
   // Update round number when game state changes
@@ -362,6 +393,7 @@ const BingoGame = () => {
     }
   }, [showStartModal]);
 
+>>>>>>> parent of ce4298d (Revert "sales report")
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Dialog
@@ -740,7 +772,27 @@ const BingoGame = () => {
           setShowCheckModal(false);
           // Continue the game
         }}
-        onNewBingo={handleNewBingo}
+        onNewBingo={() => {
+          setShowCheckModal(false);
+          // Reset game state
+          setDrawnNumbers([]);
+          setGamePattern(null);
+          setGameStarted(false);
+          setShowStartModal(true);
+          setActiveCartellas([]);
+          setLastDrawn(null);
+          setIsDrawing(false);
+          setTotalBetAmount(0);
+          // Clear all localStorage
+          localStorage.removeItem('drawnNumbers');
+          localStorage.removeItem('lastDrawn');
+          localStorage.removeItem('gameStarted');
+          localStorage.removeItem('gameInProgress');
+          localStorage.removeItem('isDrawing');
+          localStorage.removeItem('activeCartellas');
+          localStorage.removeItem('gamePattern');
+          localStorage.removeItem('totalBetAmount');
+        }}
       />
     </Container>
   );
