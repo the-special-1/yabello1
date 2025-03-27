@@ -207,37 +207,44 @@ const CartellaCheckModal = ({
 
         {/* BINGO Header */}
         <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: 0.5,
+          display: 'table',
+          width: '90%',
+          margin: '0 auto',
+          borderSpacing: 0,
+          borderCollapse: 'collapse',
           mb: 0
         }}>
-          {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
-            <Box
-              key={letter}
-              sx={{
-                background: i === 0 ? 'linear-gradient(135deg, #000066 0%, #0099ff 100%)' :
-                           i === 1 ? '#990000' :
-                           i === 2 ? '#009933' :
-                           i === 3 ? '#996600' :
-                           'linear-gradient(135deg, #666666 0%, #999999 100%)',
-                p: 1,
-                borderRadius: 1
-              }}
-            >
-              <Typography
-                align="center"
+          <Box sx={{ display: 'table-row' }}>
+            {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
+              <Box
+                key={letter}
                 sx={{
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  color: 'white',
-                  lineHeight: 1
+                  display: 'table-cell',
+                  width: '20%',
+                  background: i === 0 ? 'linear-gradient(135deg, #000066 0%, #0099ff 100%)' :
+                             i === 1 ? '#990000' :
+                             i === 2 ? '#009933' :
+                             i === 3 ? '#996600' :
+                             'linear-gradient(135deg, #666666 0%, #999999 100%)',
+                  p: 1,
+                  textAlign: 'center',
+                  border: '1px solid #e0e0e0'
                 }}
               >
-                {letter}
-              </Typography>
-            </Box>
-          ))}
+                <Typography
+                  align="center"
+                  sx={{
+                    fontSize: '2.5rem',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    lineHeight: 1
+                  }}
+                >
+                  {letter}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
         </Box>
 
         {/* Numbers Grid */}
@@ -247,11 +254,10 @@ const CartellaCheckModal = ({
           margin: '0 auto',
           borderSpacing: 0,
           borderCollapse: 'collapse',
-          my: 1,
-          minHeight: '60vh',
+          minHeight: '55vh',
         }}>
           {cartella.numbers.map((row, i) => (
-            <Box key={i} sx={{ display: 'table-row', height: '42px' }}>
+            <Box key={i} sx={{ display: 'table-row', height: '22px' }}>
               {row.map((number, j) => {
                 const isMiddleCell = i === 2 && j === 2;
                 const isDrawn = drawnNumbers.includes(number);
@@ -268,8 +274,8 @@ const CartellaCheckModal = ({
                       width: '20%',
                       position: 'relative',
                       padding: 0,
-                      border: '1px solid #e0e0e0',
-                      backgroundColor: 'white'
+                      border: '1px solid #bdbdbd',
+                      backgroundColor: '#eeeeee	'
                     }}
                   >
                     <Box
@@ -307,7 +313,7 @@ const CartellaCheckModal = ({
           display: 'grid', 
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: 1,
-          mt: 2,
+          mt: 0,
           mx: 'auto',
           width: '100%'
         }}>
@@ -347,7 +353,7 @@ const CartellaCheckModal = ({
             sx={{ 
               bgcolor: '#009933',
               '&:hover': { bgcolor: '#008029' },
-              fontSize: '0.9rem',
+              fontSize: '1rem',
               textTransform: 'none',
               border: '2px solid #006622',
               borderRadius: 0,
