@@ -70,7 +70,7 @@ const BingoGame = () => {
   });
   const [currentRound, setCurrentRound] = useState(getRoundNumber);
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
 
   // Update round number when component mounts and every minute
@@ -328,58 +328,31 @@ const BingoGame = () => {
     }
   };
 
-  const handleNewBingo = async () => {
-    try {
-      // Save round data
-      const response = await fetch('http://localhost:5001/api/reports/save-round', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          round: currentRound,
-          price: totalBetAmount / activeCartellas.length, // Price per cartella
-          noPlayer: activeCartellas.length,
-          winnerPrice: totalBetAmount,
-          income: totalBetAmount * 0.1, // 10% commission
-          date: new Date().toISOString(),
-          branchId: user.branchId
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save round data');
-      }
-
-      // Reset game state
-      setDrawnNumbers([]);
-      setLastDrawn(null);
-      setGamePattern(null);
-      setGameStarted(false);
-      setIsDrawing(false);
-      setShowStartModal(true);
-      setTotalBetAmount(0);
-      setActiveCartellas([]);
-      setCheckedCartella(null);
-      
-      // Clear local storage
-      localStorage.removeItem('drawnNumbers');
-      localStorage.removeItem('lastDrawn');
-      localStorage.removeItem('gameStarted');
-      localStorage.removeItem('isDrawing');
-      localStorage.removeItem('gameInProgress');
-      localStorage.removeItem('activeCartellas');
-      localStorage.removeItem('gamePattern');
-      localStorage.removeItem('totalBetAmount');
-      
-      // Force round update before opening modal
-      incrementRound();
-      setCurrentRound(getRoundNumber());
-    } catch (error) {
-      console.error('Error saving round data:', error);
-      alert('Failed to save round data. Please try again.');
-    }
+  const handleNewBingo = () => {
+    // Reset game state
+    setDrawnNumbers([]);
+    setLastDrawn(null);
+    setGamePattern(null);
+    setGameStarted(false);
+    setIsDrawing(false);
+    setShowStartModal(true);
+    setTotalBetAmount(0);
+    setActiveCartellas([]);
+    setCheckedCartella(null);
+    
+    // Clear local storage
+    localStorage.removeItem('drawnNumbers');
+    localStorage.removeItem('lastDrawn');
+    localStorage.removeItem('gameStarted');
+    localStorage.removeItem('isDrawing');
+    localStorage.removeItem('gameInProgress');
+    localStorage.removeItem('activeCartellas');
+    localStorage.removeItem('gamePattern');
+    localStorage.removeItem('totalBetAmount');
+    
+    // Force round update before opening modal
+    incrementRound();
+    setCurrentRound(getRoundNumber());
   };
 
   // Update round number when game state changes
