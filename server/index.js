@@ -10,6 +10,7 @@ const cartellaRoutes = require('./routes/cartellaRoutes');
 const userRoutes = require('./routes/userRoutes');
 const gameRoutes = require('./routes/gameRoutes');
 const authRoutes = require('./routes/authRoutes');
+const reportRoutes = require('./routes/reports');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/cartellas', cartellaRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/games', gameRoutes);
+app.use('/api/reports', reportRoutes);
 app.use('/api', routes);
 
 // Error handling middleware

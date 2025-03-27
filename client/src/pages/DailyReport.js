@@ -184,19 +184,19 @@ const DailyReport = () => {
                       key={index}
                       sx={{ '&:nth-of-type(odd)': { bgcolor: '#f5f5f5' } }}
                     >
-                      <TableCell>{row.round}</TableCell>
-                      <TableCell>{row.price}</TableCell>
-                      <TableCell>{row.noPlayer}</TableCell>
-                      <TableCell>{row.winnerPrice}</TableCell>
-                      <TableCell>{row.income}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{row.round}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{row.price}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{row.noPlayer}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{row.winnerPrice}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{row.income}</TableCell>
                     </TableRow>
                   ))}
                   {/* Total row */}
                   <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                    <TableCell colSpan={4} align="right" sx={{ fontWeight: 'bold' }}>
+                    <TableCell colSpan={4} align="right" sx={{ fontWeight: 'bold', color: 'black' }}>
                       Total
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>
+                    <TableCell sx={{ fontWeight: 'bold', color: 'black' }}>
                       {calculateTotal('income')}
                     </TableCell>
                   </TableRow>

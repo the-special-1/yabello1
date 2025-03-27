@@ -28,7 +28,7 @@ let sequelize = new Sequelize(
 const db = {};
 
 // Only load models we want to keep
-const modelsToLoad = ['User.js', 'Branch.js', 'Cartella.js', 'Transaction.js'];
+const modelsToLoad = ['User.js', 'Branch.js', 'Cartella.js', 'Transaction.js', 'Report.js'];
 
 fs.readdirSync(__dirname)
   .filter(file => {
@@ -40,7 +40,7 @@ fs.readdirSync(__dirname)
     );
   })
   .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize);
+    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
   });
 
@@ -52,6 +52,6 @@ Object.keys(db).forEach(modelName => {
 });
 
 db.sequelize = sequelize;
-
+db.Sequelize = Sequelize;
 
 module.exports = db;
