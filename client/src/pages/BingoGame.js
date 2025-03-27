@@ -169,8 +169,6 @@ const BingoGame = () => {
     setShowStartModal(false);
     localStorage.setItem('gameStarted', 'true');
     localStorage.setItem('gameInProgress', 'true');
-    incrementRound(); // Increment round when starting new game
-    setCurrentRound(getRoundNumber());
     setIsDrawing(true);
   };
 
@@ -329,6 +327,40 @@ const BingoGame = () => {
         return false;
     }
   };
+
+  const handleNewBingo = () => {
+    // Reset game state
+    setDrawnNumbers([]);
+    setLastDrawn(null);
+    setGamePattern(null);
+    setGameStarted(false);
+    setIsDrawing(false);
+    setShowStartModal(true);
+    setTotalBetAmount(0);
+    setActiveCartellas([]);
+    setCheckedCartella(null);
+    
+    // Clear local storage
+    localStorage.removeItem('drawnNumbers');
+    localStorage.removeItem('lastDrawn');
+    localStorage.removeItem('gameStarted');
+    localStorage.removeItem('isDrawing');
+    localStorage.removeItem('gameInProgress');
+    localStorage.removeItem('activeCartellas');
+    localStorage.removeItem('gamePattern');
+    localStorage.removeItem('totalBetAmount');
+    
+    // Force round update before opening modal
+    incrementRound();
+    setCurrentRound(getRoundNumber());
+  };
+
+  // Update round number when game state changes
+  useEffect(() => {
+    if (showStartModal) {
+      setCurrentRound(getRoundNumber());
+    }
+  }, [showStartModal]);
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -708,27 +740,7 @@ const BingoGame = () => {
           setShowCheckModal(false);
           // Continue the game
         }}
-        onNewBingo={() => {
-          setShowCheckModal(false);
-          // Reset game state
-          setDrawnNumbers([]);
-          setGamePattern(null);
-          setGameStarted(false);
-          setShowStartModal(true);
-          setActiveCartellas([]);
-          setLastDrawn(null);
-          setIsDrawing(false);
-          setTotalBetAmount(0);
-          // Clear all localStorage
-          localStorage.removeItem('drawnNumbers');
-          localStorage.removeItem('lastDrawn');
-          localStorage.removeItem('gameStarted');
-          localStorage.removeItem('gameInProgress');
-          localStorage.removeItem('isDrawing');
-          localStorage.removeItem('activeCartellas');
-          localStorage.removeItem('gamePattern');
-          localStorage.removeItem('totalBetAmount');
-        }}
+        onNewBingo={handleNewBingo}
       />
     </Container>
   );
