@@ -67,8 +67,13 @@ const DailyReport = () => {
     fetchReportData();
   };
 
+  const formatNumber = (number) => {
+    return parseFloat(number).toFixed(2);
+  };
+
   const calculateTotal = (field) => {
-    return reportData.reduce((sum, row) => sum + (row[field] || 0), 0);
+    const total = reportData.reduce((sum, row) => sum + parseFloat(row[field] || 0), 0);
+    return formatNumber(total);
   };
 
   return (
@@ -185,10 +190,10 @@ const DailyReport = () => {
                       sx={{ '&:nth-of-type(odd)': { bgcolor: '#f5f5f5' } }}
                     >
                       <TableCell sx={{ color: 'black' }}>{row.round}</TableCell>
-                      <TableCell sx={{ color: 'black' }}>{row.price}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{formatNumber(row.price)}</TableCell>
                       <TableCell sx={{ color: 'black' }}>{row.noPlayer}</TableCell>
-                      <TableCell sx={{ color: 'black' }}>{row.winnerPrice}</TableCell>
-                      <TableCell sx={{ color: 'black' }}>{row.income}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{formatNumber(row.winnerPrice)}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{formatNumber(row.income)}</TableCell>
                     </TableRow>
                   ))}
                   {/* Total row */}
@@ -197,7 +202,7 @@ const DailyReport = () => {
                       Total
                     </TableCell>
                     <TableCell sx={{ fontWeight: 'bold', color: 'black' }}>
-                      {calculateTotal('income')}
+                      {formatNumber(calculateTotal('income'))}
                     </TableCell>
                   </TableRow>
                   {loading && (

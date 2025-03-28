@@ -282,7 +282,15 @@ const CartellaRegistration = ({ open, onSelect }) => {
         cartellas: selectedCartellas,
         pattern: selectedPattern,
         betAmount: betAmount,
-        totalBet: adjustedTotalBet // Pass the adjusted total bet
+        totalBet: adjustedTotalBet,
+        calculationDetails: {
+          numberOfCartellas: selectedCartellas.length,
+          betPerCartella: betAmount,
+          rawTotalBet: rawTotalBet,
+          userCutPercentage: userCut,
+          cutAmount: cutAmount,
+          adjustedTotalBet: adjustedTotalBet
+        }
       });
     } catch (error) {
       setError(error.message);

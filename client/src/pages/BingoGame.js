@@ -68,6 +68,7 @@ const BingoGame = () => {
     const saved = localStorage.getItem('totalBetAmount');
     return saved ? parseFloat(saved) : 0;
   });
+  const [calculationDetails, setCalculationDetails] = useState(null);
   const [currentRound, setCurrentRound] = useState(getRoundNumber);
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -75,9 +76,9 @@ const BingoGame = () => {
 
   // Update round number when component mounts and every minute
   useEffect(() => {
-    setCurrentRound(getRoundNumber());
+    setCurrentRound(getRoundNumber);
     const interval = setInterval(() => {
-      setCurrentRound(getRoundNumber());
+      setCurrentRound(getRoundNumber);
     }, 60000); // Check every minute
     return () => clearInterval(interval);
   }, []);
@@ -180,9 +181,9 @@ const BingoGame = () => {
     setDrawSpeed(3000 - newValue);
   };
 
-  const handleCartellaSelect = async ({ cartellas, pattern, betAmount, totalBet }) => {
+  const handleCartellaSelect = async ({ cartellas, pattern, betAmount, totalBet, calculationDetails }) => {
     try {
-      const response = await fetch('/api/cartellas/place-bet', {
+      const response = await fetch('http://localhost:5001/api/cartellas/place-bet', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -203,11 +204,11 @@ const BingoGame = () => {
       const data = await response.json();
       setActiveCartellas(cartellas);
       setGamePattern(pattern);
-      setTotalBetAmount(totalBet); 
+      setTotalBetAmount(calculationDetails.rawTotalBet); // Use raw total bet from calculations
+      setCalculationDetails(calculationDetails);
       setShowCartellaRegistration(false);
     } catch (error) {
       console.error('Error placing bet:', error);
-      // Re-throw the error to be handled by the CartellaRegistration component
       throw error;
     }
   };
@@ -329,8 +330,12 @@ const BingoGame = () => {
   };
 
   const handleNewBingo = async () => {
+    if (!calculationDetails) {
+      alert('No calculation details available');
+      return;
+    }
+
     try {
-      // Save round data
       const response = await fetch('http://localhost:5001/api/reports/save-round', {
         method: 'POST',
         headers: {
@@ -339,10 +344,10 @@ const BingoGame = () => {
         },
         body: JSON.stringify({
           round: currentRound,
-          price: totalBetAmount / activeCartellas.length, // Price per cartella
-          noPlayer: activeCartellas.length,
-          winnerPrice: totalBetAmount,
-          income: totalBetAmount * 0.1, // 10% commission
+          price: calculationDetails.betPerCartella,
+          noPlayer: calculationDetails.numberOfCartellas,
+          winnerPrice: calculationDetails.adjustedTotalBet,
+          income: calculationDetails.cutAmount,
           date: new Date().toISOString(),
           branchId: user.branchId
         })
@@ -352,18 +357,21 @@ const BingoGame = () => {
         throw new Error('Failed to save round data');
       }
 
-      // Reset game state
+      // Reset game state completely
       setDrawnNumbers([]);
       setLastDrawn(null);
+      incrementRound(); // Use the incrementRound function
+      setActiveCartellas([]);
       setGamePattern(null);
+      setTotalBetAmount(0);
+      setCalculationDetails(null);
       setGameStarted(false);
       setIsDrawing(false);
-      setShowStartModal(true);
-      setTotalBetAmount(0);
-      setActiveCartellas([]);
+      setShowStartModal(true); // Show start modal instead of cartella registration
+      setShowCartellaRegistration(false);
       setCheckedCartella(null);
       
-      // Clear local storage
+      // Clear local storage except round number
       localStorage.removeItem('drawnNumbers');
       localStorage.removeItem('lastDrawn');
       localStorage.removeItem('gameStarted');
@@ -373,19 +381,16 @@ const BingoGame = () => {
       localStorage.removeItem('gamePattern');
       localStorage.removeItem('totalBetAmount');
       
-      // Force round update before opening modal
-      incrementRound();
-      setCurrentRound(getRoundNumber());
     } catch (error) {
-      console.error('Error saving round data:', error);
-      alert('Failed to save round data. Please try again.');
+      console.error('Error starting new game:', error);
+      alert('Failed to start new game. Please try again.');
     }
   };
 
   // Update round number when game state changes
   useEffect(() => {
     if (showStartModal) {
-      setCurrentRound(getRoundNumber());
+      setCurrentRound(getRoundNumber);
     }
   }, [showStartModal]);
 
