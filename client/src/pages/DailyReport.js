@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -24,8 +24,34 @@ const DailyReport = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [userBalance, setUserBalance] = useState(0);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Load today's sales when component mounts
+  useEffect(() => {
+    fetchReportData();
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Fetch user balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const response = await fetch('/api/users/balance', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (!response.ok) throw new Error('Failed to fetch balance');
+        const data = await response.json();
+        setUserBalance(data.balance);
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+      }
+    };
+    fetchBalance();
+  }, []);
 
   const columns = [
     { id: 'round', label: 'Round', width: '20%' },
@@ -76,6 +102,14 @@ const DailyReport = () => {
     return formatNumber(total);
   };
 
+  const [page, setPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  // Get current items
+  const indexOfLastItem = page * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = reportData.slice(indexOfFirstItem, indexOfLastItem);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', bgcolor: '#2D2D2D', minHeight: '100vh' }}>
       {/* Header */}
@@ -91,27 +125,51 @@ const DailyReport = () => {
         left: 0,
         right: 0,
         zIndex: 2,
-        height: 100
+        height: 100,
+        justifyContent: 'space-between' // Added to position balance on right
       }}>
-        <Typography 
-          onClick={() => navigate('/')}
-          sx={{ 
-            color: '#333',
-            fontSize: '1.25rem',
-            cursor: 'pointer',
-            '&:hover': {
-              textDecoration: 'underline'
-            },
-            mr: 2
-          }}
-        >
-          Play Bingo
-        </Typography>
-        <img 
-          src="/logob.png" 
-          alt="Bingo Logo"
-          style={{ height: '100px',width: '600px' }}
-        />
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography 
+            onClick={() => navigate('/')}
+            sx={{ 
+              color: '#333',
+              fontSize: '1.25rem',
+              cursor: 'pointer',
+              '&:hover': {
+                textDecoration: 'underline'
+              },
+              mr: 2
+            }}
+          >
+            Play Bingo
+          </Typography>
+          <img 
+            src="/logob.png" 
+            alt="Bingo Logo"
+            style={{ height: '100px', width: '600px' }}
+          />
+        </Box>
+        
+        {/* Balance display */}
+        <Box sx={{
+          backgroundColor: '#1a1a1a',
+          p: 2,
+          borderRadius: 1,
+          minWidth: 200,
+          mr: 2
+        }}>
+          <Typography variant="h6" sx={{ 
+            color: '#4caf50',
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}>
+            Balance: {Number(userBalance).toLocaleString('en-US', {
+              style: 'currency',
+              currency: 'ETB',
+              maximumFractionDigits: 0
+            })}
+          </Typography>
+        </Box>
       </Box>
 
       {/* Content wrapper */}
@@ -184,7 +242,7 @@ const DailyReport = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {reportData.map((row, index) => (
+                  {currentItems.map((row, index) => (
                     <TableRow 
                       key={index}
                       sx={{ '&:nth-of-type(odd)': { bgcolor: '#f5f5f5' } }}
@@ -215,6 +273,58 @@ const DailyReport = () => {
                 </TableBody>
               </Table>
             </TableContainer>
+
+            {/* Pagination */}
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+              mt: 2,
+              gap: 1
+            }}>
+              <Button
+                variant="text"
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                sx={{
+                  color: page === 1 ? 'grey' : '#1976d2',
+                  '&:hover': {
+                    bgcolor: 'transparent',
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                Previous
+              </Button>
+
+              <Button
+                variant="contained"
+                sx={{
+                  minWidth: '40px',
+                  bgcolor: '#1976d2',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: '#1976d2'
+                  }
+                }}
+              >
+                {page}
+              </Button>
+
+              <Button
+                variant="text"
+                disabled={indexOfLastItem >= reportData.length}
+                onClick={() => setPage(page + 1)}
+                sx={{
+                  color: indexOfLastItem >= reportData.length ? 'grey' : '#1976d2',
+                  '&:hover': {
+                    bgcolor: 'transparent',
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                Next
+              </Button>
+            </Box>
           </Paper>
         </Box>
       </Box>
