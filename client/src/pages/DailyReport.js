@@ -38,14 +38,15 @@ const DailyReport = () => {
     const fetchBalance = async () => {
       try {
         const response = await fetch('/api/users/balance', {
-          method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
-        if (!response.ok) throw new Error('Failed to fetch balance');
         const data = await response.json();
-        setUserBalance(data.balance);
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to fetch balance');
+        }
+        setUserBalance(data.credits || 0);
       } catch (error) {
         console.error('Error fetching balance:', error);
       }
@@ -163,7 +164,7 @@ const DailyReport = () => {
             fontWeight: 'bold',
             textAlign: 'center'
           }}>
-            Balance: {Number(userBalance).toLocaleString('en-US', {
+            Balance: {userBalance.toLocaleString('en-US', {
               style: 'currency',
               currency: 'ETB',
               maximumFractionDigits: 0
