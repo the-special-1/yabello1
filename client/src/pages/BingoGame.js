@@ -722,25 +722,25 @@ const BingoGame = () => {
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {/* Top section with ball and pattern */}
+        {/* Top section - all boxes */}
         <Box sx={{ 
           display: 'flex',
           height: '220px',
           width: '100%',
-          mb: 2
+          backgroundColor: '#1a1a1a'
         }}>
-          {/* Ball display - always visible */}
+          {/* Ball display */}
           <Box sx={{
-            width: 220,
+            width: '25%',
             height: '100%',
-            backgroundColor: '#1a1a1a',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            alignItems: 'flex-start',
+            justifyContent: 'flex-start',
+            p: 0
           }}>
             <Box sx={{
-              width: 200,
-              height: 200,
+              width: 220,
+              height: 220,
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -749,53 +749,73 @@ const BingoGame = () => {
               boxShadow: '0 4px 8px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.2)',
               border: '3px solid #ffffff'
             }}>
-              <Box sx={{
-                width: '70%',
-                height: '70%',
-                borderRadius: '50%',
-                backgroundColor: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Typography variant="h3" sx={{
-                  color: '#990000',
-                  fontWeight: 'bold',
-                  fontFamily: "'Roboto Condensed', sans-serif"
+              <motion.div
+                animate={{
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+                style={{
+                  width: '70%',
+                  height: '70%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Box sx={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  backgroundColor: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}>
-                  {isShuffling ? shuffleDisplay : (lastDrawn ? `${getPrefix(lastDrawn)}-${lastDrawn}` : '--')}
-                </Typography>
-              </Box>
+                  <Typography variant="h2" sx={{
+                    color: '#990000',
+                    fontWeight: 'bold',
+                    fontFamily: "'Roboto Condensed', sans-serif"
+                  }}>
+                    {isShuffling ? shuffleDisplay : (lastDrawn ? `${getPrefix(lastDrawn)}-${lastDrawn}` : '')}
+                  </Typography>
+                </Box>
+              </motion.div>
             </Box>
           </Box>
 
           {/* Pattern display */}
-          {gamePattern && (
-            <Box sx={{ 
-              height: '220px',
-              display: 'flex',
-              alignItems: 'center'
-            }}>
-              <PatternVisualizer 
-                pattern={gamePattern} 
-                gameStarted={gameStarted}
-                lastDrawn={lastDrawn}
-              />
-            </Box>
-          )}
+          <Box sx={{ 
+            width: '25%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRight: '1px solid rgba(255,255,255,0.1)'
+          }}>
+            <PatternVisualizer 
+              pattern={gamePattern} 
+              gameStarted={gameStarted}
+              lastDrawn={lastDrawn}
+            />
+          </Box>
 
           {/* Recent Numbers */}
           <Box sx={{
-            height: '220px',
-            minWidth: '300px',
-            backgroundColor: '#1a1a1a',
-            ml: 2,
-            p: 2,
-            borderRadius: 2,
+            width: '25%',
+            height: '100%',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            borderRight: '1px solid rgba(255,255,255,0.1)'
           }}>
-            <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+            <Typography variant="h6" sx={{ 
+              color: 'white', 
+              p: 2, 
+              borderBottom: '1px solid rgba(255,255,255,0.1)'
+            }}>
               Recent Numbers
             </Typography>
             <Box sx={{ 
@@ -804,24 +824,24 @@ const BingoGame = () => {
               gap: 1,
               flex: 1,
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              p: 2
             }}>
-              {/* Always show 5 boxes */}
               {Array.from({ length: 5 }).map((_, index) => (
                 <Box key={index} sx={{
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                  p: 1.5,
-                  borderRadius: 1,
+                  backgroundColor: 'rgba(255,165,0,0.9)',
+                  width: '45px',
+                  height: '45px',
+                  borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minWidth: '50px',
-                  minHeight: '40px' // Ensure consistent height
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                 }}>
                   <Typography sx={{ 
                     color: 'white',
-                    fontWeight: index === 0 ? 'bold' : 'normal',
-                    fontSize: index === 0 ? '1.2rem' : '1rem'
+                    fontWeight: 'bold',
+                    fontSize: '0.9rem'
                   }}>
                     {recentNumbers[index] ? `${getPrefix(recentNumbers[index])}-${recentNumbers[index]}` : ''}
                   </Typography>
@@ -832,23 +852,24 @@ const BingoGame = () => {
 
           {/* Win Amount Box */}
           <Box sx={{
-            height: '220px',
-            minWidth: '200px',
-            backgroundColor: '#1a1a1a',
-            ml: 2,
-            p: 2,
-            borderRadius: 2,
+            width: '25%',
+            height: '100%',
             display: 'flex',
             flexDirection: 'column'
           }}>
-            <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+            <Typography variant="h6" sx={{ 
+              color: 'white', 
+              p: 2,
+              borderBottom: '1px solid rgba(255,255,255,0.1)'
+            }}>
               Adjusted Total
             </Typography>
             <Box sx={{
               flex: 1,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              backgroundColor: '#1a1a1a'
             }}>
               <Typography variant="h4" sx={{ 
                 color: '#4caf50',
