@@ -152,25 +152,15 @@ const DailyReport = () => {
         </Box>
         
         {/* Balance display */}
-        <Box sx={{
-          backgroundColor: '#1a1a1a',
-          p: 2,
-          borderRadius: 1,
-          minWidth: 200,
-          mr: 2
-        }}>
+      
           <Typography variant="h6" sx={{ 
-            color: '#4caf50',
-            fontWeight: 'bold',
+            color: 'black',
+            
             textAlign: 'center'
           }}>
-            Balance: {userBalance.toLocaleString('en-US', {
-              style: 'currency',
-              currency: 'ETB',
-              maximumFractionDigits: 0
-            })}
+           ቀሪ ሒሳብ: {userBalance}
           </Typography>
-        </Box>
+       
       </Box>
 
       {/* Content wrapper */}

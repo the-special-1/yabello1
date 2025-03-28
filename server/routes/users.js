@@ -394,7 +394,7 @@ router.post('/create-user', auth, authorize(['agent']), async (req, res) => {
 router.put('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   const t = await db.sequelize.transaction();
   try {
-    const { username, password, commission, status, credits, branchId } = req.body;
+    const { username, password, commission, status, credits, branchId, cut } = req.body;
     const user = await db.User.findByPk(req.params.id, { transaction: t });
 
     if (!user) {
@@ -447,6 +447,10 @@ router.put('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) =>
         throw new Error('Invalid branch');
       }
       updates.branchId = branchId;
+    }
+
+    if (typeof cut === 'number' && cut >= 0 && cut <= 100) {
+      updates.cut = cut;
     }
 
     // Update user
