@@ -47,8 +47,15 @@ router.post('/daily', auth, async (req, res) => {
       }
     };
 
+    // If user, show only reports from their creator's branch
+    if (req.user.role === 'user') {
+      const creator = await db.User.findByPk(req.user.createdBy);
+      if (creator) {
+        whereClause.branchId = creator.branchId;
+      }
+    }
     // If agent, only show their branch
-    if (req.user.role === 'agent') {
+    else if (req.user.role === 'agent') {
       whereClause.branchId = req.user.branchId;
     } 
     // If superadmin and specific branch requested
