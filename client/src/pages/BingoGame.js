@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Container,
   Paper,
   Typography,
   Box,
@@ -12,6 +11,8 @@ import {
   TextField,
   Dialog,
   DialogContent,
+  Select,
+  MenuItem
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -73,6 +74,12 @@ const BingoGame = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
+  const [selectedCaller, setSelectedCaller] = useState('auto');
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [shuffleDisplay, setShuffleDisplay] = useState('--');
+  const [shufflingNumbers, setShufflingNumbers] = useState([]);
+  const [recentNumbers, setRecentNumbers] = useState([]);
+  const [totalBet, setTotalBet] = useState(0);
 
   // Helper function to get the prefix based on number range
   const getPrefix = (number) => {
@@ -122,6 +129,24 @@ const BingoGame = () => {
 
   useEffect(() => {
     localStorage.setItem('totalBetAmount', totalBetAmount.toString());
+  }, [totalBetAmount]);
+
+  useEffect(() => {
+    if (lastDrawn) {
+      setRecentNumbers(prev => {
+        const updated = [lastDrawn, ...prev].slice(0, 5);
+        return updated;
+      });
+    }
+  }, [lastDrawn]);
+
+  useEffect(() => {
+    setTotalBet(25000); // Example value
+  }, []);
+
+  useEffect(() => {
+    const adjustedAmount = totalBetAmount * 0.8; // 20% cut
+    setTotalBet(adjustedAmount);
   }, [totalBetAmount]);
 
   const handleCheckCartella = () => {
@@ -175,15 +200,23 @@ const BingoGame = () => {
     }
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
+    setRecentNumbers([]); // Reset recent numbers
     setGameStarted(true);
     setShowStartModal(false);
-    localStorage.setItem('gameStarted', 'true');
-    localStorage.setItem('gameInProgress', 'true');
-    setIsDrawing(true);
+    setDrawnNumbers([]);
+    setLastDrawn(null);
+    setIsDrawing(false);
+    incrementRound();
   };
 
   const toggleDrawing = () => {
+    if (!isDrawing) {
+      // Starting new game
+      setRecentNumbers([]); // Reset recent numbers when starting new game
+      setDrawnNumbers([]);
+      setLastDrawn(null);
+    }
     setIsDrawing(!isDrawing);
   };
 
@@ -256,7 +289,7 @@ const BingoGame = () => {
   const sampleCartella = [
     [1, 16, 31, 46, 61],
     [2, 17, 32, 47, 62],
-    [3, 18, 'FREE', 48, 63],
+    [3, 23, 'FREE', 48, 63],
     [4, 19, 33, 49, 64],
     [5, 20, 34, 50, 65]
   ];
@@ -390,7 +423,7 @@ const BingoGame = () => {
       setShowStartModal(true); // Show start modal instead of cartella registration
       setShowCartellaRegistration(false);
       setCheckedCartella(null);
-      
+      setRecentNumbers([]); // Reset recent numbers
       // Clear local storage except round number
       localStorage.removeItem('drawnNumbers');
       localStorage.removeItem('lastDrawn');
@@ -414,78 +447,55 @@ const BingoGame = () => {
     }
   }, [showStartModal]);
 
+  const handleShuffle = () => {
+    if (isShuffling) return;
+    setIsShuffling(true);
+    
+    const startTime = Date.now();
+    const SHUFFLE_DURATION = 5000; // 5 seconds
+    
+    const interval = setInterval(() => {
+      const elapsedTime = Date.now() - startTime;
+      
+      if (elapsedTime >= SHUFFLE_DURATION) {
+        clearInterval(interval);
+        setIsShuffling(false);
+        setShufflingNumbers([]);
+        drawNumber(); // Draw the actual number after animation
+        return;
+      }
+      
+      // Generate 6 random numbers for this iteration
+      const newShuffleNumbers = Array.from({length: 6}, () => 
+        Math.floor(Math.random() * 75) + 1
+      );
+      setShufflingNumbers(newShuffleNumbers);
+      
+    }, 300); // Change numbers every 300ms
+  };
+
+  // Add callers list
+  const callers = [
+    { id: 'auto', name: 'Auto Caller' },
+    { id: 'amharic', name: 'Amharic' },
+    { id: 'english', name: 'English' },
+    { id: 'oromifa', name: 'Oromifa' }
+  ];
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {lastDrawn && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: '20px',
-            left: '20px',
-            width: 220,
-            height: 220,
-            backgroundColor: '#1a1a1a',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}
-        >
-          <Box
-            sx={{
-              width: 200,
-              height: 200,
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'radial-gradient(circle at 30% 30%, #ff0000, #990000)',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.2)',
-              border: '3px solid #ffffff'
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.5 }}
-              animate={{ scale: [0.5, 1.2, 1] }}
-              transition={{
-                duration: 1,
-                repeat: Infinity,
-                repeatDelay: 1
-              }}
-              style={{
-                width: '70%',
-                height: '70%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Box
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '50%',
-                  backgroundColor: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <Typography
-                  variant="h3"
-                  sx={{
-                    color: '#990000',
-                    fontWeight: 'bold',
-                    fontFamily: "'Roboto Condensed', sans-serif"
-                  }}
-                >
-                  {`${getPrefix(lastDrawn)}-${lastDrawn}`}
-                </Typography>
-              </Box>
-            </motion.div>
-          </Box>
-        </Box>
-      )}
+    <Box
+      sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: '100vh',
+        width: '100vw',
+        backgroundColor: '#1a1a1a',
+        overflow: 'hidden'
+      }}
+    >
       <Dialog
         open={showStartModal}
         onClose={() => {}}
@@ -619,7 +629,7 @@ const BingoGame = () => {
               {[
                 [12, 16, 33, 56, 61],
                 [1, 26, 44, 55, 71],
-                [3, 23, 'free', 46, 72],
+                [3, 23, 'FREE', 46, 72],
                 [5, 17, 37, 49, 74],
                 [15, 28, 42, 60, 75]
               ].map((row, rowIndex) => (
@@ -705,10 +715,67 @@ const BingoGame = () => {
         onSelect={handleCartellaSelect}
       />
 
-      <Paper sx={{ p: 0 }}>
-        <Box>
+      <Box sx={{ 
+        flex: 1,
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {/* Top section with ball and pattern */}
+        <Box sx={{ 
+          display: 'flex',
+          height: '220px',
+          width: '100%',
+          mb: 2
+        }}>
+          {/* Ball display - always visible */}
+          <Box sx={{
+            width: 220,
+            height: '100%',
+            backgroundColor: '#1a1a1a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Box sx={{
+              width: 200,
+              height: 200,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'radial-gradient(circle at 30% 30%, #ff0000, #990000)',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.2)',
+              border: '3px solid #ffffff'
+            }}>
+              <Box sx={{
+                width: '70%',
+                height: '70%',
+                borderRadius: '50%',
+                backgroundColor: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Typography variant="h3" sx={{
+                  color: '#990000',
+                  fontWeight: 'bold',
+                  fontFamily: "'Roboto Condensed', sans-serif"
+                }}>
+                  {isShuffling ? shuffleDisplay : (lastDrawn ? `${getPrefix(lastDrawn)}-${lastDrawn}` : '--')}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Pattern display */}
           {gamePattern && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <Box sx={{ 
+              height: '220px',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
               <PatternVisualizer 
                 pattern={gamePattern} 
                 gameStarted={gameStarted}
@@ -716,137 +783,260 @@ const BingoGame = () => {
               />
             </Box>
           )}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, mt: 3 }}>
-            {/* <Typography variant="h4" color="primary">
-              Bingo Game
-            </Typography> */}
-            <Box>
-            </Box>
-            {/* <Button
-              variant="outlined"
-              color="error"
-              onClick={handleLogout}
-              startIcon={<LogoutIcon />}
-            >
-              Logout
-            </Button> */}
-          </Box>
 
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            {!gameStarted ? (
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                onClick={handleStartGame}
-                startIcon={<PlayArrowIcon />}
-                sx={{ 
-                  fontSize: '1.2rem',
-                  padding: '0.8rem 3rem',
-                  mb: 2
-                }}
-              >
-                Start Game
-              </Button>
-            ) : (
-              <Stack direction="row" spacing={2} alignItems="center" justifyContent="center" sx={{ mb: 2 }}>
-                <Typography>Slower</Typography>
-                <Slider
-                  value={3000 - drawSpeed}
-                  onChange={handleSpeedChange}
-                  min={500}
-                  max={2500}
-                  step={100}
-                  sx={{ width: 200 }}
-                  disabled={!isDrawing}
-                />
-                <Typography>Faster</Typography>
-                <IconButton 
-                  color="primary" 
-                  onClick={toggleDrawing}
-                  size="large"
-                  sx={{ ml: 2 }}
-                >
-                  {isDrawing ? <PauseIcon /> : <PlayArrowIcon />}
-                </IconButton>
-              </Stack>
-            )}
-            <Typography variant="h3" sx={{ mb: 3 }}>
-              {lastDrawn ? `Last Drawn: ${lastDrawn}` : 'Click Start Game'}
+          {/* Recent Numbers */}
+          <Box sx={{
+            height: '220px',
+            minWidth: '300px',
+            backgroundColor: '#1a1a1a',
+            ml: 2,
+            p: 2,
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+              Recent Numbers
             </Typography>
-            {gameStarted && (
-              <Typography variant="subtitle1" color="text.secondary">
-                Numbers Drawn: {drawnNumbers.length} / 75
-              </Typography>
-            )}
+            <Box sx={{ 
+              display: 'flex',
+              flexDirection: 'row',
+              gap: 1,
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {/* Always show 5 boxes */}
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Box key={index} sx={{
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  p: 1.5,
+                  borderRadius: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '50px',
+                  minHeight: '40px' // Ensure consistent height
+                }}>
+                  <Typography sx={{ 
+                    color: 'white',
+                    fontWeight: index === 0 ? 'bold' : 'normal',
+                    fontSize: index === 0 ? '1.2rem' : '1rem'
+                  }}>
+                    {recentNumbers[index] ? `${getPrefix(recentNumbers[index])}-${recentNumbers[index]}` : ''}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
           </Box>
 
-          <Grid container spacing={1}>
-            {organizedNumbers.map((row, rowIndex) => (
-              <Grid item xs={12} key={rowIndex}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Typography 
-                    variant="h5" 
-                    sx={{ 
-                      width: 40, 
-                      fontWeight: 'bold',
-                      color: 'primary.main'
-                    }}
-                  >
-                    {bingoLetters[rowIndex]}
-                  </Typography>
-                  <Grid container spacing={1} sx={{ flex: 1 }}>
-                    {row.map((number) => (
-                      <Grid item xs={0.8} key={number}>
-                        <Paper
-                          elevation={2}
-                          sx={{
-                            p: 2,
-                            textAlign: 'center',
-                            backgroundColor: drawnNumbers.includes(number) ? 'primary.main' : 'background.paper',
-                            color: drawnNumbers.includes(number) ? 'white' : 'text.primary',
-                            transition: 'all 0.3s',
-                            opacity: drawnNumbers.includes(number) ? 1 : 0.7,
-                            fontSize: '1.1rem',
-                            fontWeight: 'normal'
-                          }}
-                        >
-                          {number}
-                        </Paper>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-
-          <Box sx={{ mt: 4, textAlign: 'center' }}>
-            <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
-              <TextField
-                label="Check Cartella"
-                variant="outlined"
-                size="small"
-                value={checkNumber}
-                onChange={(e) => setCheckNumber(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleCheckCartella();
-                  }
-                }}
-                sx={{ width: 150 }}
-              />
-              <Button
-                variant="contained"
-                onClick={handleCheckCartella}
-                disabled={!checkNumber}
-              >
-                Check
-              </Button>
-            </Stack>
+          {/* Win Amount Box */}
+          <Box sx={{
+            height: '220px',
+            minWidth: '200px',
+            backgroundColor: '#1a1a1a',
+            ml: 2,
+            p: 2,
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+              Adjusted Total
+            </Typography>
+            <Box sx={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Typography variant="h4" sx={{ 
+                color: '#4caf50',
+                fontWeight: 'bold'
+              }}>
+                {Number(totalBet).toLocaleString('en-US', {
+                  style: 'currency',
+                  currency: 'ETB',
+                  maximumFractionDigits: 0
+                })}
+              </Typography>
+            </Box>
           </Box>
         </Box>
-      </Paper>
+
+        {/* Numbers grid */}
+        <Grid 
+          container 
+          spacing={1} 
+          sx={{ 
+            flex: 1,
+            width: '100%',
+            margin: 0,
+            padding: 2,
+            backgroundColor: '#1a1a1a'
+          }}
+        >
+          {organizedNumbers.map((row, rowIndex) => (
+            <Grid item xs={12} key={rowIndex}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                width: '100%',
+                mb: 1
+              }}>
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    minWidth: 40,
+                    fontWeight: 'bold',
+                    color: 'primary.main',
+                    mr: 2
+                  }}
+                >
+                  {bingoLetters[rowIndex]}
+                </Typography>
+                <Grid container spacing={1} sx={{ flex: 1, m: 0 }}>
+                  {row.map((number) => (
+                    <Grid item xs={0.8} key={number} sx={{ p: 0.5 }}>
+                      <Paper
+                        elevation={2}
+                        sx={{
+                          p: 1.5,
+                          textAlign: 'center',
+                          backgroundColor: shufflingNumbers.includes(number) 
+                            ? 'primary.main' 
+                            : drawnNumbers.includes(number) 
+                              ? 'primary.main' 
+                              : 'background.paper',
+                          color: (shufflingNumbers.includes(number) || drawnNumbers.includes(number)) 
+                            ? 'white' 
+                            : 'text.primary',
+                          transition: 'all 0.2s',
+                          opacity: shufflingNumbers.includes(number) 
+                            ? 1 
+                            : drawnNumbers.includes(number) 
+                              ? 1 
+                              : 0.7,
+                          fontSize: shufflingNumbers.includes(number) 
+                            ? '1.5rem' 
+                            : '1.2rem',
+                          fontWeight: (shufflingNumbers.includes(number) || drawnNumbers.includes(number)) 
+                            ? 'bold' 
+                            : 'normal',
+                          transform: shufflingNumbers.includes(number) 
+                            ? 'scale(1.2)' 
+                            : 'scale(1)',
+                          zIndex: shufflingNumbers.includes(number) ? 1 : 'auto',
+                          width: '100%'
+                        }}
+                      >
+                        {number}
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* Bottom controls */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          p: 2,
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          backgroundColor: '#242424'
+        }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            {/* <Typography sx={{ color: 'white' }}>Slower</Typography> */}
+           
+            {/* <Typography sx={{ color: 'white' }}>Faster</Typography> */}
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={toggleDrawing}
+              sx={{ 
+                minWidth: 120,
+                height: 40,
+                fontSize: '1rem',
+                fontWeight: 'bold'
+              }}
+            >
+              {isDrawing ? 'STOP' : 'BINGO'}
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleShuffle}
+              disabled={isShuffling || isDrawing}
+              sx={{ 
+                minWidth: 120,
+                height: 40,
+                fontSize: '1rem',
+                fontWeight: 'bold'
+              }}
+            >
+              Bowzew
+            </Button>
+            <Select
+              value={selectedCaller}
+              onChange={(e) => setSelectedCaller(e.target.value)}
+              sx={{ 
+                minWidth: 150,
+                height: 40,
+                backgroundColor: 'white',
+                '& .MuiSelect-select': {
+                  py: 1
+                }
+              }}
+            >
+              {callers.map(caller => (
+                <MenuItem key={caller.id} value={caller.id}>
+                  {caller.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </Stack>
+ <Slider
+              value={3000 - drawSpeed}
+              onChange={handleSpeedChange}
+              min={500}
+              max={2500}
+              step={100}
+              sx={{ width: 200 }}
+              disabled={!isDrawing}
+            />
+          <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+              label="Check Cartella"
+              variant="outlined"
+              size="small"
+              value={checkNumber}
+              onChange={(e) => setCheckNumber(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleCheckCartella();
+                }
+              }}
+              sx={{ 
+                width: 150,
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'white'
+                }
+              }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleCheckCartella}
+              disabled={!checkNumber}
+            >
+              Check
+            </Button>
+          </Stack>
+        </Box>
+      </Box>
 
       <CartellaCheckModal
         open={showCheckModal}
@@ -862,7 +1052,7 @@ const BingoGame = () => {
         }}
         onNewBingo={handleNewBingo}
       />
-    </Container>
+    </Box>
   );
 };
 
