@@ -74,6 +74,16 @@ const BingoGame = () => {
   const { logout, user } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
 
+  // Helper function to get the prefix based on number range
+  const getPrefix = (number) => {
+    if (number >= 1 && number <= 15) return 'B';
+    if (number >= 16 && number <= 30) return 'I';
+    if (number >= 31 && number <= 45) return 'N';
+    if (number >= 46 && number <= 60) return 'G';
+    if (number >= 61 && number <= 75) return 'O';
+    return '';
+  };
+
   // Update round number when component mounts and every minute
   useEffect(() => {
     setCurrentRound(getRoundNumber);
@@ -406,6 +416,76 @@ const BingoGame = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      {lastDrawn && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            width: 220,
+            height: 220,
+            backgroundColor: '#1a1a1a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+        >
+          <Box
+            sx={{
+              width: 200,
+              height: 200,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'radial-gradient(circle at 30% 30%, #ff0000, #990000)',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.2)',
+              border: '3px solid #ffffff'
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.5 }}
+              animate={{ scale: [0.5, 1.2, 1] }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                repeatDelay: 1
+              }}
+              style={{
+                width: '70%',
+                height: '70%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Box
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  backgroundColor: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Typography
+                  variant="h3"
+                  sx={{
+                    color: '#990000',
+                    fontWeight: 'bold',
+                    fontFamily: "'Roboto Condensed', sans-serif"
+                  }}
+                >
+                  {`${getPrefix(lastDrawn)}-${lastDrawn}`}
+                </Typography>
+              </Box>
+            </motion.div>
+          </Box>
+        </Box>
+      )}
       <Dialog
         open={showStartModal}
         onClose={() => {}}
