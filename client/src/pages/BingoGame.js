@@ -183,6 +183,14 @@ const BingoGame = () => {
 
   const handleCartellaSelect = async ({ cartellas, pattern, betAmount, totalBet, calculationDetails }) => {
     try {
+      // First update the state
+      setActiveCartellas(cartellas);
+      setGamePattern(pattern);
+      setTotalBetAmount(calculationDetails.rawTotalBet);
+      setCalculationDetails(calculationDetails);
+      setShowCartellaRegistration(false);
+
+      // Then make the API call
       const response = await fetch('http://localhost:5001/api/cartellas/place-bet', {
         method: 'POST',
         headers: {
@@ -198,17 +206,19 @@ const BingoGame = () => {
 
       if (!response.ok) {
         const data = await response.json();
+        // If API call fails, revert the state changes
+        setActiveCartellas([]);
+        setGamePattern(null);
+        setTotalBetAmount(0);
+        setCalculationDetails(null);
+        setShowCartellaRegistration(true);
         throw new Error(data.error || 'Failed to place bet');
       }
 
-      const data = await response.json();
-      setActiveCartellas(cartellas);
-      setGamePattern(pattern);
-      setTotalBetAmount(calculationDetails.rawTotalBet); // Use raw total bet from calculations
-      setCalculationDetails(calculationDetails);
-      setShowCartellaRegistration(false);
+      await response.json(); // Wait for the response to be fully read
     } catch (error) {
       console.error('Error placing bet:', error);
+      setShowCartellaRegistration(true); // Show registration again on error
       throw error;
     }
   };
@@ -570,19 +580,17 @@ const BingoGame = () => {
             </Box>
 
             {/* Bet Amount in Amharic */}
-            {totalBetAmount > 0 && (
+            {calculationDetails && (
               <Typography
                 align="center"
                 sx={{
-                  // mt: 3,
-                  // mb: 2,
                   fontSize: '4rem',
                   color: '#666',
                   fontFamily: 'sans-serif',
                   fontWeight: 'bold',
                 }}
               >
-                {totalBetAmount} ወሳጅ
+                {calculationDetails.adjustedTotalBet} ወሳጅ
               </Typography>
             )}
 

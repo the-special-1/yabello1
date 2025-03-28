@@ -74,6 +74,7 @@ const CartellaRegistration = ({ open, onSelect }) => {
   const [tabValue, setTabValue] = useState(0);
   const [showNewCartellaModal, setShowNewCartellaModal] = useState(false);
   const [currentRound, setCurrentRound] = useState(getRoundNumber());
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
 
   // Add state for previous game settings and current state backup
@@ -83,30 +84,39 @@ const CartellaRegistration = ({ open, onSelect }) => {
   });
   const [stateBeforeContinue, setStateBeforeContinue] = useState(null);
   const [isContinueActive, setIsContinueActive] = useState(false);
+  const [isLoadingContinue, setIsLoadingContinue] = useState(false);
 
   // Toggle between continue and initial state
-  const handleContinue = () => {
-    if (!isContinueActive && previousSettings) {
-      // Save current state before applying continue
-      setStateBeforeContinue({
-        cartellas: selectedCartellas,
-        pattern: selectedPattern,
-        betAmount: betAmount
-      });
-      
+  const handleContinue = async () => {
+    if (!previousSettings) return;
+    
+    try {
       // Apply previous settings
       setSelectedCartellas(previousSettings.cartellas);
       setSelectedPattern(previousSettings.pattern);
       setBetAmount(previousSettings.betAmount);
-      setIsContinueActive(true);
-    } else if (stateBeforeContinue) {
-      // Restore state from before continue was clicked
-      setSelectedCartellas(stateBeforeContinue.cartellas);
-      setSelectedPattern(stateBeforeContinue.pattern);
-      setBetAmount(stateBeforeContinue.betAmount);
-      setIsContinueActive(false);
+    } catch (error) {
+      console.error('Error in handleContinue:', error);
     }
   };
+
+  // Add effect to ensure state is properly updated
+  useEffect(() => {
+    if (isContinueActive && previousSettings) {
+      // Verify state matches previous settings
+      const stateMatches = 
+        JSON.stringify(selectedCartellas) === JSON.stringify(previousSettings.cartellas) &&
+        selectedPattern === previousSettings.pattern &&
+        betAmount === previousSettings.betAmount;
+      
+      if (!stateMatches) {
+        // Re-apply settings if they don't match
+        setSelectedCartellas(previousSettings.cartellas);
+        setSelectedPattern(previousSettings.pattern);
+        setBetAmount(previousSettings.betAmount);
+      }
+    }
+  }, [isContinueActive, previousSettings]);
 
   useEffect(() => {
     if (open) {
@@ -234,66 +244,72 @@ const CartellaRegistration = ({ open, onSelect }) => {
     }
   };
 
-  const handleSubmit = () => {
-    if (selectedCartellas.length === 0) {
-      setError('Please select at least one cartella');
-      return;
-    }
-    if (!selectedPattern) {
-      setError('Please select a pattern');
-      return;
-    }
-    if (!betAmount) {
-      setError('Please select a bet amount');
-      return;
-    }
-
-    const rawTotalBet = selectedCartellas.length * betAmount;
-    const cutAmount = rawTotalBet * (userCut / 100); // Calculate the cut amount
-    const adjustedTotalBet = rawTotalBet - cutAmount; // Subtract the cut from total
-
-    console.log('Calculation details:', {
-      numberOfCartellas: selectedCartellas.length,
-      betPerCartella: betAmount,
-      rawTotalBet: rawTotalBet,
-      userCutPercentage: userCut,
-      cutAmount: cutAmount,
-      adjustedTotalBet: adjustedTotalBet
-    });
+  const handleSubmit = async (event) => {
+    if (isSubmitting) return;
     
-    if (adjustedTotalBet > userBalance) {
-      setError('Insufficient balance');
-      return;
-    }
-    
-    // Save current settings
-    const currentSettings = {
-      cartellas: selectedCartellas,
-      pattern: selectedPattern,
-      betAmount: betAmount,
-      totalBet: adjustedTotalBet // Pass the adjusted total bet
-    };
-    localStorage.setItem('previousGameSettings', JSON.stringify(currentSettings));
-    setPreviousSettings(currentSettings);
-
     try {
-      console.log('Selected pattern:', selectedPattern);
-      onSelect({
+      event?.preventDefault(); // Prevent any form submission
+      setIsSubmitting(true);
+      setError('');
+
+      // Validate inputs
+      if (selectedCartellas.length === 0) {
+        setError('Please select at least one cartella');
+        return;
+      }
+      if (!selectedPattern) {
+        setError('Please select a pattern');
+        return;
+      }
+      if (!betAmount) {
+        setError('Please select a bet amount');
+        return;
+      }
+
+      // Calculate values
+      const parsedBetAmount = parseFloat(betAmount);
+      const rawTotalBet = selectedCartellas.length * parsedBetAmount;
+      const cutAmount = rawTotalBet * (userCut / 100);
+      const adjustedTotalBet = rawTotalBet - cutAmount;
+      
+      if (adjustedTotalBet > userBalance) {
+        setError('Insufficient balance');
+        return;
+      }
+      
+      // Prepare data
+      const calculationDetails = {
+        numberOfCartellas: selectedCartellas.length,
+        betPerCartella: parsedBetAmount,
+        rawTotalBet: rawTotalBet,
+        userCutPercentage: userCut,
+        cutAmount: cutAmount,
+        adjustedTotalBet: adjustedTotalBet
+      };
+
+      // Save settings before making API call
+      const currentSettings = {
         cartellas: selectedCartellas,
         pattern: selectedPattern,
         betAmount: betAmount,
+        totalBet: adjustedTotalBet
+      };
+      localStorage.setItem('previousGameSettings', JSON.stringify(currentSettings));
+      setPreviousSettings(currentSettings);
+
+      // Make the API call
+      await onSelect({
+        cartellas: selectedCartellas,
+        pattern: selectedPattern,
+        betAmount: parsedBetAmount,
         totalBet: adjustedTotalBet,
-        calculationDetails: {
-          numberOfCartellas: selectedCartellas.length,
-          betPerCartella: betAmount,
-          rawTotalBet: rawTotalBet,
-          userCutPercentage: userCut,
-          cutAmount: cutAmount,
-          adjustedTotalBet: adjustedTotalBet
-        }
+        calculationDetails
       });
     } catch (error) {
-      setError(error.message);
+      console.error('Error in handleSubmit:', error);
+      setError(error.message || 'Failed to submit');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -389,30 +405,32 @@ const CartellaRegistration = ({ open, onSelect }) => {
               Round {currentRound}
             </Typography>
 
-            <Button
-              variant="contained"
-              size="medium"
-              onClick={handleContinue}
-              disabled={!previousSettings}
-              sx={{
-                bgcolor: isContinueActive ? '#790918' : '#790918',
-                color: 'white',
-                fontWeight: 'bold',
-                px: 3,
-                mt:2,
-                ml:30,
-                '&:hover': {
-                  bgcolor: isContinueActive ? '#b71c1c' : '#d32f2f',
-                  transform: 'scale(1.02)'
-                },
-                '&:disabled': {
+            {previousSettings && (
+              <Button
+                variant="contained"
+                size="medium"
+                onClick={handleContinue}
+                disabled={!previousSettings}
+                sx={{
                   bgcolor: '#790918',
-                  color: '#999'
-                }
-              }}
-            >
-              Continue
-            </Button>
+                  color: 'white',
+                  fontWeight: 'bold',
+                  px: 3,
+                  mt: 2,
+                  ml: 30,
+                  '&:hover': {
+                    bgcolor: '#d32f2f',
+                    transform: 'scale(1.02)'
+                  },
+                  '&:disabled': {
+                    bgcolor: '#790918',
+                    color: '#999'
+                  }
+                }}
+              >
+                Continue
+              </Button>
+            )}
           </Box>
 
           {/* Main content */}
@@ -608,11 +626,11 @@ const CartellaRegistration = ({ open, onSelect }) => {
                   <Button
                     variant="contained"
                     onClick={handleSubmit}
-                    // startIcon={<PlayArrowIcon />}
+                    disabled={!selectedPattern || selectedCartellas.length === 0}
                     sx={{
                       minWidth: 120,
                       height: 50,
-                     fontSize: '1.5rem',
+                      fontSize: '1.5rem',
                       backgroundColor: 'blue',
                       boxShadow: 2,
                       mt: 0,
