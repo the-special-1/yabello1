@@ -24,9 +24,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
 } from 'recharts';
 import { startOfDay, endOfDay } from 'date-fns/fp';
 import { format } from 'date-fns';
@@ -80,19 +77,42 @@ const SalesAnalytics = () => {
 
   const fetchSalesData = async () => {
     try {
-      const queryParams = new URLSearchParams({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        period,
-        ...(branchId && { branchId }),
-        ...(userId && { userId })
+      const response = await fetch('/api/reports/daily', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          date: format(startDate, 'yyyy-MM-dd'),
+          branchId: user.role === 'agent' ? user.branchId : branchId
+        })
       });
 
-      const response = await fetch(`/api/sales?${queryParams}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch report data');
+      }
+
       const data = await response.json();
-      setSalesData(data);
+      console.log('Daily Report Data:', data);
+      
+      // Calculate totals from daily report data
+      const totalIncome = data.reduce((sum, item) => {
+        console.log('Current item:', item);
+        console.log('Current income:', item.income);
+        console.log('Running sum:', sum + (item.income || 0));
+        return sum + (Number(item.income) || 0);
+      }, 0);
+      
+      console.log('Final Total Income:', totalIncome);
+
+      setSalesData({
+        totalSales: totalIncome,
+        salesByPeriod: data.map(item => ({
+          period: `Round ${item.round}`,
+          sales: Number(item.income) || 0
+        }))
+      });
     } catch (error) {
       console.error('Error fetching sales data:', error);
     }
@@ -182,60 +202,47 @@ const SalesAnalytics = () => {
           </Grid>
 
           {/* Summary Cards */}
-          {salesData?.summary && (
-            <Grid item xs={12}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Card>
-                    <CardContent>
-                      <Typography color="textSecondary" gutterBottom>
-                        Total Sales
-                      </Typography>
-                      <Typography variant="h4">
-                        {formatCurrency(salesData.summary.totalSales)}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Card>
-                    <CardContent>
-                      <Typography color="textSecondary" gutterBottom>
-                        Total Transactions
-                      </Typography>
-                      <Typography variant="h4">
-                        {salesData.summary.totalTransactions}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Card>
-                    <CardContent>
-                      <Typography color="textSecondary" gutterBottom>
-                        Average Transaction
-                      </Typography>
-                      <Typography variant="h4">
-                        {formatCurrency(salesData.summary.averageTransaction)}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
+          {salesData && (
+            <>
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography color="textSecondary" gutterBottom>
+                      Total Sales
+                    </Typography>
+                    <Typography variant="h4">
+                      {formatCurrency(salesData.totalSales)}
+                    </Typography>
+                  </CardContent>
+                </Card>
               </Grid>
-            </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography color="textSecondary" gutterBottom>
+                      Average Income per Round
+                    </Typography>
+                    <Typography variant="h4">
+                      {formatCurrency(salesData.totalSales / (salesData.salesByPeriod?.length || 1))}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </>
           )}
 
           {/* Charts */}
-          {salesData?.aggregatedData && (
+          {salesData?.salesByPeriod && (
             <>
-              <Grid item xs={12} md={8}>
+              <Grid item xs={12}>
                 <Paper sx={{ p: 2, height: 400 }}>
                   <Typography variant="h6" gutterBottom>
-                    Sales Trend
+                    Sales by Round
                   </Typography>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      data={salesData.aggregatedData}
+                      data={salesData.salesByPeriod}
                       margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
@@ -243,38 +250,8 @@ const SalesAnalytics = () => {
                       <YAxis />
                       <Tooltip formatter={(value) => formatCurrency(value)} />
                       <Legend />
-                      <Bar dataKey="totalAmount" name="Sales" fill="#8884d8" />
+                      <Bar dataKey="sales" name="Sales" fill="#8884d8" />
                     </BarChart>
-                  </ResponsiveContainer>
-                </Paper>
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <Paper sx={{ p: 2, height: 400 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Sales by Branch
-                  </Typography>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={Object.entries(salesData.salesByBranch).map(([name, data]) => ({
-                          name,
-                          value: data.totalAmount
-                        }))}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        label={(entry) => `${entry.name}: ${formatCurrency(entry.value)}`}
-                      >
-                        {Object.entries(salesData.salesByBranch).map((entry, index) => (
-                          <Cell key={entry[0]} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => formatCurrency(value)} />
-                      <Legend />
-                    </PieChart>
                   </ResponsiveContainer>
                 </Paper>
               </Grid>
