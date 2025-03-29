@@ -133,47 +133,44 @@ router.post('/', auth, async (req, res) => {
       numbers,
       branchId: targetBranchId,
       createdBy: req.user.id,
-      markedNumbers: Array(5).fill().map(() => Array(5).fill(false))
+      status: 'available'
     });
 
+    console.log('Cartella created successfully:', cartella.id);
     res.status(201).json(cartella);
   } catch (error) {
     console.error('Create cartella error:', error);
-    res.status(500).json({ error: error.message || 'Failed to create cartella' });
+    res.status(400).json({ error: error.message });
   }
 });
 
-// Get all cartellas for current branch
-router.get('/branch/current', auth, authorize(['superadmin', 'agent']), async (req, res) => {
+// Get all cartellas
+router.get('/', auth, async (req, res) => {
   try {
-    const { status } = req.query;
-    const where = {};
+    const { branchId, status } = req.query;
+    let whereClause = {};
 
-    // For agents, only show cartellas from their branch
-    if (req.user.role === 'agent') {
-      where.branchId = req.user.branchId;
+    // Filter by branch
+    if (branchId) {
+      whereClause.branchId = branchId;
+    } else if (req.user.role === 'agent') {
+      // Agents can only see cartellas from their branch
+      whereClause.branchId = req.user.branchId;
     }
 
-    // Add status filter if provided
+    // Filter by status if provided
     if (status) {
-      where.status = status;
+      whereClause.status = status;
     }
 
     const cartellas = await db.Cartella.findAll({
-      where,
-      include: [
-        {
-          model: db.Branch,
-          as: 'branch',
-          attributes: ['id', 'name', 'location']
-        },
-        {
-          model: db.User,
-          as: 'creator',
-          attributes: ['id', 'username']
-        }
-      ],
-      order: [['createdAt', 'DESC']]
+      where: whereClause,
+      include: [{
+        model: db.Branch,
+        as: 'branch',
+        attributes: ['name']
+      }],
+      order: [['id', 'ASC']]
     });
 
     res.json(cartellas);
@@ -183,194 +180,35 @@ router.get('/branch/current', auth, authorize(['superadmin', 'agent']), async (r
   }
 });
 
-// Get user's cartellas
-router.get('/user', auth, async (req, res) => {
+// Get a specific cartella
+router.get('/:id', auth, async (req, res) => {
   try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    const cartellas = await db.Cartella.findAll({
-      where: {
-        createdBy: req.user.id
-      },
-      include: [
-        {
-          model: db.Branch,
-          as: 'branch',
-          attributes: ['id', 'name']
-        }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
-
-    res.json(cartellas);
-  } catch (error) {
-    console.error('Get user cartellas error:', error);
-    res.status(500).json({ error: error.message || 'Failed to fetch cartellas' });
-  }
-});
-
-// Get all cartellas for user's branch
-router.get('/branch', auth, async (req, res) => {
-  try {
-    // Get user with branch information
-    const user = await db.User.findByPk(req.user.id, {
+    const cartella = await db.Cartella.findByPk(req.params.id, {
       include: [{
         model: db.Branch,
-        as: 'branch'
+        as: 'branch',
+        attributes: ['name']
       }]
     });
-
-    if (!user || !user.branchId) {
-      return res.status(400).json({ error: 'User is not associated with a branch' });
-    }
-
-    const cartellas = await db.Cartella.findAll({
-      where: {
-        branchId: user.branchId
-      },
-      include: [
-        {
-          model: db.Branch,
-          as: 'branch',
-          attributes: ['id', 'name', 'location']
-        },
-        {
-          model: db.User,
-          as: 'creator',
-          attributes: ['id', 'username']
-        }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
-
-    res.json(cartellas);
-  } catch (error) {
-    console.error('Get branch cartellas error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get all cartellas for user's branch (with status filter)
-router.get('/branch/available', auth, async (req, res) => {
-  try {
-    // Get user with branch information
-    const user = await db.User.findByPk(req.user.id, {
-      include: [{
-        model: db.Branch,
-        as: 'branch'
-      }]
-    });
-
-    if (!user || !user.branchId) {
-      return res.status(400).json({ error: 'User is not associated with a branch' });
-    }
-
-    const where = {
-      branchId: user.branchId
-    };
-
-    // Add status filter if provided
-    if (req.query.status) {
-      where.status = req.query.status;
-    }
-
-    const cartellas = await db.Cartella.findAll({
-      where,
-      include: [
-        {
-          model: db.Branch,
-          as: 'branch',
-          attributes: ['id', 'name', 'location']
-        },
-        {
-          model: db.User,
-          as: 'creator',
-          attributes: ['id', 'username']
-        }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
-
-    res.json(cartellas);
-  } catch (error) {
-    console.error('Get branch cartellas error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update cartella
-router.put('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) => {
-  try {
-    const { numbers } = req.body;
-    const cartella = await db.Cartella.findByPk(req.params.id);
 
     if (!cartella) {
       return res.status(404).json({ error: 'Cartella not found' });
     }
 
-    // Verify ownership
-    if (cartella.branchId !== req.user.branchId) {
-      return res.status(403).json({ error: 'You can only update cartellas from your branch' });
-    }
-
-    // Only allow updates if cartella is available
-    if (cartella.status !== 'available') {
-      return res.status(400).json({ error: 'Cannot update cartella that is not available' });
-    }
-
-    // Validate numbers if provided
-    if (numbers) {
-      // Validate grid structure
-      if (!Array.isArray(numbers) || numbers.length !== 5) {
-        return res.status(400).json({ error: 'Grid must be a 5x5 array' });
-      }
-
-      for (let i = 0; i < 5; i++) {
-        if (!Array.isArray(numbers[i]) || numbers[i].length !== 5) {
-          return res.status(400).json({ error: 'Each row must have exactly 5 numbers' });
-        }
-
-        for (let j = 0; j < 5; j++) {
-          if (i === 2 && j === 2) {
-            if (numbers[i][j] !== 'FREE') {
-              return res.status(400).json({ error: 'Center space must be FREE' });
-            }
-            continue;
-          }
-          const num = numbers[i][j];
-          if (!Number.isInteger(num) || num < 1 || num > 75) {
-            return res.status(400).json({ error: 'Numbers must be integers between 1 and 75' });
-          }
-        }
-      }
-
-      // Check for duplicates
-      const flatNumbers = numbers.flat().filter((num, index) => {
-        const row = Math.floor(index / 5);
-        const col = index % 5;
-        return !(row === 2 && col === 2);
-      });
-
-      if (new Set(flatNumbers).size !== flatNumbers.length) {
-        return res.status(400).json({ error: 'Duplicate numbers are not allowed' });
-      }
-    }
-
-    await cartella.update({ numbers });
     res.json(cartella);
   } catch (error) {
-    console.error('Update cartella error:', error);
-    res.status(400).json({ error: error.message });
+    console.error('Get cartella error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Update a cartella
-router.put('/:id/:branchId', auth, async (req, res) => {
+// Update cartella
+router.put('/:id/:branchId', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   const t = await db.sequelize.transaction();
   try {
     const { numbers } = req.body;
+
+    // Find cartella
     const cartella = await db.Cartella.findOne({
       where: {
         id: req.params.id,

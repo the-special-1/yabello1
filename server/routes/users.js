@@ -132,7 +132,12 @@ router.get('/my-users', auth, authorize(['superadmin', 'agent']), async (req, re
 router.get('/balance', auth, async (req, res) => {
   try {
     const user = await db.User.findByPk(req.user.id, {
-      attributes: ['id', 'username', 'credits', 'commission']
+      attributes: ['id', 'username', 'credits', 'commission', 'cut'],
+      include: [{
+        model: db.Branch,
+        as: 'branch',
+        attributes: ['id', 'name']
+      }]
     });
 
     if (!user) {
@@ -141,7 +146,9 @@ router.get('/balance', auth, async (req, res) => {
 
     res.json({
       credits: user.credits,
-      commission: user.commission
+      commission: user.commission,
+      cut: user.cut,
+      branch: user.branch
     });
   } catch (error) {
     console.error('Get balance error:', error);
@@ -159,13 +166,6 @@ router.post('/transfer-credits', auth, authorize(['superadmin', 'agent']), async
       throw new Error('Valid receiver and amount are required');
     }
 
-    console.log('Credit transfer request:', {
-      senderId: req.user.id,
-      senderRole: req.user.role,
-      receiverId,
-      amount
-    });
-
     const sender = await db.User.findByPk(req.user.id, { transaction: t });
     const receiver = await db.User.findByPk(receiverId, { transaction: t });
 
@@ -173,96 +173,34 @@ router.post('/transfer-credits', auth, authorize(['superadmin', 'agent']), async
       throw new Error('Receiver not found');
     }
 
-    console.log('Credit transfer participants:', {
-      sender: {
-        id: sender.id,
-        role: sender.role,
-        credits: sender.credits
-      },
-      receiver: {
-        id: receiver.id,
-        role: receiver.role,
-        credits: receiver.credits
-      }
-    });
-
-    // Validate hierarchical transfer rules
-    if (req.user.role === 'superadmin' && receiver.role !== 'agent') {
-      throw new Error('Superadmin can only transfer credits to agents');
-    }
-
-    if (req.user.role === 'agent' && receiver.role !== 'user') {
-      throw new Error('Agents can only transfer credits to users');
-    }
-
-    if (sender.credits < amount && sender.role !== 'superadmin') {
+    // For superadmin, skip credit check
+    if (sender.role !== 'superadmin' && sender.credits < amount) {
       throw new Error('Insufficient credits');
-    }
-
-    // Calculate new balances
-    const newSenderCredits = sender.role === 'superadmin' ? sender.credits : parseFloat((sender.credits - amount).toFixed(2));
-    const newReceiverCredits = parseFloat((parseFloat(receiver.credits) + parseFloat(amount)).toFixed(2));
-
-    console.log('Credit transfer amounts:', {
-      currentSenderCredits: sender.credits,
-      newSenderCredits,
-      currentReceiverCredits: receiver.credits,
-      newReceiverCredits,
-      amount
-    });
-
-    // Validate branch hierarchy for agents
-    if (sender.role === 'agent' && receiver.branchId !== sender.branchId) {
-      throw new Error('Agents can only transfer credits to users in their branch');
     }
 
     // Update sender credits (skip for superadmin)
     if (sender.role !== 'superadmin') {
       await sender.update({
-        credits: newSenderCredits
+        credits: sender.credits - amount
       }, { transaction: t });
     }
 
-    // Update receiver credits
+    // Update receiver credits using string operations for precision
+    const newCredits = (parseFloat(receiver.credits) + parseFloat(amount)).toFixed(2);
     await receiver.update({
-      credits: newReceiverCredits
+      credits: newCredits
     }, { transaction: t });
 
-    // Record transaction
-    const transaction = await db.Transaction.create({
+    // Create transaction record
+    await db.Transaction.create({
       senderId: sender.id,
       receiverId: receiver.id,
-      amount: parseFloat(amount),
-      type: sender.role === 'superadmin' ? 'credit_creation' : 'credit_transfer',
-      status: 'completed',
-      description: sender.role === 'superadmin' 
-        ? `Credit creation by ${sender.username} for ${receiver.username}`
-        : `Credit transfer from ${sender.username} to ${receiver.username}`
+      amount,
+      type: 'credit_transfer'
     }, { transaction: t });
 
     await t.commit();
-    
-    // Fetch fresh data after commit
-    const updatedReceiver = await db.User.findByPk(receiverId);
-    const updatedSender = sender.role !== 'superadmin' ? await db.User.findByPk(sender.id) : sender;
-
-    res.json({ 
-      message: sender.role === 'superadmin' ? 'Credits created successfully' : 'Credits transferred successfully',
-      transaction: {
-        id: transaction.id,
-        amount: parseFloat(amount),
-        type: sender.role === 'superadmin' ? 'credit_creation' : 'credit_transfer',
-        status: 'completed'
-      },
-      sender: {
-        id: updatedSender.id,
-        credits: updatedSender.credits
-      },
-      receiver: {
-        id: updatedReceiver.id,
-        credits: updatedReceiver.credits
-      }
-    });
+    res.json({ message: 'Credits transferred successfully' });
   } catch (error) {
     await t.rollback();
     console.error('Transfer credits error:', error);
@@ -270,88 +208,14 @@ router.post('/transfer-credits', auth, authorize(['superadmin', 'agent']), async
   }
 });
 
-// Create new user
+// Create user
 router.post('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   const t = await db.sequelize.transaction();
   try {
-    const { username, password, role, credits = 0, commission = 0, branchId, branchName } = req.body;
+    const { username, password, credits } = req.body;
 
-    // Validate role permissions
-    if (req.user.role === 'agent' && role !== 'user') {
-      throw new Error('Agents can only create users');
-    }
-
-    // For agent creation, check if branch exists and is not already assigned
-    if (role === 'agent') {
-      if (!branchName) {
-        throw new Error('Branch name is required for agent creation');
-      }
-
-      // First check if branch exists
-      let branch;
-      if (branchId) {
-        branch = await db.Branch.findOne({
-          where: { id: branchId },
-          include: [{
-            model: db.User,
-            as: 'users',
-            where: { role: 'agent' },
-            required: false
-          }]
-        });
-
-        if (branch && branch.users.length > 0) {
-          throw new Error('Branch already has an agent assigned');
-        }
-      } else {
-        // Create new branch if it doesn't exist
-        branch = await db.Branch.create({
-          name: branchName,
-          createdBy: req.user.id
-        }, { transaction: t });
-      }
-
-      req.body.branchId = branch.id;
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // For agents, automatically assign their branch
-    let targetBranchId = req.body.branchId;
-    if (req.user.role === 'agent') {
-      targetBranchId = req.user.branchId;
-    }
-
-    // Create user
-    const user = await db.User.create({
-      username,
-      password: hashedPassword,
-      role,
-      credits,
-      commission,
-      branchId: targetBranchId,
-      createdBy: req.user.id
-    }, { transaction: t });
-
-    await t.commit();
-    res.status(201).json(user);
-  } catch (error) {
-    await t.rollback();
-    console.error('Create user error:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Create user (agent only)
-router.post('/create-user', auth, authorize(['agent']), async (req, res) => {
-  const t = await db.sequelize.transaction();
-  try {
-    const { username, password, credits = 0 } = req.body;
-
-    if (!username || !password) {
-      throw new Error('Username and password are required');
+    if (!username || !password || credits === undefined) {
+      throw new Error('Username, password, and credits are required');
     }
 
     // Check if username exists
@@ -364,7 +228,7 @@ router.post('/create-user', auth, authorize(['agent']), async (req, res) => {
       throw new Error('Username already exists');
     }
 
-    // Create user with agent's branch
+    // Create user
     const user = await db.User.create({
       username,
       password,

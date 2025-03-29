@@ -93,14 +93,17 @@ const CartellaManagement = () => {
   const fetchCartellas = async () => {
     try {
       setError('');
-      // Use the /branch/current endpoint for both superadmin and agents
-      const response = await axios.get('/api/cartellas/branch/current', {
+      const response = await axios.get('/api/cartellas', {
+        params: {
+          branchId: selectedBranch
+        },
         headers: { Authorization: `Bearer ${token}` }
       });
-      setCartellas(response.data);
+      setCartellas(response.data || []);
     } catch (error) {
       console.error('Error fetching cartellas:', error);
-      setError('Failed to fetch cartellas. Please try again.');
+      setError('Failed to fetch cartellas');
+      setCartellas([]);
     }
   };
 
