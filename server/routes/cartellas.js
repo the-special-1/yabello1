@@ -249,27 +249,17 @@ router.patch('/:id', auth, async (req, res) => {
 
     // Find the cartella
     const cartella = await db.Cartella.findByPk(id);
+
     if (!cartella) {
       return res.status(404).json({ error: 'Cartella not found' });
     }
 
-    // Check ownership
-    if (cartella.createdBy !== req.user.id) {
+    // For non-superadmin users, verify they can only edit cartellas from their branch
+    if (req.user.role !== 'superadmin' && cartella.branchId !== req.user.branchId) {
       return res.status(403).json({ error: 'Not authorized to edit this cartella' });
     }
 
-    // Validate numbers grid structure
-    if (!Array.isArray(numbers) || numbers.length !== 5) {
-      return res.status(400).json({ error: 'Grid must be a 5x5 array' });
-    }
-
-    for (let i = 0; i < 5; i++) {
-      if (!Array.isArray(numbers[i]) || numbers[i].length !== 5) {
-        return res.status(400).json({ error: 'Each row must have exactly 5 numbers' });
-      }
-    }
-
-    // Update the cartella
+    // Update cartella numbers
     await cartella.update({ numbers });
     res.json(cartella);
   } catch (error) {

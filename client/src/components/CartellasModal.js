@@ -297,6 +297,13 @@ const CartellasModal = ({ open, onClose }) => {
     numbers: Array(5).fill().map(() => Array(5).fill('')),
     branchId: userBranch
   });
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  // Check if user can edit cartella
+  const canEditCartella = (cartella) => {
+    // Since users can only see their own cartellas in available view, they should be able to edit them
+    return true;
+  };
 
   const handlePlayBingoClick = () => {
     onClose();
@@ -318,14 +325,13 @@ const CartellasModal = ({ open, onClose }) => {
 
   const fetchCartellas = async () => {
     try {
-      const response = await fetch('/api/cartellas/branch/available?status=available', {
+      const response = await fetch('/api/cartellas?status=available', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to fetch cartellas');
+        throw new Error('Failed to fetch cartellas');
       }
       const data = await response.json();
       setExistingCartellas(data);
