@@ -882,241 +882,245 @@ const BingoGame = () => {
         </Box>
 
         {/* Numbers grid */}
-        <Grid 
-          container 
-          spacing={1} 
-          sx={{ 
-            flex: 1,
-            width: '100%',
-            margin: 0,
-            padding: 2,
-            paddingBottom: 0.5,
-            backgroundColor: '#1a1a1a'
-          }}
-        >
-          {organizedNumbers.map((row, rowIndex) => (
-            <Grid item xs={12} key={rowIndex}>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center',
-                width: '100%',
-                mb: 1
-              }}>
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    minWidth: 40,
-                    fontWeight: 'bold',
-                    color: 'primary.main',
-                    mr: 2
-                  }}
-                >
-                  {bingoLetters[rowIndex]}
-                </Typography>
-                <Grid container spacing={1} sx={{ flex: 1, m: 0 }}>
-                  {row.map((number) => (
-                    <Grid item xs={0.8} key={number} sx={{ p: 0.5 }}>
-                      <Paper
-                        elevation={2}
-                        sx={{
-                          p: 1.5,
-                          textAlign: 'center',
-                          backgroundColor: shufflingNumbers.includes(number) 
-                            ? 'primary.main' 
-                            : drawnNumbers.includes(number) 
-                              ? 'primary.main' 
-                              : 'background.paper',
-                          color: (shufflingNumbers.includes(number) || drawnNumbers.includes(number)) 
-                            ? 'white' 
-                            : 'text.primary',
-                          transition: 'all 0.2s',
-                          opacity: shufflingNumbers.includes(number) 
-                            ? 1 
-                            : drawnNumbers.includes(number) 
-                              ? 1 
-                              : 0.7,
-                          fontSize: shufflingNumbers.includes(number) 
-                            ? '1.5rem' 
-                            : '1.2rem',
-                          fontWeight: (shufflingNumbers.includes(number) || drawnNumbers.includes(number)) 
-                            ? 'bold' 
-                            : 'normal',
-                          transform: shufflingNumbers.includes(number) 
-                            ? 'scale(1.2)' 
-                            : 'scale(1)',
-                          zIndex: shufflingNumbers.includes(number) ? 1 : 'auto',
-                          width: '100%'
-                        }}
-                      >
-                        {number}
-                      </Paper>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-
-        {/* Bottom controls */}
         <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          p: 0.5,
-          backgroundColor: '#1a1a1a'
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          justifyContent: 'flex-end'
         }}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={toggleDrawing}
-              sx={{ 
-                minWidth: 120,
-                height: 40,
-                fontSize: '1rem',
-                fontWeight: 'bold'
-              }}
-            >
-              {isDrawing ? 'STOP' : 'BINGO'}
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleShuffle}
-              disabled={isShuffling || isDrawing}
-              sx={{ 
-                minWidth: 120,
-                height: 40,
-                fontSize: '1rem',
-                fontWeight: 'bold'
-              }}
-            >
-              Bowzew
-            </Button>
-            <Select
-              value={selectedCaller}
-              onChange={(e) => setSelectedCaller(e.target.value)}
-              sx={{ 
-                minWidth: 150,
-                height: 40,
-                color: 'black',
-                backgroundColor: 'whitesmoke',
-                '& .MuiSelect-select': {
-                  py: 1
-                }
-              }}
-            >
-              {callers.map(caller => (
-                <MenuItem key={caller.id} value={caller.id}>
-                  {caller.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </Stack>
-          <Box 
+          <Grid 
+            container 
+            spacing={1} 
             sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              width: 380,
-              height: 45,
-              backgroundColor: 'silver',
-              position: 'relative',
-              overflow: 'hidden',
-              transition: 'background-color 0.2s',
-              '&:hover': {
-                backgroundColor: '#E5E4E2',
-                '& .speed-text': {
-                  opacity: 0
-                }
-              }
+              width: '100%',
+              margin: 0,
+              padding: 2,
+              paddingBottom: -2,
+              backgroundColor: '#1a1a1a'
             }}
-            onMouseEnter={() => setIsSliding(true)}
-            onMouseLeave={() => setIsSliding(false)}
           >
-            {!isSliding && (
-              <Typography 
-                className="speed-text"
-                variant="caption" 
+            {organizedNumbers.map((row, rowIndex) => (
+              <Grid item xs={12} key={rowIndex}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  width: '100%',
+                  mb: 1
+                }}>
+                  <Typography 
+                    variant="h5" 
+                    sx={{ 
+                      minWidth: 40,
+                      fontWeight: 'bold',
+                      color: 'primary.main',
+                      mr: 2
+                    }}
+                  >
+                    {bingoLetters[rowIndex]}
+                  </Typography>
+                  <Grid container spacing={1} sx={{ flex: 1, m: 0 }}>
+                    {row.map((number) => (
+                      <Grid item xs={0.8} key={number} sx={{ p: 0.5 }}>
+                        <Paper
+                          elevation={2}
+                          sx={{
+                            p: 1.5,
+                            textAlign: 'center',
+                            backgroundColor: shufflingNumbers.includes(number) 
+                              ? 'primary.main' 
+                              : drawnNumbers.includes(number) 
+                                ? 'primary.main' 
+                                : 'background.paper',
+                            color: (shufflingNumbers.includes(number) || drawnNumbers.includes(number)) 
+                              ? 'white' 
+                              : 'text.primary',
+                            transition: 'all 0.2s',
+                            opacity: shufflingNumbers.includes(number) 
+                              ? 1 
+                              : drawnNumbers.includes(number) 
+                                ? 1 
+                                : 0.7,
+                            fontSize: shufflingNumbers.includes(number) 
+                              ? '1.5rem' 
+                              : '1.2rem',
+                            fontWeight: (shufflingNumbers.includes(number) || drawnNumbers.includes(number)) 
+                              ? 'bold' 
+                              : 'normal',
+                            transform: shufflingNumbers.includes(number) 
+                              ? 'scale(1.2)' 
+                              : 'scale(1)',
+                            zIndex: shufflingNumbers.includes(number) ? 1 : 'auto',
+                            width: '100%'
+                          }}
+                        >
+                          {number}
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Bottom controls */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            p: 0.5,
+            backgroundColor: '#1a1a1a'
+          }}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={toggleDrawing}
                 sx={{ 
-                  position: 'absolute',
-                  left: 8,
-                  color: 'white',
-                  zIndex: 2,
+                  minWidth: 120,
+                  height: 40,
                   fontSize: '1rem',
-                  transition: 'opacity 0.2s'
+                  fontWeight: 'bold'
                 }}
               >
-                play speed: {drawSpeed/1000}
-              </Typography>
-            )}
-            <Box
-              sx={{
-                position: 'absolute',
-                height: '100%',
-                width: '7%',
-                backgroundColor: '#01796f',
-                right: `${((drawSpeed/1000 - 2) / 8) * 85}%`
-              }}
-            />
-            <Slider
-              value={12 - drawSpeed/1000}
-              onChange={handleSpeedChange}
-              min={2}
-              max={10}
-              step={1}
-              sx={{ 
-                width: '100%',
-                height: '100%',
-                padding: '0 !important',
-                opacity: 0,
-                position: 'absolute',
-                zIndex: 1
-              }}
-            />
-          </Box>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <TextField
-              // label="Check Cartella"
-              variant="outlined"
-              placeholder="Enter Card Number"
-              size="small"
-              value={checkNumber}
-              onChange={(e) => setCheckNumber(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleCheckCartella();
-                }
-              }}
-              sx={{ 
-                width: 180,
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'whitesmoke',
+                {isDrawing ? 'STOP' : 'BINGO'}
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleShuffle}
+                disabled={isShuffling || isDrawing}
+                sx={{ 
+                  minWidth: 120,
+                  height: 40,
+                  fontSize: '1rem',
+                  fontWeight: 'bold'
+                }}
+              >
+                Bowzew
+              </Button>
+              <Select
+                value={selectedCaller}
+                onChange={(e) => setSelectedCaller(e.target.value)}
+                sx={{ 
+                  minWidth: 150,
+                  height: 40,
                   color: 'black',
-                  placeholderColor: 'black',
-                  
-
+                  backgroundColor: 'whitesmoke',
+                  '& .MuiSelect-select': {
+                    py: 1
+                  }
+                }}
+              >
+                {callers.map(caller => (
+                  <MenuItem key={caller.id} value={caller.id}>
+                    {caller.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Stack>
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                width: 380,
+                height: 45,
+                backgroundColor: 'silver',
+                position: 'relative',
+                overflow: 'hidden',
+                transition: 'background-color 0.2s',
+                '&:hover': {
+                  backgroundColor: '#E5E4E2',
+                  '& .speed-text': {
+                    opacity: 0
+                  }
                 }
               }}
-            />
-            <Button
-              variant="contained"
-              onClick={handleCheckCartella}
-          sx={{
-
-            minWidth: 120,
-            height: 40,
-            fontSize: '1rem',
-            backgroundColor: 'darkred',
-            
-            // fontWeight: 'bold'
-          }}
-              // disabled={!checkNumber}
+              onMouseEnter={() => setIsSliding(true)}
+              onMouseLeave={() => setIsSliding(false)}
             >
-              Check
-            </Button>
-          </Stack>
+              {!isSliding && (
+                <Typography 
+                  className="speed-text"
+                  variant="caption" 
+                  sx={{ 
+                    position: 'absolute',
+                    left: 8,
+                    color: 'white',
+                    zIndex: 2,
+                    fontSize: '1rem',
+                    transition: 'opacity 0.2s'
+                  }}
+                >
+                  play speed: {drawSpeed/1000}
+                </Typography>
+              )}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  height: '100%',
+                  width: '7%',
+                  backgroundColor: '#01796f',
+                  right: `${((drawSpeed/1000 - 2) / 8) * 85}%`
+                }}
+              />
+              <Slider
+                value={12 - drawSpeed/1000}
+                onChange={handleSpeedChange}
+                min={2}
+                max={10}
+                step={1}
+                sx={{ 
+                  width: '100%',
+                  height: '100%',
+                  padding: '0 !important',
+                  opacity: 0,
+                  position: 'absolute',
+                  zIndex: 1
+                }}
+              />
+            </Box>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <TextField
+                // label="Check Cartella"
+                variant="outlined"
+                placeholder="Enter Card Number"
+                size="small"
+                value={checkNumber}
+                onChange={(e) => setCheckNumber(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleCheckCartella();
+                  }
+                }}
+                sx={{ 
+                  width: 180,
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'whitesmoke',
+                    color: 'black',
+                    placeholderColor: 'black',
+                   
+
+                  }
+                }}
+              />
+              <Button
+                variant="contained"
+                onClick={handleCheckCartella}
+                sx={{
+                  minWidth: 120,
+                  height: 40,
+                  fontSize: '1rem',
+                  backgroundColor: 'darkred',
+                  // fontWeight: 'bold'
+                }}
+              >
+                Check
+              </Button>
+            </Stack>
+          </Box>
         </Box>
+
       </Box>
 
       <CartellaCheckModal
