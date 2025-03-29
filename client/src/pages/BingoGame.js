@@ -48,7 +48,8 @@ const BingoGame = () => {
     const saved = localStorage.getItem('isDrawing');
     return saved ? JSON.parse(saved) : false;
   });
-  const [drawSpeed, setDrawSpeed] = useState(1000);
+  const [drawSpeed, setDrawSpeed] = useState(10000); // Start with slowest speed (10)
+  const [isSliding, setIsSliding] = useState(false);
   const [gameStarted, setGameStarted] = useState(() => {
     const saved = localStorage.getItem('gameStarted');
     return saved ? JSON.parse(saved) : false;
@@ -215,7 +216,8 @@ const BingoGame = () => {
   };
 
   const handleSpeedChange = (_, newValue) => {
-    setDrawSpeed(3000 - newValue);
+    // Convert slider value (2-10) to milliseconds (2000-10000)
+    setDrawSpeed((12 - newValue) * 1000);
   };
 
   const handleCartellaSelect = async ({ cartellas, pattern, betAmount, totalBet, calculationDetails }) => {
@@ -888,6 +890,7 @@ const BingoGame = () => {
             width: '100%',
             margin: 0,
             padding: 2,
+            paddingBottom: 0.5,
             backgroundColor: '#1a1a1a'
           }}
         >
@@ -960,14 +963,10 @@ const BingoGame = () => {
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          p: 2,
-          borderTop: '1px solid rgba(255,255,255,0.1)',
-          backgroundColor: '#242424'
+          p: 0.5,
+          backgroundColor: '#1a1a1a'
         }}>
           <Stack direction="row" spacing={2} alignItems="center">
-            {/* <Typography sx={{ color: 'white' }}>Slower</Typography> */}
-           
-            {/* <Typography sx={{ color: 'white' }}>Faster</Typography> */}
             <Button
               variant="contained"
               color="primary"
@@ -1001,7 +1000,8 @@ const BingoGame = () => {
               sx={{ 
                 minWidth: 150,
                 height: 40,
-                backgroundColor: 'white',
+                color: 'black',
+                backgroundColor: 'whitesmoke',
                 '& .MuiSelect-select': {
                   py: 1
                 }
@@ -1014,15 +1014,67 @@ const BingoGame = () => {
               ))}
             </Select>
           </Stack>
- <Slider
-              value={3000 - drawSpeed}
-              onChange={handleSpeedChange}
-              min={500}
-              max={2500}
-              step={100}
-              sx={{ width: 200 }}
-              // disabled={!isDrawing}
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              width: 380,
+              height: 45,
+              backgroundColor: 'silver',
+              position: 'relative',
+              overflow: 'hidden',
+              transition: 'background-color 0.2s',
+              '&:hover': {
+                backgroundColor: '#E5E4E2',
+                '& .speed-text': {
+                  opacity: 0
+                }
+              }
+            }}
+            onMouseEnter={() => setIsSliding(true)}
+            onMouseLeave={() => setIsSliding(false)}
+          >
+            {!isSliding && (
+              <Typography 
+                className="speed-text"
+                variant="caption" 
+                sx={{ 
+                  position: 'absolute',
+                  left: 8,
+                  color: 'white',
+                  zIndex: 2,
+                  fontSize: '1rem',
+                  transition: 'opacity 0.2s'
+                }}
+              >
+                play speed: {drawSpeed/1000}
+              </Typography>
+            )}
+            <Box
+              sx={{
+                position: 'absolute',
+                height: '100%',
+                width: '7%',
+                backgroundColor: '#01796f',
+                right: `${((drawSpeed/1000 - 2) / 8) * 85}%`
+              }}
             />
+            <Slider
+              value={12 - drawSpeed/1000}
+              onChange={handleSpeedChange}
+              min={2}
+              max={10}
+              step={1}
+              sx={{ 
+                width: '100%',
+                height: '100%',
+                padding: '0 !important',
+                opacity: 0,
+                position: 'absolute',
+                zIndex: 1
+              }}
+            />
+          </Box>
           <Stack direction="row" spacing={2} alignItems="center">
             <TextField
               // label="Check Cartella"
