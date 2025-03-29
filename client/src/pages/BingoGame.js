@@ -211,12 +211,6 @@ const BingoGame = () => {
   };
 
   const toggleDrawing = () => {
-    if (!isDrawing) {
-      // Starting new game
-      setRecentNumbers([]); // Reset recent numbers when starting new game
-      setDrawnNumbers([]);
-      setLastDrawn(null);
-    }
     setIsDrawing(!isDrawing);
   };
 
@@ -1027,12 +1021,13 @@ const BingoGame = () => {
               max={2500}
               step={100}
               sx={{ width: 200 }}
-              disabled={!isDrawing}
+              // disabled={!isDrawing}
             />
           <Stack direction="row" spacing={2} alignItems="center">
             <TextField
-              label="Check Cartella"
+              // label="Check Cartella"
               variant="outlined"
+              placeholder="Enter Card Number"
               size="small"
               value={checkNumber}
               onChange={(e) => setCheckNumber(e.target.value)}
@@ -1042,16 +1037,29 @@ const BingoGame = () => {
                 }
               }}
               sx={{ 
-                width: 150,
+                width: 180,
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'white'
+                  backgroundColor: 'whitesmoke',
+                  color: 'black',
+                  placeholderColor: 'black',
+                  
+
                 }
               }}
             />
             <Button
               variant="contained"
               onClick={handleCheckCartella}
-              disabled={!checkNumber}
+          sx={{
+
+            minWidth: 120,
+            height: 40,
+            fontSize: '1rem',
+            backgroundColor: 'darkred',
+            
+            // fontWeight: 'bold'
+          }}
+              // disabled={!checkNumber}
             >
               Check
             </Button>

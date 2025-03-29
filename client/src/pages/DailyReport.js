@@ -45,13 +45,14 @@ const DailyReport = () => {
         });
         if (!response.ok) throw new Error('Failed to fetch balance');
         const data = await response.json();
-        setUserBalance(data.balance);
+        setUserBalance(data.credits || 0); // Changed from data.balance to data.credits
       } catch (error) {
         console.error('Error fetching balance:', error);
+        setUserBalance(0); // Set to 0 on error
       }
     };
     fetchBalance();
-  }, []);
+  }, []); // Run once on mount
 
   const columns = [
     { id: 'round', label: 'Round', width: '20%' },
@@ -151,25 +152,21 @@ const DailyReport = () => {
         </Box>
         
         {/* Balance display */}
-        <Box sx={{
+        {/* <Box sx={{
           backgroundColor: '#1a1a1a',
           p: 2,
           borderRadius: 1,
           minWidth: 200,
           mr: 2
-        }}>
+        }}> */}
           <Typography variant="h6" sx={{ 
-            color: '#4caf50',
-            fontWeight: 'bold',
+            color: 'black',
+            
             textAlign: 'center'
           }}>
-            Balance: {Number(userBalance).toLocaleString('en-US', {
-              style: 'currency',
-              currency: 'ETB',
-              maximumFractionDigits: 0
-            })}
+            ቀሪ ሒሳብ: {userBalance?.toLocaleString() || '0'} 
           </Typography>
-        </Box>
+        {/* </Box> */}
       </Box>
 
       {/* Content wrapper */}
