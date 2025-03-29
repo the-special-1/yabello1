@@ -721,22 +721,23 @@ const BingoGame = () => {
         {/* Top section - all boxes */}
         <Box sx={{ 
           display: 'flex',
-          height: '220px',
+          height: '250px',
           width: '100%',
-          backgroundColor: '#1a1a1a'
+          backgroundColor: '#1a1a1a',
+          mb: 0
         }}>
           {/* Ball display */}
           <Box sx={{
             width: '25%',
             height: '100%',
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             justifyContent: 'flex-start',
             p: 0
           }}>
             <Box sx={{
-              width: 220,
-              height: 220,
+              width: 250,
+              height: 250,
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -886,7 +887,7 @@ const BingoGame = () => {
           display: 'flex',
           flexDirection: 'column',
           flex: 1,
-          justifyContent: 'flex-end'
+          backgroundColor: '#1a1a1a'
         }}>
           <Grid 
             container 
@@ -894,8 +895,7 @@ const BingoGame = () => {
             sx={{ 
               width: '100%',
               margin: 0,
-              padding: 2,
-              paddingBottom: -2,
+              padding: '0 16px',
               backgroundColor: '#1a1a1a'
             }}
           >
@@ -905,7 +905,7 @@ const BingoGame = () => {
                   display: 'flex', 
                   alignItems: 'center',
                   width: '100%',
-                  mb: 1
+                  mb: 0.5
                 }}>
                   <Typography 
                     variant="h5" 
@@ -968,7 +968,8 @@ const BingoGame = () => {
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center',
-            p: 0.5,
+            padding: '0 16px',
+            mt: 0,
             backgroundColor: '#1a1a1a'
           }}>
             <Stack direction="row" spacing={2} alignItems="center">
