@@ -582,16 +582,21 @@ const BingoGame = () => {
         PaperProps={{
           sx: {
             bgcolor: '#f5f5f5',
-            overflow: 'hidden',
+            overflow: 'visible',
             minWidth: '600px',
-            maxHeight: '80vh',
+            height: 'auto',
+            maxHeight: 'none',
             opacity: 0.9,
             m: 1,
             borderRadius: 0,
             top: -60,
             left: 0,
             right: 0,
-            bottom: 0
+            bottom: 'auto',
+            '& .MuiDialogContent-root': {
+              overflow: 'visible',
+              padding: 0
+            }
           }
         }}
       >
