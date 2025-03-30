@@ -33,6 +33,89 @@ router.get('/available', auth, async (req, res) => {
   }
 });
 
+// Update cartella
+router.put('/:id', auth, async (req, res) => {
+  const t = await db.sequelize.transaction();
+  try {
+    const { id } = req.params;
+    const { numbers } = req.body;
+
+    const user = await db.User.findByPk(req.user.id, { transaction: t });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Find the cartella
+    const cartella = await db.Cartella.findOne({
+      where: {
+        id,
+        branchId: user.branchId
+      },
+      transaction: t
+    });
+
+    if (!cartella) {
+      throw new Error('Cartella not found');
+    }
+
+    // Only allow superadmin or the creator to update
+    if (user.role !== 'superadmin' && cartella.createdBy !== user.id) {
+      throw new Error('Unauthorized to update this cartella');
+    }
+
+    // Update cartella numbers
+    await cartella.update({ numbers }, { transaction: t });
+
+    await t.commit();
+    res.json({ message: 'Cartella updated successfully', cartella });
+  } catch (error) {
+    await t.rollback();
+    console.error('Update cartella error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete cartella
+router.delete('/:id', auth, async (req, res) => {
+  const t = await db.sequelize.transaction();
+  try {
+    const { id } = req.params;
+
+    const user = await db.User.findByPk(req.user.id, { transaction: t });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Find the cartella
+    const cartella = await db.Cartella.findOne({
+      where: {
+        id,
+        branchId: user.branchId
+      },
+      transaction: t
+    });
+
+    if (!cartella) {
+      throw new Error('Cartella not found');
+    }
+
+    // Only allow superadmin or the creator to delete
+    if (user.role !== 'superadmin' && cartella.createdBy !== user.id) {
+      throw new Error('Unauthorized to delete this cartella');
+    }
+
+    // Delete the cartella
+    await cartella.destroy({ transaction: t });
+
+    await t.commit();
+    res.json({ message: 'Cartella deleted successfully' });
+  } catch (error) {
+    await t.rollback();
+    console.error('Delete cartella error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Place bet on cartellas
 router.post('/place-bet', auth, async (req, res) => {
   const t = await db.sequelize.transaction();
