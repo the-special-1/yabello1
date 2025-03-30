@@ -34,6 +34,10 @@ module.exports = (sequelize) => {
     branchId: {
       type: DataTypes.UUID,
       allowNull: false
+    },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false
     }
   });
 
@@ -41,6 +45,10 @@ module.exports = (sequelize) => {
     Report.belongsTo(models.Branch, {
       foreignKey: 'branchId',
       as: 'branch'
+    });
+    Report.belongsTo(models.User, {
+      foreignKey: 'userId',
+      as: 'user'
     });
   };
 

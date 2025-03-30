@@ -55,11 +55,12 @@ const DailyReport = () => {
   }, []); // Run once on mount
 
   const columns = [
-    { id: 'round', label: 'Round', width: '20%' },
-    { id: 'price', label: 'price', width: '20%' },
-    { id: 'noPlayer', label: 'No. Player', width: '20%' },
-    { id: 'winnerPrice', label: 'Winner price', width: '20%' },
-    { id: 'income', label: 'Income', width: '20%' },
+    { id: 'round', label: 'Round', width: '16%' },
+    { id: 'price', label: 'Price', width: '26%' },
+    { id: 'noPlayer', label: 'No. Player', width: '26%' },
+    { id: 'winnerPrice', label: 'Winner price', width: '26%' },
+    { id: 'income', label: 'Income', width: '35%' },
+    // { id: 'user', label: 'User', width: '20%' },
   ];
 
   const fetchReportData = async () => {
@@ -173,7 +174,7 @@ const DailyReport = () => {
       <Box sx={{ display: 'flex', mt: '100px' }}>
         <Sidebar />
         {/* Main content */}
-        <Box sx={{ flexGrow: 1, marginLeft: '240px', p: 4 }}>
+        <Box sx={{ flexGrow: 1, marginLeft: '350px', p: 2 }}>
           <Paper sx={{ p: 3, bgcolor: 'white' }}>
             {/* Search filters */}
             <Box sx={{ 
@@ -221,7 +222,7 @@ const DailyReport = () => {
 
             {/* Results table */}
             <TableContainer component={Paper} sx={{ bgcolor: 'white' }}>
-              <Table sx={{ minWidth: 650 }}>
+              <Table sx={{ minWidth: 700 }}>
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#1976d2' }}>
                     {columns.map((column) => (
@@ -239,21 +240,19 @@ const DailyReport = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {currentItems.map((row, index) => (
-                    <TableRow 
-                      key={index}
-                      sx={{ '&:nth-of-type(odd)': { bgcolor: '#f5f5f5' } }}
-                    >
+                  {reportData.map((row) => (
+                    <TableRow key={row.id}>
                       <TableCell sx={{ color: 'black' }}>{row.round}</TableCell>
                       <TableCell sx={{ color: 'black' }}>{formatNumber(row.price)}</TableCell>
                       <TableCell sx={{ color: 'black' }}>{row.noPlayer}</TableCell>
                       <TableCell sx={{ color: 'black' }}>{formatNumber(row.winnerPrice)}</TableCell>
                       <TableCell sx={{ color: 'black' }}>{formatNumber(row.income)}</TableCell>
+                      {/* <TableCell sx={{ color: 'black' }}>{row.user?.username || 'N/A'}</TableCell> */}
                     </TableRow>
                   ))}
                   {/* Total row */}
                   <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                    <TableCell colSpan={4} align="right" sx={{ fontWeight: 'bold', color: 'black' }}>
+                    <TableCell colSpan={5} align="right" sx={{ fontWeight: 'bold', color: 'black' }}>
                       Total
                     </TableCell>
                     <TableCell sx={{ fontWeight: 'bold', color: 'black' }}>
@@ -262,7 +261,7 @@ const DailyReport = () => {
                   </TableRow>
                   {loading && (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
+                      <TableCell colSpan={6} align="center">
                         <CircularProgress />
                       </TableCell>
                     </TableRow>

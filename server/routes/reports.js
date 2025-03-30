@@ -22,7 +22,8 @@ router.post('/save-round', auth, async (req, res) => {
       winnerPrice,
       income,
       date,
-      branchId
+      branchId,
+      userId: req.user.id // Add the user ID who created the report
     });
 
     res.json(report);
@@ -47,14 +48,11 @@ router.post('/daily', auth, async (req, res) => {
       }
     };
 
-    // If user, show only reports from their creator's branch
+    // Regular users see only their own reports
     if (req.user.role === 'user') {
-      const creator = await db.User.findByPk(req.user.createdBy);
-      if (creator) {
-        whereClause.branchId = creator.branchId;
-      }
+      whereClause.userId = req.user.id;
     }
-    // If agent, only show their branch
+    // Agents see reports from their branch, but separated by user
     else if (req.user.role === 'agent') {
       whereClause.branchId = req.user.branchId;
     } 
@@ -66,11 +64,18 @@ router.post('/daily', auth, async (req, res) => {
     const reports = await db.Report.findAll({
       where: whereClause,
       order: [['round', 'ASC']],
-      include: [{
-        model: db.Branch,
-        as: 'branch',
-        attributes: ['name']
-      }]
+      include: [
+        {
+          model: db.Branch,
+          as: 'branch',
+          attributes: ['name']
+        },
+        {
+          model: db.User,
+          as: 'user',
+          attributes: ['username']
+        }
+      ]
     });
 
     res.json(reports);
