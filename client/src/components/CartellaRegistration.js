@@ -249,11 +249,6 @@ const CartellaRegistration = ({ open, onSelect, currentRound }) => {
       const cutAmount = rawTotalBet * (userCut / 100);
       const adjustedTotalBet = rawTotalBet - cutAmount;
       
-      if (adjustedTotalBet > userBalance) {
-        setError('Insufficient balance');
-        return;
-      }
-      
       // Prepare data
       const calculationDetails = {
         numberOfCartellas: selectedCartellas.length,

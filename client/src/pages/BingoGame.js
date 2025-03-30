@@ -206,13 +206,51 @@ const BingoGame = () => {
   };
 
   const handleStartGame = async () => {
-    setRecentNumbers([]); // Reset recent numbers
-    setGameStarted(true);
-    setShowStartModal(false);
-    setDrawnNumbers([]);
-    setLastDrawn(null);
-    setIsDrawing(false);
-    incrementRound();
+    try {
+      if (!calculationDetails) {
+        throw new Error('please register cards');
+      }
+
+      // Calculate the total amount to deduct (bet amount)
+      const totalDeduction = calculationDetails.betPerCartella * activeCartellas.length;
+      
+      // Calculate the cut amount (20%)
+      const cutAmount = totalDeduction * 0.2;
+
+      // Place bet and deduct only the cut amount
+      const response = await fetch('/api/cartellas/place-bet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          selectedCartellas: activeCartellas,
+          betAmount: cutAmount, // Only deduct the cut amount
+          pattern: gamePattern,
+          totalBet: totalDeduction,
+          cutAmount: cutAmount,
+          adjustedTotalBet: totalDeduction - cutAmount // Full amount minus cut
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to place bet');
+      }
+
+      const data = await response.json();
+      setRecentNumbers([]); // Reset recent numbers
+      setGameStarted(true);
+      setShowStartModal(false);
+      setDrawnNumbers([]);
+      setLastDrawn(null);
+      setIsDrawing(false);
+      incrementRound();
+    } catch (error) {
+      console.error('Error starting game:', error);
+      alert(error.message || 'Failed to start game. Please check your balance.');
+    }
   };
 
   const toggleDrawing = () => {
@@ -232,35 +270,8 @@ const BingoGame = () => {
       setTotalBetAmount(calculationDetails.rawTotalBet);
       setCalculationDetails(calculationDetails);
       setShowCartellaRegistration(false);
-
-      // Then make the API call
-      const response = await fetch('http://localhost:5001/api/cartellas/place-bet', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          selectedCartellas: cartellas,
-          pattern,
-          betAmount
-        })
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        // If API call fails, revert the state changes
-        setActiveCartellas([]);
-        setGamePattern(null);
-        setTotalBetAmount(0);
-        setCalculationDetails(null);
-        setShowCartellaRegistration(true);
-        throw new Error(data.error || 'Failed to place bet');
-      }
-
-      await response.json(); // Wait for the response to be fully read
     } catch (error) {
-      console.error('Error placing bet:', error);
+      console.error('Error in handleCartellaSelect:', error);
       setShowCartellaRegistration(true); // Show registration again on error
       throw error;
     }
@@ -389,7 +400,7 @@ const BingoGame = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5001/api/reports/save-round', {
+      const response = await fetch('/api/reports/save-round', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -722,7 +733,7 @@ const BingoGame = () => {
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Button
                 variant="contained"
-                onClick={handleCloseModal}
+                onClick={handleStartGame}
                 sx={{
                   minWidth: 200,
                   // py: 1,
