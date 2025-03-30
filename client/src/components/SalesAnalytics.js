@@ -11,6 +11,12 @@ import {
   FormControl,
   InputLabel,
   Select,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -24,15 +30,17 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LineChart,
+  Line,
   PieChart,
   Pie,
   Cell
 } from 'recharts';
-import { startOfDay, endOfDay } from 'date-fns/fp';
+import { startOfDay, endOfDay, parseISO } from 'date-fns/fp';
 import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const SalesAnalytics = () => {
   const { user } = useAuth();
@@ -80,209 +88,316 @@ const SalesAnalytics = () => {
 
   const fetchSalesData = async () => {
     try {
-      const queryParams = new URLSearchParams({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        period,
-        ...(branchId && { branchId }),
-        ...(userId && { userId })
+      const response = await fetch('/api/reports/daily', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          date: format(startDate, 'yyyy-MM-dd'),
+          period
+        })
       });
-
-      const response = await fetch(`/api/sales?${queryParams}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch sales data');
+      }
+      
       const data = await response.json();
-      setSalesData(data);
+      console.log('Raw data from server:', data); // Debug log
+      
+      // Calculate total income directly from raw data first
+      const rawTotalIncome = data.reduce((sum, report) => {
+        const income = parseFloat(report.income) || 0;
+        console.log('Adding income:', income); // Debug log
+        return sum + income;
+      }, 0);
+      console.log('Raw total income:', rawTotalIncome); // Debug log
+      
+      // Group data by date for visualization
+      const groupedData = data.reduce((acc, report) => {
+        const date = format(new Date(report.date), 'yyyy-MM-dd');
+        if (!acc[date]) {
+          acc[date] = {
+            date,
+            games: 0,
+            income: 0,
+            users: new Set()
+          };
+        }
+        acc[date].games += 1;
+        acc[date].income += parseFloat(report.income) || 0;
+        acc[date].users.add(report.user?.username);
+        return acc;
+      }, {});
+
+      const details = Object.values(groupedData).map(item => ({
+        ...item,
+        users: Array.from(item.users),
+        averageIncome: item.income / item.games
+      }));
+
+      // Sort details by date
+      details.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const transformedData = {
+        totalIncome: rawTotalIncome, // Use the raw total we calculated first
+        totalGames: data.length,
+        details,
+        userIncome: Object.values(data.reduce((acc, report) => {
+          const username = report.user?.username || 'Unknown';
+          if (!acc[username]) {
+            acc[username] = { name: username, value: 0 };
+          }
+          acc[username].value += parseFloat(report.income) || 0;
+          return acc;
+        }, {}))
+      };
+      
+      console.log('Transformed data:', transformedData); // Debug log
+      setSalesData(transformedData);
     } catch (error) {
       console.error('Error fetching sales data:', error);
     }
   };
 
   const formatCurrency = (amount) => {
-    return `${parseFloat(amount).toFixed(2)} Birr`;
+    // Ensure we're working with a number
+    const value = parseFloat(amount) || 0;
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ p: 3 }}>
-        <Grid container spacing={3}>
-          {/* Filters */}
-          <Grid item xs={12}>
-            <Paper sx={{ p: 2, mb: 3 }}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={6} md={2}>
+    <Box sx={{ p: 2 }}>
+      <Grid container spacing={3}>
+        {/* Filters */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2, mb: 2 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={3}>
+                <FormControl fullWidth>
+                  <InputLabel>Period</InputLabel>
+                  <Select
+                    value={period}
+                    onChange={(e) => setPeriod(e.target.value)}
+                    label="Period"
+                  >
+                    <MenuItem value="daily">Daily</MenuItem>
+                    <MenuItem value="weekly">Weekly</MenuItem>
+                    <MenuItem value="monthly">Monthly</MenuItem>
+                    <MenuItem value="yearly">Yearly</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
                     label="Start Date"
                     value={startDate}
-                    onChange={(newValue) => setStartDate(startOfDay(newValue))}
-                    slotProps={{ textField: { fullWidth: true } }}
+                    onChange={setStartDate}
+                    renderInput={(params) => <TextField {...params} fullWidth />}
                   />
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
+                </LocalizationProvider>
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
                     label="End Date"
                     value={endDate}
-                    onChange={(newValue) => setEndDate(endOfDay(newValue))}
-                    slotProps={{ textField: { fullWidth: true } }}
+                    onChange={setEndDate}
+                    renderInput={(params) => <TextField {...params} fullWidth />}
                   />
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
+                </LocalizationProvider>
+              </Grid>
+              {user.role === 'superadmin' && (
+                <Grid item xs={12} sm={3}>
                   <FormControl fullWidth>
-                    <InputLabel>Period</InputLabel>
+                    <InputLabel>Branch</InputLabel>
                     <Select
-                      value={period}
-                      onChange={(e) => setPeriod(e.target.value)}
-                      label="Period"
+                      value={branchId}
+                      onChange={(e) => setBranchId(e.target.value)}
+                      label="Branch"
                     >
-                      <MenuItem value="daily">Daily</MenuItem>
-                      <MenuItem value="weekly">Weekly</MenuItem>
-                      <MenuItem value="monthly">Monthly</MenuItem>
-                      <MenuItem value="yearly">Yearly</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                {user.role === 'superadmin' && (
-                  <Grid item xs={12} sm={6} md={2}>
-                    <FormControl fullWidth>
-                      <InputLabel>Branch</InputLabel>
-                      <Select
-                        value={branchId}
-                        onChange={(e) => setBranchId(e.target.value)}
-                        label="Branch"
-                      >
-                        <MenuItem value="">All Branches</MenuItem>
-                        {branches.map((branch) => (
-                          <MenuItem key={branch.id} value={branch.id}>
-                            {branch.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                )}
-                <Grid item xs={12} sm={6} md={2}>
-                  <FormControl fullWidth>
-                    <InputLabel>User</InputLabel>
-                    <Select
-                      value={userId}
-                      onChange={(e) => setUserId(e.target.value)}
-                      label="User"
-                    >
-                      <MenuItem value="">All Users</MenuItem>
-                      {users.map((user) => (
-                        <MenuItem key={user.id} value={user.id}>
-                          {user.username}
+                      <MenuItem value="">All Branches</MenuItem>
+                      {branches.map((branch) => (
+                        <MenuItem key={branch.id} value={branch.id}>
+                          {branch.name}
                         </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
                 </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-
-          {/* Summary Cards */}
-          {salesData?.summary && (
-            <Grid item xs={12}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Card>
-                    <CardContent>
-                      <Typography color="textSecondary" gutterBottom>
-                        Total Sales
-                      </Typography>
-                      <Typography variant="h4">
-                        {formatCurrency(salesData.summary.totalSales)}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Card>
-                    <CardContent>
-                      <Typography color="textSecondary" gutterBottom>
-                        Total Transactions
-                      </Typography>
-                      <Typography variant="h4">
-                        {salesData.summary.totalTransactions}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Card>
-                    <CardContent>
-                      <Typography color="textSecondary" gutterBottom>
-                        Average Transaction
-                      </Typography>
-                      <Typography variant="h4">
-                        {formatCurrency(salesData.summary.averageTransaction)}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
+              )}
+              <Grid item xs={12} sm={3}>
+                <FormControl fullWidth>
+                  <InputLabel>User</InputLabel>
+                  <Select
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
+                    label="User"
+                  >
+                    <MenuItem value="">All Users</MenuItem>
+                    {users.map((user) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.username}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
             </Grid>
-          )}
-
-          {/* Charts */}
-          {salesData?.aggregatedData && (
-            <>
-              <Grid item xs={12} md={8}>
-                <Paper sx={{ p: 2, height: 400 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Sales Trend
-                  </Typography>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={salesData.aggregatedData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="period" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatCurrency(value)} />
-                      <Legend />
-                      <Bar dataKey="totalAmount" name="Sales" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Paper>
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <Paper sx={{ p: 2, height: 400 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Sales by Branch
-                  </Typography>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={Object.entries(salesData.salesByBranch).map(([name, data]) => ({
-                          name,
-                          value: data.totalAmount
-                        }))}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        label={(entry) => `${entry.name}: ${formatCurrency(entry.value)}`}
-                      >
-                        {Object.entries(salesData.salesByBranch).map((entry, index) => (
-                          <Cell key={entry[0]} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => formatCurrency(value)} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Paper>
-              </Grid>
-            </>
-          )}
+          </Paper>
         </Grid>
-      </Box>
-    </LocalizationProvider>
+
+        {/* Summary Cards */}
+        <Grid item xs={12}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={4}>
+              <Card>
+                <CardContent>
+                  <Typography color="textSecondary" gutterBottom>
+                    Total Sales
+                  </Typography>
+                  <Typography variant="h5">
+                    {formatCurrency(salesData?.totalIncome || 0)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Card>
+                <CardContent>
+                  <Typography color="textSecondary" gutterBottom>
+                    Total Games
+                  </Typography>
+                  <Typography variant="h5">
+                    {salesData?.totalGames || 0}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Card>
+                <CardContent>
+                  <Typography color="textSecondary" gutterBottom>
+                    Average Income per Game
+                  </Typography>
+                  <Typography variant="h5">
+                    {formatCurrency(salesData?.totalGames ? salesData.totalIncome / salesData.totalGames : 0)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        {/* Charts */}
+        <Grid item xs={12} md={8}>
+          <Paper sx={{ p: 2, height: 400 }}>
+            <Typography variant="h6" gutterBottom>
+              Daily Income Trend
+            </Typography>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={salesData?.details || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip formatter={(value) => formatCurrency(value)} />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="income" 
+                  stroke="#8884d8" 
+                  name="Income"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="averageIncome" 
+                  stroke="#82ca9d" 
+                  name="Avg Income/Game"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, height: 400 }}>
+            <Typography variant="h6" gutterBottom>
+              Income by User
+            </Typography>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={salesData?.userIncome || []}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label={(entry) => `${entry.name}: ${formatCurrency(entry.value)}`}
+                >
+                  {salesData?.userIncome?.map((entry, index) => (
+                    <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => formatCurrency(value)} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid>
+
+        {/* Games Bar Chart */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2, height: 400 }}>
+            <Typography variant="h6" gutterBottom>
+              Games per Day
+            </Typography>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={salesData?.details || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="games" fill="#8884d8" name="Number of Games" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid>
+
+        {/* Sales Table */}
+        <Grid item xs={12}>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Games</TableCell>
+                  <TableCell>Income</TableCell>
+                  <TableCell>Average</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {salesData?.details?.map((row) => (
+                  <TableRow key={row.date}>
+                    <TableCell>{format(new Date(row.date), 'yyyy-MM-dd')}</TableCell>
+                    <TableCell>{row.games}</TableCell>
+                    <TableCell>{formatCurrency(row.income)}</TableCell>
+                    <TableCell>{formatCurrency(row.games ? row.income / row.games : 0)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 
