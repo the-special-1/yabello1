@@ -62,7 +62,7 @@ function TabPanel(props) {
   );
 }
 
-const CartellaRegistration = ({ open, onSelect }) => {
+const CartellaRegistration = ({ open, onSelect, currentRound }) => {
   const navigate = useNavigate();
   const [selectedCartellas, setSelectedCartellas] = useState([]);
   const [selectedPattern, setSelectedPattern] = useState('Any 1 Line');  
@@ -73,7 +73,6 @@ const CartellaRegistration = ({ open, onSelect }) => {
   const [userCut, setUserCut] = useState(0);
   const [tabValue, setTabValue] = useState(0);
   const [showNewCartellaModal, setShowNewCartellaModal] = useState(false);
-  const [currentRound, setCurrentRound] = useState(getRoundNumber());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
 
@@ -126,25 +125,6 @@ const CartellaRegistration = ({ open, onSelect }) => {
     }
   }, [open]);
 
-  // Update round number when modal opens and every minute
-  useEffect(() => {
-    if (open) {
-      setCurrentRound(getRoundNumber());
-    }
-  }, [open]);
-
-  // Keep checking for round updates while modal is open
-  useEffect(() => {
-    if (!open) return;
-
-    setCurrentRound(getRoundNumber());
-    const interval = setInterval(() => {
-      setCurrentRound(getRoundNumber());
-    }, 1000); // Check more frequently while modal is open
-    
-    return () => clearInterval(interval);
-  }, [open]);
-
   useEffect(() => {
     if (open) {
       // Reset states when modal opens
@@ -153,9 +133,6 @@ const CartellaRegistration = ({ open, onSelect }) => {
       setSelectedPattern('Any 1 Line');
       setBetAmount('');
       setTabValue(0);
-      
-      // Force round number update
-      setCurrentRound(getRoundNumber());
     }
   }, [open]);
 

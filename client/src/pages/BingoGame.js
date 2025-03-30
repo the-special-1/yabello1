@@ -71,7 +71,7 @@ const BingoGame = () => {
     return saved ? parseFloat(saved) : 0;
   });
   const [calculationDetails, setCalculationDetails] = useState(null);
-  const [currentRound, setCurrentRound] = useState(getRoundNumber);
+  const [currentRound, setCurrentRound] = useState(1); // Initialize with 1
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
@@ -94,12 +94,16 @@ const BingoGame = () => {
 
   // Update round number when component mounts and every minute
   useEffect(() => {
-    setCurrentRound(getRoundNumber);
-    const interval = setInterval(() => {
-      setCurrentRound(getRoundNumber);
-    }, 60000); // Check every minute
+    const fetchRound = async () => {
+      if (!user || !user.branchId) return;
+      const round = await getRoundNumber(user.branchId);
+      setCurrentRound(round);
+    };
+
+    fetchRound();
+    const interval = setInterval(fetchRound, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, []);
+  }, [user?.branchId]);
 
   useEffect(() => {
     localStorage.setItem('drawnNumbers', JSON.stringify(drawnNumbers));
@@ -409,7 +413,12 @@ const BingoGame = () => {
       // Reset game state completely
       setDrawnNumbers([]);
       setLastDrawn(null);
-      incrementRound(); // Use the incrementRound function
+      if (user?.branchId) {
+        const newRound = await incrementRound(user.branchId);
+        if (newRound) {
+          setCurrentRound(newRound);
+        }
+      }
       setActiveCartellas([]);
       setGamePattern(null);
       setTotalBetAmount(0);
@@ -436,12 +445,41 @@ const BingoGame = () => {
     }
   };
 
-  // Update round number when game state changes
-  useEffect(() => {
-    if (showStartModal) {
-      setCurrentRound(getRoundNumber);
+  const handleGameEnd = async () => {
+    try {
+      if (!user?.branchId) {
+        console.warn('No branch ID available for round increment');
+        return;
+      }
+
+      // Increment round number in database
+      const newRound = await incrementRound(user.branchId);
+      if (newRound) {
+        setCurrentRound(newRound);
+      }
+
+      // Reset game state
+      setDrawnNumbers([]);
+      setLastDrawn(null);
+      setIsDrawing(false);
+      setGameStarted(false);
+      setActiveCartellas([]);
+      setTotalBetAmount(0);
+      
+      // Clear localStorage game state
+      localStorage.removeItem('drawnNumbers');
+      localStorage.removeItem('lastDrawn');
+      localStorage.removeItem('isDrawing');
+      localStorage.removeItem('gameStarted');
+      localStorage.removeItem('activeCartellas');
+      localStorage.removeItem('totalBetAmount');
+      
+      // Show start modal for next game
+      setShowStartModal(true);
+    } catch (error) {
+      console.error('Error ending game:', error);
     }
-  }, [showStartModal]);
+  };
 
   const handleShuffle = () => {
     if (isShuffling) return;
@@ -709,6 +747,7 @@ const BingoGame = () => {
         open={showCartellaRegistration}
         onClose={() => setShowCartellaRegistration(false)}
         onSelect={handleCartellaSelect}
+        currentRound={currentRound}
       />
 
       <Box sx={{ 

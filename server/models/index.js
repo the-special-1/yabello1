@@ -28,7 +28,7 @@ let sequelize = new Sequelize(
 const db = {};
 
 // Only load models we want to keep
-const modelsToLoad = ['User.js', 'Branch.js', 'Cartella.js', 'Transaction.js', 'Report.js'];
+const modelsToLoad = ['User.js', 'Branch.js', 'Cartella.js', 'Transaction.js', 'Report.js', 'RoundCounter.js'];
 
 fs.readdirSync(__dirname)
   .filter(file => {
