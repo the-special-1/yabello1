@@ -68,7 +68,7 @@ router.post('/place-bet', auth, async (req, res) => {
 
     // Check if user has enough credits
     if (user.credits < totalBetAmount) {
-      throw new Error('Insufficient credits');
+      throw new Error('Minimum balance reached. Please recharge your credit!');
     }
 
     // Deduct credits from user

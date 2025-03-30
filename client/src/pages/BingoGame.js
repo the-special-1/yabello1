@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Paper,
   Typography,
@@ -12,7 +12,9 @@ import {
   Dialog,
   DialogContent,
   Select,
-  MenuItem
+  MenuItem,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -64,6 +66,7 @@ const BingoGame = () => {
     return saved || null;
   });
   const [checkNumber, setCheckNumber] = useState('');
+  const checkInputRef = useRef(null);
   const [checkedCartella, setCheckedCartella] = useState(null);
   const [showCheckModal, setShowCheckModal] = useState(false);
   const [totalBetAmount, setTotalBetAmount] = useState(() => {
@@ -81,6 +84,20 @@ const BingoGame = () => {
   const [shufflingNumbers, setShufflingNumbers] = useState([]);
   const [recentNumbers, setRecentNumbers] = useState([]);
   const [totalBet, setTotalBet] = useState(0);
+  const [openToast, setOpenToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const handleCloseToast = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenToast(false);
+  };
+
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setOpenToast(true);
+  };
 
   // Helper function to get the prefix based on number range
   const getPrefix = (number) => {
@@ -157,20 +174,37 @@ const BingoGame = () => {
   const handleCheckCartella = () => {
     const number = parseInt(checkNumber);
     if (isNaN(number)) {
-      alert('Please enter a valid cartella number');
+      showErrorToast('Cartela not selected or doesn\'t exist!');
       return;
     }
     
     // Find cartella by its actual ID/number
     const cartella = activeCartellas.find(c => c.id === number.toString() || c.id === number);
     if (!cartella) {
-      alert('Cartella not found or not registered for this game');
+      showErrorToast('Cartela not selected or doesn\'t exist!');
       return;
     }
 
     setCheckedCartella(cartella);
     setShowCheckModal(true);
+    setCheckNumber(''); // Clear the input
   };
+
+  const handleCheckInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleCheckCartella();
+    } else if (e.key === 'Backspace' && checkNumber === '') {
+      // When backspace is pressed on empty input, close modal
+      setShowCheckModal(false);
+    }
+  };
+
+  // Keep input focused when modal opens
+  useEffect(() => {
+    if (showCheckModal && checkInputRef.current) {
+      checkInputRef.current.focus();
+    }
+  }, [showCheckModal]);
 
   const drawNumber = useCallback(() => {
     const remainingNumbers = numbers.filter(n => !drawnNumbers.includes(n));
@@ -1133,25 +1167,20 @@ const BingoGame = () => {
             </Box>
             <Stack direction="row" spacing={2} alignItems="center">
               <TextField
-                // label="Check Cartella"
-                variant="outlined"
-                placeholder="Enter Card Number"
-                size="small"
+                inputRef={checkInputRef}
                 value={checkNumber}
                 onChange={(e) => setCheckNumber(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleCheckCartella();
-                  }
-                }}
-                sx={{ 
-                  width: 180,
+                onKeyDown={handleCheckInputKeyDown}
+                placeholder="Enter cartella number"
+                variant="outlined"
+                size="small"
+                sx={{
+                  width: 200,
+                  mr: 2,
                   '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'whitesmoke',
+                    backgroundColor: 'white',
                     color: 'black',
                     placeholderColor: 'black',
-                   
-
                   }
                 }}
               />
@@ -1178,7 +1207,7 @@ const BingoGame = () => {
         open={showCheckModal}
         onClose={() => setShowCheckModal(false)}
         cartella={checkedCartella}
-        cartellaNumber={checkNumber}
+        cartellaNumber={checkedCartella?.id || ''}
         drawnNumbers={drawnNumbers}
         winningPattern={gamePattern}
         isWinner={checkWin(checkedCartella)}
@@ -1188,6 +1217,34 @@ const BingoGame = () => {
         }}
         onNewBingo={handleNewBingo}
       />
+
+      {/* Toast Message */}
+      <Snackbar
+        open={openToast}
+        autoHideDuration={4000}
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          severity="error"
+          onClose={handleCloseToast}
+          sx={{
+            width: '100%',
+            backgroundColor: '#ff0000',
+            color: '#ffffff',
+            '& .MuiAlert-icon': {
+              color: '#ffffff'
+            },
+            '& .MuiAlert-action': {
+              color: '#ffffff'
+            },
+            fontSize: '1rem',
+            alignItems: 'center'
+          }}
+        >
+          {toastMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

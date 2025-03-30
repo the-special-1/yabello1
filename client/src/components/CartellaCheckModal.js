@@ -27,6 +27,7 @@ const CartellaCheckModal = ({
     alignItems: 'center',
     minHeight: '60vh',
     opacity: 0.9,
+    tabIndex: -1
   };
 
   const handleGoodBingo = () => {
@@ -183,7 +184,9 @@ const CartellaCheckModal = ({
     <Modal
       open={open}
       onClose={onClose}
-      aria-labelledby="cartella-check-modal"
+      disableAutoFocus
+      disableEnforceFocus
+      disableRestoreFocus
     >
       <Box sx={modalStyle}>
        
@@ -201,7 +204,7 @@ const CartellaCheckModal = ({
           borderTopRightRadius: 4
         }}>
           <Typography variant="h4" align="center" sx={{ color: 'white', fontWeight: 'bold' }}>
-            Card No: {cartellaNumber}
+            ካርድ ቁጥር: {cartellaNumber}
           </Typography>
         </Box>
 
