@@ -144,7 +144,7 @@ module.exports = (sequelize) => {
     return await bcrypt.compare(password, this.password);
   };
 
-  User.associate = (models) => {
+  User.associate = function(models) {
     User.belongsTo(models.Branch, {
       foreignKey: 'branchId',
       as: 'branch'
@@ -165,6 +165,16 @@ module.exports = (sequelize) => {
       foreignKey: 'receiverId',
       as: 'receivedTransactions',
       onDelete: 'SET NULL'
+    });
+
+    User.hasMany(models.Cartella, {
+      foreignKey: 'createdBy',
+      as: 'createdCartellas'
+    });
+
+    User.hasMany(models.Report, {
+      foreignKey: 'userId',
+      as: 'reports'
     });
   };
 

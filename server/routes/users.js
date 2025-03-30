@@ -342,7 +342,9 @@ router.delete('/:id', auth, authorize(['superadmin', 'agent']), async (req, res)
       include: [
         { model: db.Branch, as: 'branch' },
         { model: db.Transaction, as: 'sentTransactions' },
-        { model: db.Transaction, as: 'receivedTransactions' }
+        { model: db.Transaction, as: 'receivedTransactions' },
+        { model: db.Cartella, as: 'createdCartellas' },
+        { model: db.Report, as: 'reports' }
       ],
       transaction: t
     });
@@ -371,6 +373,47 @@ router.delete('/:id', auth, authorize(['superadmin', 'agent']), async (req, res)
       },
       transaction: t
     });
+
+    // Handle Cartellas before deleting user
+    if (userToDelete.role === 'agent') {
+      // For agents, reassign their created Cartellas to the superadmin
+      const superadmin = await db.User.findOne({
+        where: { role: 'superadmin' },
+        transaction: t
+      });
+
+      if (!superadmin) {
+        throw new Error('No superadmin found to reassign Cartellas');
+      }
+
+      await db.Cartella.update(
+        { createdBy: superadmin.id },
+        { 
+          where: { createdBy: userToDelete.id },
+          transaction: t
+        }
+      );
+
+      // For agents, also reassign their reports to superadmin
+      await db.Report.update(
+        { userId: superadmin.id },
+        {
+          where: { userId: userToDelete.id },
+          transaction: t
+        }
+      );
+    } else {
+      // For regular users, we can delete their Cartellas and reports
+      await db.Cartella.destroy({
+        where: { createdBy: userToDelete.id },
+        transaction: t
+      });
+
+      await db.Report.destroy({
+        where: { userId: userToDelete.id },
+        transaction: t
+      });
+    }
 
     // Then delete the user
     await userToDelete.destroy({ transaction: t });

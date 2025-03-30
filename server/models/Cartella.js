@@ -134,11 +134,12 @@ module.exports = (sequelize) => {
     ]
   });
 
-  Cartella.associate = (models) => {
+  Cartella.associate = function(models) {
     Cartella.belongsTo(models.Branch, {
       foreignKey: 'branchId',
       as: 'branch'
     });
+
     Cartella.belongsTo(models.User, {
       foreignKey: 'createdBy',
       as: 'creator'
