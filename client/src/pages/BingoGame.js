@@ -168,9 +168,9 @@ const BingoGame = () => {
   }, []);
 
   useEffect(() => {
-    const adjustedAmount = totalBetAmount * 0.8; // 20% cut
+    const adjustedAmount = totalBetAmount * (1 - (userCut || 20) / 100); // Use userCut or fallback to 20%
     setTotalBet(adjustedAmount);
-  }, [totalBetAmount]);
+  }, [totalBetAmount, userCut]); // Add userCut as dependency
 
   useEffect(() => {
     const fetchUserCut = async () => {
