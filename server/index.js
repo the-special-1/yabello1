@@ -12,6 +12,7 @@ const gameRoutes = require('./routes/gameRoutes');
 const authRoutes = require('./routes/authRoutes');
 const reportRoutes = require('./routes/reports');
 const roundCounterRoutes = require('./routes/roundCounter');
+const roundRoutes = require('./routes/rounds');
 
 const app = express();
 
@@ -29,7 +30,7 @@ app.use('/api/cartellas', cartellaRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/reports', reportRoutes);
-app.use('/api/rounds', roundCounterRoutes);
+app.use('/api/rounds', roundRoutes);
 app.use('/api', routes);
 
 // Error handling middleware
