@@ -60,7 +60,7 @@ const SalesAnalytics = () => {
 
   useEffect(() => {
     fetchSalesData();
-  }, [startDate, endDate, period, branchId, userId]);
+  }, [userId, startDate, endDate, period, branchId]);
 
   const fetchBranches = async () => {
     try {
@@ -80,6 +80,7 @@ const SalesAnalytics = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       const data = await response.json();
+      // Store full user objects to have access to all user data
       setUsers(data.filter(u => u.role === 'user'));
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -105,18 +106,23 @@ const SalesAnalytics = () => {
       }
       
       const data = await response.json();
-      console.log('Raw data from server:', data); // Debug log
+      console.log('Raw data from server:', data);
       
-      // Calculate total income directly from raw data first
-      const rawTotalIncome = data.reduce((sum, report) => {
+      // Filter data if a user is selected
+      const filteredData = userId 
+        ? data.filter(report => String(report.userId) === String(userId))
+        : data;
+      
+      console.log('Filtered data for userId:', userId, filteredData);
+      
+      // Calculate total income from filtered data
+      const rawTotalIncome = filteredData.reduce((sum, report) => {
         const income = parseFloat(report.income) || 0;
-        console.log('Adding income:', income); // Debug log
         return sum + income;
       }, 0);
-      console.log('Raw total income:', rawTotalIncome); // Debug log
       
-      // Group data by date for visualization
-      const groupedData = data.reduce((acc, report) => {
+      // Group filtered data by date for visualization
+      const groupedData = filteredData.reduce((acc, report) => {
         const date = format(new Date(report.date), 'yyyy-MM-dd');
         if (!acc[date]) {
           acc[date] = {
@@ -142,20 +148,21 @@ const SalesAnalytics = () => {
       details.sort((a, b) => new Date(a.date) - new Date(b.date));
 
       const transformedData = {
-        totalIncome: rawTotalIncome, // Use the raw total we calculated first
-        totalGames: data.length,
+        totalIncome: rawTotalIncome,
+        totalGames: filteredData.length,
         details,
-        userIncome: Object.values(data.reduce((acc, report) => {
+        // Only show user distribution in pie chart when no user is filtered
+        userIncome: !userId ? Object.values(data.reduce((acc, report) => {
           const username = report.user?.username || 'Unknown';
           if (!acc[username]) {
             acc[username] = { name: username, value: 0 };
           }
           acc[username].value += parseFloat(report.income) || 0;
           return acc;
-        }, {}))
+        }, {})) : []
       };
       
-      console.log('Transformed data:', transformedData); // Debug log
+      console.log('Transformed data:', transformedData);
       setSalesData(transformedData);
     } catch (error) {
       console.error('Error fetching sales data:', error);
@@ -190,6 +197,26 @@ const SalesAnalytics = () => {
                     <MenuItem value="weekly">Weekly</MenuItem>
                     <MenuItem value="monthly">Monthly</MenuItem>
                     <MenuItem value="yearly">Yearly</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <FormControl fullWidth>
+                  <InputLabel>User</InputLabel>
+                  <Select
+                    value={userId}
+                    onChange={(e) => {
+                      setUserId(e.target.value);
+                      console.log('Selected user:', e.target.value);
+                    }}
+                    label="User"
+                  >
+                    <MenuItem value="">All Users</MenuItem>
+                    {users.map((user) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.username}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>
@@ -232,23 +259,6 @@ const SalesAnalytics = () => {
                   </FormControl>
                 </Grid>
               )}
-              <Grid item xs={12} sm={3}>
-                <FormControl fullWidth>
-                  <InputLabel>User</InputLabel>
-                  <Select
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
-                    label="User"
-                  >
-                    <MenuItem value="">All Users</MenuItem>
-                    {users.map((user) => (
-                      <MenuItem key={user.id} value={user.id}>
-                        {user.username}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
             </Grid>
           </Paper>
         </Grid>
@@ -326,30 +336,32 @@ const SalesAnalytics = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 2, height: 400 }}>
-            <Typography variant="h6" gutterBottom>
-              Income by User
-            </Typography>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={salesData?.userIncome || []}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={(entry) => `${entry.name}: ${formatCurrency(entry.value)}`}
-                >
-                  {salesData?.userIncome?.map((entry, index) => (
-                    <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => formatCurrency(value)} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </Paper>
+          {salesData?.userIncome.length > 0 && (
+            <Paper sx={{ p: 2, height: 400 }}>
+              <Typography variant="h6" gutterBottom>
+                Income by User
+              </Typography>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={salesData?.userIncome || []}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label={(entry) => `${entry.name}: ${formatCurrency(entry.value)}`}
+                  >
+                    {salesData?.userIncome?.map((entry, index) => (
+                      <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </Paper>
+          )}
         </Grid>
 
         {/* Games Bar Chart */}
