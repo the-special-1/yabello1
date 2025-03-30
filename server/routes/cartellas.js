@@ -156,6 +156,9 @@ router.get('/', auth, async (req, res) => {
     } else if (req.user.role === 'agent') {
       // Agents can only see cartellas from their branch
       whereClause.branchId = req.user.branchId;
+    } else if (req.user.role === 'user') {
+      // Regular users can only see cartellas from their branch
+      whereClause.branchId = req.user.branchId;
     }
 
     // Filter by status if provided

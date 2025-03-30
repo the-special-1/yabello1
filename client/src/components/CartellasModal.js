@@ -286,7 +286,7 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
 };
 
 const CartellasModal = ({ open, onClose }) => {
-  const { userBranch } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [existingCartellas, setExistingCartellas] = useState([]);
@@ -295,9 +295,8 @@ const CartellasModal = ({ open, onClose }) => {
   const [newCartella, setNewCartella] = useState({
     id: '',
     numbers: Array(5).fill().map(() => Array(5).fill('')),
-    branchId: userBranch
+    branchId: user.branchId
   });
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   // Check if user can edit cartella
   const canEditCartella = (cartella) => {
@@ -325,7 +324,7 @@ const CartellasModal = ({ open, onClose }) => {
 
   const fetchCartellas = async () => {
     try {
-      const response = await fetch('/api/cartellas?status=available', {
+      const response = await fetch(`/api/cartellas?status=available&branchId=${user.branchId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -375,7 +374,7 @@ const CartellasModal = ({ open, onClose }) => {
       setNewCartella({
         id: '',
         numbers: Array(5).fill().map(() => Array(5).fill('')),
-        branchId: userBranch
+        branchId: user.branchId
       });
       const updatedNumbers = Array(5).fill().map(() => Array(5).fill(''));
       updatedNumbers[2][2] = '0';
