@@ -192,7 +192,7 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
               <Grid container item xs={12} spacing={0.5}>
                 {editedNumbers.map((row, i) => (
                   row.map((num, j) => (
-                    <Grid item xs={2.4} key={`${i}-${j}`}>
+                    <Grid item xs={2.4} key={`${cartella.id}-${i}-${j}`}>
                       {i === 2 && j === 2 ? (
                         <Paper
                           sx={{
@@ -515,7 +515,7 @@ const CartellasModal = ({ open, onClose }) => {
                     <Grid container item xs={12} spacing={0.5}>
                       {newCartella.numbers.map((row, i) => (
                         row.map((num, j) => (
-                          <Grid item xs={2.4} key={`${i}-${j}`}>
+                          <Grid item xs={2.4} key={`${newCartella.id}-${i}-${j}`}>
                             {i === 2 && j === 2 ? (
                               <Paper
                                 sx={{
@@ -714,7 +714,7 @@ const CartellasModal = ({ open, onClose }) => {
                     <TableBody>
                       {existingCartellas.map((cartella, index) => (
                         <TableRow 
-                          key={cartella.id}
+                          key={`${cartella.id}-${index}`}
                           sx={{
                             bgcolor: 'white',
                             '&:hover': { bgcolor: '#f5f5f5' }

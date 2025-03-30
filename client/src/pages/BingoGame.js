@@ -533,12 +533,12 @@ const BingoGame = () => {
       <Dialog
         open={showStartModal}
         onClose={() => {}}
-        minWidth='600px'
         fullWidth
         PaperProps={{
           sx: {
             bgcolor: '#f5f5f5',
             overflow: 'hidden',
+            minWidth: '600px',
             maxHeight: '80vh',
             opacity: 0.9,
             m: 1,
