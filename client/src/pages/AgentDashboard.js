@@ -162,12 +162,13 @@ const AgentDashboard = () => {
       setError('');
       await axios.put(`/api/users/${selectedUser.id}`, {
         username: formData.username,
-        ...(formData.password ? { password: formData.password } : {})
+        ...(formData.password ? { password: formData.password } : {}),
+        cut: parseFloat(formData.cut)
       });
       
       setSuccess('User updated successfully');
       setOpenEditDialog(false);
-      setFormData({ username: '', password: '' });
+      setFormData({ username: '', password: '', cut: '0' });
       setSelectedUser(null);
       fetchUsers();
     } catch (error) {
@@ -191,7 +192,11 @@ const AgentDashboard = () => {
 
   const openEdit = (user) => {
     setSelectedUser(user);
-    setFormData({ username: user.username, password: '' });
+    setFormData({ 
+      username: user.username, 
+      password: '',
+      cut: user.cut.toString()
+    });
     setOpenEditDialog(true);
   };
 
@@ -410,6 +415,15 @@ const AgentDashboard = () => {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 helperText="Leave blank to keep current password"
+              />
+              <TextField
+                fullWidth
+                label="Cut Percentage"
+                type="number"
+                value={formData.cut}
+                onChange={(e) => setFormData({ ...formData, cut: e.target.value })}
+                inputProps={{ min: 0, max: 100, step: 0.01 }}
+                helperText="Enter a value between 0 and 100"
               />
             </Box>
           </DialogContent>
