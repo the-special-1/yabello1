@@ -86,6 +86,7 @@ const BingoGame = () => {
   const [totalBet, setTotalBet] = useState(0);
   const [openToast, setOpenToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [userCut, setUserCut] = useState(null);
 
   const handleCloseToast = (event, reason) => {
     if (reason === 'clickaway') {
@@ -171,6 +172,27 @@ const BingoGame = () => {
     setTotalBet(adjustedAmount);
   }, [totalBetAmount]);
 
+  useEffect(() => {
+    const fetchUserCut = async () => {
+      try {
+        const response = await fetch('/api/users/my-data', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          console.log('User data received:', data);
+          setUserCut(data.cut);
+          console.log('Setting user cut to:', data.cut);
+        }
+      } catch (error) {
+        console.error('Error fetching user cut:', error);
+      }
+    };
+    fetchUserCut();
+  }, []);
+
   const handleCheckCartella = () => {
     const number = parseInt(checkNumber);
     if (isNaN(number)) {
@@ -248,9 +270,10 @@ const BingoGame = () => {
       // Calculate the total amount to deduct (bet amount)
       const totalDeduction = calculationDetails.betPerCartella * activeCartellas.length;
       
-      // Calculate the cut amount (20%)
-      const cutAmount = totalDeduction * 0.2;
-
+      // Calculate the cut amount using user's actual cut percentage
+      const cutAmount = totalDeduction * ((userCut || 20) / 100); // Fallback to 20% if userCut is not loaded
+      console.log('Using cut percentage:', userCut || 20);
+      
       // Place bet and deduct only the cut amount
       const response = await fetch('/api/cartellas/place-bet', {
         method: 'POST',
