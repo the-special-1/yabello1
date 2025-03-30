@@ -926,44 +926,66 @@ const BingoGame = () => {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            borderRight: '1px solid rgba(255,255,255,0.1)'
+            borderRight: '1px solid rgba(255,255,255,0.1)',
+            background: 'linear-gradient(to right, #4a0000, #800000)',
+            p: 2,
+            borderRadius: '8px',
+            m: 1
           }}>
-            <Typography variant="h6" sx={{ 
+            <Typography variant="h5" sx={{ 
               color: 'white', 
-              p: 2, 
-              borderBottom: '1px solid rgba(255,255,255,0.1)'
+              textAlign: 'center',
+              fontWeight: 'bold',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+              mb: 2
             }}>
-              Recent Numbers
+              Recent 5 Numbers
             </Typography>
             <Box sx={{ 
               display: 'flex',
               flexDirection: 'row',
-              gap: 1,
+              gap: 2,
               flex: 1,
               alignItems: 'center',
-              justifyContent: 'center',
-              p: 2
+              justifyContent: 'center'
             }}>
               {Array.from({ length: 5 }).map((_, index) => (
                 <Box key={index} sx={{
-                  backgroundColor: 'rgba(255,165,0,0.9)',
-                  width: '45px',
-                  height: '45px',
+                  width: 70,
+                  height: 70,
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  backgroundColor: '#FFA500',
+                  backgroundImage: 'linear-gradient(135deg, #FFA500, #FF8C00)',
+                  color: '#000',
+                  fontSize: '2rem',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+                  border: '3px solid #FF8C00'
                 }}>
-                  <Typography sx={{ 
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem'
-                  }}>
-                    {recentNumbers[index] ? `${getPrefix(recentNumbers[index])}-${recentNumbers[index]}` : ''}
-                  </Typography>
+                  {recentNumbers[4 - index] || ''}
                 </Box>
               ))}
+            </Box>
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mt: 2,
+              gap: 2
+            }}>
+              <Box
+                component="img"
+                src="/phoneimage.png"
+                alt="Phone"
+                sx={{
+                  height: '35px',
+                  width: 'full'
+                }}
+              />
+            
             </Box>
           </Box>
 

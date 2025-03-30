@@ -310,7 +310,7 @@ const CartellaRegistration = ({ open, onSelect, currentRound }) => {
           alignItems: 'center',
           borderBottom: '1px solid #ddd',
           p: 1,  
-          minHeight: '48px',  
+          minHeight: '60px',  
           fontFamily: 'inherit'
         }}>
           {/* Left side - Phone image and back button */}
@@ -327,7 +327,8 @@ const CartellaRegistration = ({ open, onSelect, currentRound }) => {
               style={{
                 height: '36px',
                 width: 'auto',
-                marginRight: '8px'
+                marginRight: '8px',
+                marginBottom:'0px'
               }}
             />
           </Box>
@@ -544,10 +545,10 @@ const CartellaRegistration = ({ open, onSelect, currentRound }) => {
                             የብር መጠን
                           </Typography>
                         </MenuItem>
-                        {[10, 20, 50, 100, 200, 500].map((amount) => (
+                        {[10, 20, 30,40,50, 100, 200,300,400, 500].map((amount) => (
                           <MenuItem key={amount} value={amount}>
                             <Typography sx={{ color: 'black', fontFamily: 'inherit', display: 'flex', alignItems: 'center', fontSize: '1.5rem', fontWeight: 'bold' }}>
-                              {amount} ETB
+                            በ {amount}ብር
                             </Typography>
                           </MenuItem>
                         ))}
