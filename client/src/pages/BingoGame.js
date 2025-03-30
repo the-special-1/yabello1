@@ -588,7 +588,10 @@ const BingoGame = () => {
             opacity: 0.9,
             m: 1,
             borderRadius: 0,
-            mt:-2
+            top: -60,
+            left: 0,
+            right: 0,
+            bottom: 0
           }
         }}
       >
@@ -689,7 +692,7 @@ const BingoGame = () => {
                 <Typography
                   key={letter}
                   sx={{
-                    fontSize: '2rem',
+                    fontSize: '3rem',
                     fontWeight: 'bolder',
                     color: 'red',
                     width: '20%',
@@ -708,7 +711,7 @@ const BingoGame = () => {
               {[
                 [12, 16, 33, 56, 61],
                 [1, 26, 44, 55, 71],
-                [3, 23, 'FREE', 46, 72],
+                [3, 23, 'free', 46, 72],
                 [5, 17, 37, 49, 74],
                 [15, 28, 42, 60, 75]
               ].map((row, rowIndex) => (
@@ -718,6 +721,8 @@ const BingoGame = () => {
                     display: 'flex',
                     '& > div': {
                       width: '40%',
+                      fontFamily: 'serif',
+                      fontWeight: 'bolder',
                       height: 45,
                       display: 'flex',
                       alignItems: 'center',
@@ -736,7 +741,8 @@ const BingoGame = () => {
                     <Box key={colIndex}>
                       <Typography sx={{
                         fontSize: '2rem',
-                        fontStyle:'sans-serif',
+                        fontFamily:'inherit',
+                        fontWeight: 'bolder',
                         color: '#333',
                         textTransform: number === 'free' ? 'lowercase' : 'none'
                       }}>
@@ -764,13 +770,15 @@ const BingoGame = () => {
             )}
 
             {/* Start Button */}
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'start' }}>
               <Button
                 variant="contained"
                 onClick={handleStartGame}
                 sx={{
-                  minWidth: 200,
-                  // py: 1,
+                  minWidth: 220,
+                  maxHeight: "40px",
+                  py: 1,
+                  mt: 1,
                   fontSize: '1.2rem',
                   bgcolor: '#800000',
                   '&:hover': {

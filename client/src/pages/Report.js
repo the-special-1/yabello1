@@ -11,6 +11,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Select,
   MenuItem,
   IconButton,
@@ -34,6 +35,8 @@ const Report = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const columns = [
     { id: 'name', label: 'Name:', width: '20%' },
@@ -78,6 +81,15 @@ const Report = () => {
 
   const handleSearch = () => {
     fetchReportData();
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   return (
@@ -229,7 +241,9 @@ const Report = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {reportData.map((row, index) => (
+                  {reportData
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((row, index) => (
                     <TableRow 
                       key={index}
                       sx={{ '&:nth-of-type(odd)': { bgcolor: '#f5f5f5' } }}
@@ -252,6 +266,24 @@ const Report = () => {
                   )}
                 </TableBody>
               </Table>
+              <TablePagination
+                rowsPerPageOptions={[10, 25, 50]}
+                component="div"
+                count={reportData.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                sx={{
+                  bgcolor: 'white',
+                  '.MuiTablePagination-select': {
+                    color: '#333'
+                  },
+                  '.MuiTablePagination-displayedRows': {
+                    color: '#333'
+                  }
+                }}
+              />
             </TableContainer>
           </Paper>
         </Box>

@@ -12,7 +12,9 @@ import {
   Button,
   CircularProgress
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import {
+  AdapterDateFns
+} from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useNavigate } from 'react-router-dom';
@@ -105,12 +107,16 @@ const DailyReport = () => {
   };
 
   const [page, setPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const itemsPerPage = 10; // Fixed at 10 rows per page
 
   // Get current items
   const indexOfLastItem = page * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = reportData.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', bgcolor: '#2D2D2D', minHeight: '100vh' }}>
@@ -240,19 +246,18 @@ const DailyReport = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {reportData.map((row) => (
+                  {currentItems.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell sx={{ color: 'black' }}>{row.round}</TableCell>
                       <TableCell sx={{ color: 'black' }}>{formatNumber(row.price)}</TableCell>
                       <TableCell sx={{ color: 'black' }}>{row.noPlayer}</TableCell>
                       <TableCell sx={{ color: 'black' }}>{formatNumber(row.winnerPrice)}</TableCell>
                       <TableCell sx={{ color: 'black' }}>{formatNumber(row.income)}</TableCell>
-                      {/* <TableCell sx={{ color: 'black' }}>{row.user?.username || 'N/A'}</TableCell> */}
                     </TableRow>
                   ))}
                   {/* Total row */}
                   <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                    <TableCell colSpan={5} align="right" sx={{ fontWeight: 'bold', color: 'black' }}>
+                    <TableCell colSpan={4} align="right" sx={{ fontWeight: 'bold', color: 'black' }}>
                       Total
                     </TableCell>
                     <TableCell sx={{ fontWeight: 'bold', color: 'black' }}>
@@ -261,7 +266,7 @@ const DailyReport = () => {
                   </TableRow>
                   {loading && (
                     <TableRow>
-                      <TableCell colSpan={6} align="center">
+                      <TableCell colSpan={5} align="center">
                         <CircularProgress />
                       </TableCell>
                     </TableRow>
