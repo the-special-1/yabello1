@@ -13,31 +13,28 @@ const CartellaCircleView = ({ cartellas, selectedCartellas, onSelect }) => {
           key={cartella.id}
           onClick={() => onSelect(cartella)}
           sx={{
-            width: 80,
-            height: 80,
+            width: 70,
+            height: 70,
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            backgroundImage: isSelected(cartella) ? 'linear-gradient(90deg, yellow,orange, red)' :'linear-gradient(90deg, #160220, #75090E)',
-            border: `2px solid ${isSelected(cartella) ? '#FF8C00' : '#FFD700'}`,
-            color: isSelected(cartella) ? '#000' : '#fff',
-            fontWeight: 'light',
-            fontSize: '24px',
+            background: isSelected(cartella) ? `url(/selected.png)` : 'linear-gradient(90deg, #160220, #75090E)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            border: '2px solid #FFD700',
+            color: isSelected(cartella) ? 'gray' : '#fff',
+            fontWeight: 'bolder',
+            fontSize: '4rem',
             transition: 'all 0.2s',
-            // '&:hover': {
-            //   transform: 'scale(1.05)',
-            //   boxShadow: isSelected(cartella) ?
-            //     '0 0 20px rgba(255, 140, 0, 0.7)' :
-            //     '0 4px 8px rgba(0,0,0,0.3)'
-            // }
+            boxShadow: '0 4px 8px rgba(0,0,0,0.3)'
           }}
         >
           <Typography
             variant="body2"
             sx={{
-              color: isSelected(cartella) ? '#000' : '#fff',
+              color: isSelected(cartella) ? 'gray' : '#fff',
               fontWeight: 'bold',
               fontSize: '2.5rem',
               fontFamily: "'Times New Roman', serif"

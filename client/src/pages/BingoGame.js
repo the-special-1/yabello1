@@ -983,20 +983,21 @@ const BingoGame = () => {
             }}>
               {Array.from({ length: 5 }).map((_, index) => (
                 <Box key={index} sx={{
-                  width: 70,
-                  height: 70,
+                  width: 90,
+                  height: 90,
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: '#FFA500',
-                  backgroundImage: 'linear-gradient(135deg, #FFA500, #FF8C00)',
-                  color: '#000',
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
+                  background: `url(/selected.png)`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  color: 'gray',
+                  fontSize: '3rem',
+                  fontWeight: 'bolder',
                   boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
-                  border: '3px solid #FF8C00',
-                  mt:0,
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  mt: 0
                 }}>
                   {recentNumbers[4 - index] || ''}
                 </Box>
@@ -1204,16 +1205,16 @@ const BingoGame = () => {
           {/* Bottom controls */}
           <Box sx={{ 
             display: 'flex', 
-            justifyContent: 'space-between', 
+            justifyContent: 'center', 
             alignItems: 'center',
             padding: '0 16px',
-            mt: 0,
+            ml: 20,
             backgroundColor: '#1a1a1a'
           }}>
             <Stack direction="row" spacing={2} alignItems="center">
               <Button
                 variant="contained"
-                color="primary"
+                color={isDrawing ? 'success' : 'primary'}
                 onClick={toggleDrawing}
                 sx={{ 
                   minWidth: 120,
@@ -1222,7 +1223,7 @@ const BingoGame = () => {
                   fontWeight: 'bold'
                 }}
               >
-                Bingo
+                   {isDrawing ? 'STOP' : 'BINGO'}
               </Button>
               <Button
                 variant="contained"
@@ -1233,7 +1234,8 @@ const BingoGame = () => {
                   minWidth: 120,
                   height: 40,
                   fontSize: '1rem',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  backgroundColor: 'navy'
                 }}
               >
                 Bowzew
@@ -1242,7 +1244,7 @@ const BingoGame = () => {
                 value={selectedCaller}
                 onChange={(e) => setSelectedCaller(e.target.value)}
                 sx={{ 
-                  minWidth: 150,
+                  minWidth: 100,
                   height: 40,
                   color: 'black',
                   backgroundColor: 'whitesmoke',
@@ -1262,8 +1264,9 @@ const BingoGame = () => {
               sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
-                width: 380,
+                width: 370,
                 height: 45,
+                ml:2,
                 backgroundColor: 'silver',
                 position: 'relative',
                 overflow: 'hidden',
@@ -1319,18 +1322,18 @@ const BingoGame = () => {
                 }}
               />
             </Box>
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack direction="row" spacing={0} alignItems="center">
               <TextField
                 inputRef={checkInputRef}
                 value={checkNumber}
                 onChange={(e) => setCheckNumber(e.target.value)}
                 onKeyDown={handleCheckInputKeyDown}
-                placeholder="Enter cartella number"
+                placeholder="Enter Card Cumber"
                 variant="outlined"
                 size="small"
                 sx={{
                   width: 200,
-                  mr: 2,
+                  ml: 2,
                   '& .MuiOutlinedInput-root': {
                     backgroundColor: 'white',
                     color: 'black',

@@ -425,7 +425,7 @@ const CartellaRegistration = ({ open, onSelect, currentRound }) => {
               <Typography variant="h4" sx={{ mb: 0, color: 'white', pl: 0, fontFamily: 'inherit' }}>
               ካርድ ቁጥሮች
               </Typography>
-              <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <Box sx={{ width: '100%', display: 'flex', }}>
                 <CartellaCircleView
                   cartellas={availableCartellas}
                   selectedCartellas={selectedCartellas}
@@ -466,23 +466,24 @@ const CartellaRegistration = ({ open, onSelect, currentRound }) => {
                       <Box
                         key={cartella.id}
                         sx={{
-                       
-                          width: 80,
-                          height: 80,
+                          width: 70,
+                          height: 70,
                           borderRadius: '50%',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundImage: 'linear-gradient(90deg, yellow,orange, red)' ,
-                          border: '3px solid #FF8C00',
-                          color: '#000',
+                          background: `url(/selected.png)`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          border: '2px solid #FFD700',
+                          color: 'gray',
                           fontWeight: 'bold',
                           fontSize: '2.5rem',
                           fontFamily: "'Times New Roman', serif",
                           transition: 'all 0.2s',
+                          boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
                           '&:hover': {
-                            transform: 'scale(1.05)',
-                            boxShadow: '0 0 20px rgba(255, 140, 0, 0.7)'
+                            transform: 'scale(1.05)'
                           }
                         }}
                       >

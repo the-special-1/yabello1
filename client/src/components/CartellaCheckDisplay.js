@@ -85,9 +85,13 @@ const CartellaCheckDisplay = ({ open, onClose, cartellas, drawnNumbers }) => {
                             textAlign: 'center',
                             fontSize: '1.2rem',
                             fontWeight: drawnNumbers.includes(number) ? 900 : 'normal',
-                            backgroundColor: drawnNumbers.includes(number) ? 'primary.light' : 'background.paper',
-                            color: drawnNumbers.includes(number) ? 'primary.dark' : 'text.primary',
-                            transition: 'all 0.3s'
+                            background: drawnNumbers.includes(number) ? `url(/selected.png)` : 'background.paper',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            color: drawnNumbers.includes(number) ? 'gray' : 'text.primary',
+                            transition: 'all 0.3s',
+                            border: drawnNumbers.includes(number) ? '1px solid rgba(0,0,0,0.1)' : '2px solid #FFD700',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.3)'
                           }}
                         >
                           {number}
