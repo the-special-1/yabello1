@@ -425,7 +425,7 @@ const CartellaRegistration = ({ open, onSelect, currentRound }) => {
               <Typography variant="h4" sx={{ mb: 0, color: 'white', pl: 0, fontFamily: 'inherit' }}>
               ካርድ ቁጥሮች
               </Typography>
-              <Box sx={{ width: '100%', display: 'flex', }}>
+              <Box sx={{ width: '100%', display: 'flex',ml:0 }}>
                 <CartellaCircleView
                   cartellas={availableCartellas}
                   selectedCartellas={selectedCartellas}
@@ -476,7 +476,7 @@ const CartellaRegistration = ({ open, onSelect, currentRound }) => {
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
                           border: '2px solid #FFD700',
-                          color: 'gray',
+                          color: '#444444',
                           fontWeight: 'bold',
                           fontSize: '2.5rem',
                           fontFamily: "'Times New Roman', serif",

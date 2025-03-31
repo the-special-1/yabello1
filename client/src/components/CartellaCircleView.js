@@ -7,7 +7,7 @@ const CartellaCircleView = ({ cartellas, selectedCartellas, onSelect }) => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', p: 1 }}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.4, justifyContent: 'flex-start', pl: 0 }}>
       {cartellas.map((cartella) => (
         <Box
           key={cartella.id}
@@ -24,19 +24,21 @@ const CartellaCircleView = ({ cartellas, selectedCartellas, onSelect }) => {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             border: '2px solid #FFD700',
-            color: isSelected(cartella) ? 'gray' : '#fff',
+            color: isSelected(cartella) ? '#444444' : '#fff',
             fontWeight: 'bolder',
-            fontSize: '4rem',
+            fontSize: '4.5rem',
             transition: 'all 0.2s',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.3)'
+            boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+            mr: 0.3,
+            mb: 0.3
           }}
         >
           <Typography
             variant="body2"
             sx={{
-              color: isSelected(cartella) ? 'gray' : '#fff',
+              color: isSelected(cartella) ? '#444444' : '#fff',
               fontWeight: 'bold',
-              fontSize: '2.5rem',
+              fontSize: '2.2rem',
               fontFamily: "'Times New Roman', serif"
             }}
           >

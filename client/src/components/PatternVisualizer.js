@@ -118,18 +118,20 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
     }
   };
 
-  // Animation effect
   useEffect(() => {
-    if (pattern) {
-      const patterns = getPatternDots(pattern);
-      const interval = setInterval(() => {
-        setCurrentPatternIndex((prevIndex) => (prevIndex + 1) % patterns.length);
+    let intervalId;
+    if (gameStarted && pattern) {
+      intervalId = setInterval(() => {
+        setCurrentPatternIndex((prevIndex) => {
+          const patterns = getPatternDots(pattern);
+          return (prevIndex + 1) % patterns.length;
+        });
       }, 1000);
-      return () => clearInterval(interval);
     } else {
       setCurrentPatternIndex(0);
     }
-  }, [pattern]);
+    return () => clearInterval(intervalId);
+  }, [pattern, gameStarted]);
 
   if (!pattern) return null;
 
@@ -174,8 +176,8 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: '#000033',
-                borderRight: i < 4 ? '1px solid #000' : 'none',
+                background: 'linear-gradient(90deg, #16293D, #294D73)',
+                borderRight: i < 4 ? '1px solid #000' : 'none', 
               }}
             >
               <Typography
@@ -226,17 +228,19 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
                       height: '50px',
                     }}
                   >
-                    {isHighlighted && (
+                    {(gameStarted || !isHighlighted) && (
                       <Box
                         sx={{
                           width: '40px',
                           height: '40px',
                           borderRadius: '50%',
-                          backgroundColor: 'blue',
-                          border: '2px solid rgba(0,0,0,0.3)',
+                          backgroundColor: 'blue', 
+                          border: '2px solid rgba(255,255,255,0.3)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
+                          opacity: isHighlighted ? 0.9 : 0,
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                         }}
                       />
                     )}
