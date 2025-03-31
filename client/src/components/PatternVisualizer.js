@@ -137,39 +137,54 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
   const currentPattern = patterns[currentPatternIndex];
 
   return (
-    <Box sx={{ 
-      width: '100%',
-      maxWidth: 300,
-      margin: '0 auto',
-      mt: 2 
-    }}>
-      <Box sx={{ 
-        display: 'table',
-        width: '100%',
-        borderSpacing: 0,
-        borderCollapse: 'collapse',
-      }}>
+    <Box
+      sx={{
+        margin: '0 auto',
+        overflow: 'visible',
+        display: 'flex',
+        backgroundColor: 'white',
+      }}
+    >
+      <Box
+        sx={{
+          width: '460px',
+          height: '250px',  
+          mb: 10,
+          borderSpacing: 0,
+          borderCollapse: 'collapse',
+          backgroundColor: 'transparent',
+          overflow: 'visible',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
         {/* BINGO Header */}
-        <Box sx={{ display: 'table-row' }}>
+        <Box sx={{ 
+          display: 'flex',
+          justifyContent: 'space-between',
+          height: '40px',  
+        }}>
           {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
             <Box
-              key={letter}
+              key={i}
               sx={{
-                display: 'table-cell',
-                width: '20%',
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 background: '#000033',
-                p: 1,
-                textAlign: 'center',
-                border: '1px solid #fff',
+                borderRight: '1px solid #fff',
+                '&:last-child': {
+                  borderRight: 'none'
+                }
               }}
             >
               <Typography
-                align="center"
                 sx={{
+                  color: '#fff',
                   fontSize: '1.2rem',
                   fontWeight: 'bold',
-                  color: 'white',
-                  lineHeight: 1
+                  
                 }}
               >
                 {letter}
@@ -179,48 +194,62 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
         </Box>
 
         {/* Pattern Grid */}
-        {Array(5).fill(null).map((_, row) => (
-          <Box key={row} sx={{ display: 'table-row' }}>
-            {Array(5).fill(null).map((_, col) => {
-              const index = row * 5 + col;
-              const isHighlighted = currentPattern && currentPattern[index];
-              
-              return (
-                <Box
-                  key={col}
-                  sx={{
-                    display: 'table-cell',
-                    position: 'relative',
-                    width: '20%',
-                    border: '1px solid #ccc',
-                    backgroundColor: 'white',
-                    p: 0,
-                    '&::after': {
-                      content: '""',
-                      display: 'block',
-                      paddingBottom: '100%'
-                    }
-                  }}
-                >
-                  {isHighlighted && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: '80%',
-                        height: '80%',
-                        backgroundColor: 'blue',
-                        borderRadius: '50%'
-                      }}
-                    />
-                  )}
-                </Box>
-              );
-            })}
-          </Box>
-        ))}
+        <Box sx={{ 
+          display: 'grid',
+          gridTemplateRows: 'repeat(5, 1fr)',
+          height: '160px',  
+          width: '100%'
+        }}>
+          {Array(5).fill(null).map((_, rowIndex) => (
+            <Box
+              key={rowIndex}
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(5, 1fr)',
+                height: '55px'  ,
+                alignItems: 'center',
+                      justifyContent: 'center',
+              }}
+            >
+              {Array(5).fill(null).map((_, colIndex) => {
+                const index = rowIndex * 5 + colIndex;
+                const isHighlighted = currentPattern && currentPattern[index];
+                
+                return (
+                  <Box
+                    key={colIndex}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px solid #fff',
+                      backgroundColor: 'white',
+                      width: '60px',  
+                      height: '50px',  
+                      // border: '1px solid black',
+                     
+                      ml:2,
+                    }}
+                  >
+                    {isHighlighted && (
+                      <Box
+                        sx={{
+                          width: '80%',
+                          height: '80%',
+                          alignItems: 'center',
+                      justifyContent: 'center',
+                          borderRadius: '50%',
+                          backgroundColor: 'blue',
+                          border: '2px solid rgba(0,0,0,0.3)'
+                        }}
+                      />
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          ))}
+        </Box>
       </Box>
     </Box>
   );

@@ -831,21 +831,24 @@ const BingoGame = () => {
         currentRound={currentRound}
       />
 
-      <Box sx={{ 
-        flex: 1,
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        {/* Top section - all boxes */}
-        <Box sx={{ 
-          display: 'flex',
-          height: '250px',
-          width: '100%',
-          backgroundColor: '#1a1a1a',
-          mb: 0
-        }}>
+<Box sx={{ 
+  flex: 1,
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: '0', // Allows the parent to shrink
+}}>
+  {/* Top section - all boxes */}
+  <Box sx={{ 
+    display: 'flex',
+    height: 'auto', // Allow height to adjust dynamically
+    width: '100%',
+    backgroundColor: '#1a1a1a',
+    mb: 0,
+    minHeight: '0', // Allows the parent to shrink
+  }}>
+
           {/* Ball display */}
           <Box sx={{
             width: '25%',
@@ -856,19 +859,19 @@ const BingoGame = () => {
             p: 0
           }}>
             <Box sx={{
-              width: 250,
-              height: 250,
+              width: 280,
+              height: 280,
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               background: 'radial-gradient(circle at 30% 30%, #ff0000, #990000)',
               boxShadow: '0 4px 8px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.2)',
-              border: '3px solid #ffffff'
+              border: '10px solid #ffffff'
             }}>
               <motion.div
                 animate={{
-                  scale: [1, 1.1, 1],
+                  scale: [1.1, 0.7, 1.1],
                 }}
                 transition={{
                   duration: 2,
@@ -905,27 +908,52 @@ const BingoGame = () => {
           </Box>
 
           {/* Pattern display */}
-          <Box sx={{ 
-            width: '25%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRight: '1px solid rgba(255,255,255,0.1)'
-          }}>
-            <PatternVisualizer 
-              pattern={gamePattern} 
-              gameStarted={gameStarted}
-              lastDrawn={lastDrawn}
-            />
-          </Box>
+          <Box
+  sx={{
+    width: '580px',
+    height: '320px',
+    backgroundColor: 'red',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  }}
+>
+   <PatternVisualizer
+        pattern={gamePattern}
+        gameStarted={gameStarted}
+        lastDrawn={lastDrawn}
+      />
+</Box>
+          {/* <Box
+      sx={{
+        width: '500px', // Adjust width as needed
+        height: '300px', // Adjust height as needed
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1px',
+        border: '1px solid red', // Debugging: Visualize the box
+        overflow: 'hidden', // Prevents content from overflowing
+      }}
+    > */}
+      {/* <PatternVisualizer
+        pattern={gamePattern}
+        gameStarted={gameStarted}
+        lastDrawn={lastDrawn}
+      /> */}
+    {/* </Box> */}
+
+
 
           {/* Recent Numbers */}
           <Box sx={{
-            width: '25%',
+            width: '40%',
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
             borderRight: '1px solid rgba(255,255,255,0.1)',
             background: 'linear-gradient(to right, #4a0000, #800000)',
             p: 1,
