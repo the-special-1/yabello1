@@ -928,26 +928,29 @@ const BingoGame = () => {
             flexDirection: 'column',
             borderRight: '1px solid rgba(255,255,255,0.1)',
             background: 'linear-gradient(to right, #4a0000, #800000)',
-            p: 2,
+            p: 1,
             borderRadius: '8px',
-            m: 1
+            m: 0,
+            
           }}>
-            <Typography variant="h5" sx={{ 
+            <Typography variant="h4" sx={{ 
               color: 'white', 
               textAlign: 'center',
               fontWeight: 'bold',
               textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-              mb: 2
+              mt: '10px',
+           
             }}>
               Recent 5 Numbers
             </Typography>
             <Box sx={{ 
               display: 'flex',
               flexDirection: 'row',
-              gap: 2,
+              gap: 1,
               flex: 1,
-              alignItems: 'center',
-              justifyContent: 'center'
+              // alignItems: 'center',
+              // justifyContent: 'center',
+              mt: '50px',
             }}>
               {Array.from({ length: 5 }).map((_, index) => (
                 <Box key={index} sx={{
@@ -963,7 +966,8 @@ const BingoGame = () => {
                   fontSize: '2rem',
                   fontWeight: 'bold',
                   boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
-                  border: '3px solid #FF8C00'
+                  border: '3px solid #FF8C00',
+                  mt:0,
                 }}>
                   {recentNumbers[4 - index] || ''}
                 </Box>
@@ -973,16 +977,17 @@ const BingoGame = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              mt: 2,
-              gap: 2
+              mt: 0,
+              gap: 0
             }}>
               <Box
                 component="img"
                 src="/phoneimage.png"
                 alt="Phone"
                 sx={{
-                  height: '35px',
-                  width: 'full'
+                  height: '60px',
+                  width: '380px',
+                  mt:2,
                 }}
               />
             
@@ -991,34 +996,55 @@ const BingoGame = () => {
 
           {/* Win Amount Box */}
           <Box sx={{
-            width: '25%',
+            width: '20%',
             height: '100%',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            background: 'linear-gradient(to right, #4a0000, #800000)',
+            p: 0,
+            // borderRadius: '8px',
+            m: 0,
           }}>
-            <Typography variant="h6" sx={{ 
-              color: 'white', 
-              p: 2,
-              borderBottom: '1px solid rgba(255,255,255,0.1)'
+            <Box sx={{
+              backgroundColor: '#fff',
+              // borderRadius: '4px',
+              px: 6,
+              py: 0,
+              mb: 1,
+              width: '300px',
+              alignSelf: 'center'
             }}>
-              Adjusted Total
-            </Typography>
+              <Typography variant="h1" sx={{ 
+                color: '#800000',
+                fontWeight: 'bold'
+              }}>
+                ደራሽ
+              </Typography>
+            </Box>
             <Box sx={{
               flex: 1,
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: '#1a1a1a'
+              gap: 0
             }}>
-              <Typography variant="h4" sx={{ 
-                color: '#4caf50',
-                fontWeight: 'bold'
+              <Typography variant="h2" sx={{ 
+                color: '#fff',
+                fontWeight: 'bold',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
               }}>
                 {Number(totalBet).toLocaleString('en-US', {
-                  style: 'currency',
-                  currency: 'ETB',
                   maximumFractionDigits: 0
                 })}
+              </Typography>
+              <Typography variant="h2" sx={{ 
+                color: 'white',
+                fontWeight: 'bold',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                mt: 0,
+              }}>
+                ብር
               </Typography>
             </Box>
           </Box>
