@@ -142,13 +142,13 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
         margin: '0 auto',
         overflow: 'visible',
         display: 'flex',
-        backgroundColor: 'white',
+        backgroundColor: 'transparent',
       }}
     >
       <Box
         sx={{
           width: '460px',
-          height: '250px',  
+          height: '250px',
           mb: 10,
           borderSpacing: 0,
           borderCollapse: 'collapse',
@@ -160,31 +160,29 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
       >
         {/* BINGO Header */}
         <Box sx={{ 
-          display: 'flex',
-          justifyContent: 'space-between',
-          height: '40px',  
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          height: '90px',  
+          borderTop: '1px solid #000',
+          borderLeft: '1px solid #000',
+          borderRight: '1px solid #000',
         }}>
           {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
             <Box
               key={i}
               sx={{
-                flex: 1,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 background: '#000033',
-                borderRight: '1px solid #fff',
-                '&:last-child': {
-                  borderRight: 'none'
-                }
+                borderRight: i < 4 ? '1px solid #000' : 'none',
               }}
             >
               <Typography
                 sx={{
                   color: '#fff',
-                  fontSize: '1.2rem',
+                  fontSize: '1.8rem',  
                   fontWeight: 'bold',
-                  
                 }}
               >
                 {letter}
@@ -197,8 +195,10 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
         <Box sx={{ 
           display: 'grid',
           gridTemplateRows: 'repeat(5, 1fr)',
-          height: '160px',  
-          width: '100%'
+          height: '210px',
+          width: '100%',
+          border: '1px solid #000',
+          borderTop: 'none',
         }}>
           {Array(5).fill(null).map((_, rowIndex) => (
             <Box
@@ -206,14 +206,13 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
               sx={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(5, 1fr)',
-                height: '55px'  ,
-                alignItems: 'center',
-                      justifyContent: 'center',
+                borderBottom: rowIndex < 4 ? '1px solid #000' : 'none',
               }}
             >
               {Array(5).fill(null).map((_, colIndex) => {
                 const index = rowIndex * 5 + colIndex;
                 const isHighlighted = currentPattern && currentPattern[index];
+                const isEvenCell = (rowIndex ) % 2 === 0;
                 
                 return (
                   <Box
@@ -222,25 +221,22 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      border: '1px solid #fff',
-                      backgroundColor: 'white',
-                      width: '60px',  
-                      height: '50px',  
-                      // border: '1px solid black',
-                     
-                      ml:2,
+                      backgroundColor: isEvenCell ? '#ffffff' : '#f0efe7', 
+                      borderRight: colIndex < 4 ? '1px solid #000' : 'none',
+                      height: '50px',
                     }}
                   >
                     {isHighlighted && (
                       <Box
                         sx={{
-                          width: '80%',
-                          height: '80%',
-                          alignItems: 'center',
-                      justifyContent: 'center',
+                          width: '40px',
+                          height: '40px',
                           borderRadius: '50%',
                           backgroundColor: 'blue',
-                          border: '2px solid rgba(0,0,0,0.3)'
+                          border: '2px solid rgba(0,0,0,0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                         }}
                       />
                     )}

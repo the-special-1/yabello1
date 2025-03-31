@@ -770,7 +770,7 @@ const BingoGame = () => {
                       <Typography sx={{
                         fontSize: '2rem',
                         fontFamily:'inherit',
-                        fontWeight: 'bolder',
+                        fontWeight: 'bold',
                         color: '#333',
                         textTransform: number === 'free' ? 'lowercase' : 'none'
                       }}>
@@ -856,7 +856,8 @@ const BingoGame = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            p: 0
+            p: 0,
+            border: '1px solid #fff',
           }}>
             <Box sx={{
               width: 280,
@@ -911,8 +912,8 @@ const BingoGame = () => {
           <Box
   sx={{
     width: '580px',
-    height: '320px',
-    backgroundColor: 'red',
+    height: '340px',
+    // backgroundColor: 'red',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1087,7 +1088,7 @@ const BingoGame = () => {
         }}>
           <Grid 
             container 
-            spacing={1} 
+            spacing={0.2} 
             sx={{ 
               width: '100%',
               margin: 0,
@@ -1101,7 +1102,7 @@ const BingoGame = () => {
                   display: 'flex', 
                   alignItems: 'center',
                   width: '100%',
-                  mb: 0.5
+                  mb: 0.2
                 }}>
                   <Typography 
                     variant="h5" 
@@ -1114,43 +1115,84 @@ const BingoGame = () => {
                   >
                     {bingoLetters[rowIndex]}
                   </Typography>
-                  <Grid container spacing={1} sx={{ flex: 1, m: 0 }}>
+                  <Grid container spacing={0.3} sx={{ flex: 1, m: 0 }}>
                     {row.map((number) => (
-                      <Grid item xs={0.8} key={number} sx={{ p: 0.5 }}>
-                        <Paper
-                          elevation={2}
-                          sx={{
-                            p: 1.5,
-                            textAlign: 'center',
-                            backgroundColor: shufflingNumbers.includes(number) 
-                              ? 'primary.main' 
-                              : drawnNumbers.includes(number) 
-                                ? 'primary.main' 
-                                : 'background.paper',
-                            color: (shufflingNumbers.includes(number) || drawnNumbers.includes(number)) 
-                              ? 'white' 
-                              : 'text.primary',
-                            transition: 'all 0.2s',
-                            opacity: shufflingNumbers.includes(number) 
-                              ? 1 
-                              : drawnNumbers.includes(number) 
-                                ? 1 
-                                : 0.7,
-                            fontSize: shufflingNumbers.includes(number) 
-                              ? '1.5rem' 
-                              : '1.2rem',
-                            fontWeight: (shufflingNumbers.includes(number) || drawnNumbers.includes(number)) 
-                              ? 'bold' 
-                              : 'normal',
-                            transform: shufflingNumbers.includes(number) 
-                              ? 'scale(1.2)' 
-                              : 'scale(1)',
-                            zIndex: shufflingNumbers.includes(number) ? 1 : 'auto',
-                            width: '100%'
-                          }}
-                        >
-                          {number}
-                        </Paper>
+                      <Grid item xs={0.65} key={number} sx={{ p: 0.1, mx: 0.3 }}>
+                        <Box sx={{ position: 'relative' }}>
+                          <Paper
+                            id={`cell-${number}`}
+                            elevation={2}
+                            sx={{
+                              ml: 20,
+                              p: 1.5,
+                              height: '70px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              textAlign: 'center',
+                              background: drawnNumbers.includes(number) && !(drawnNumbers[drawnNumbers.length - 1] === number)
+                                ? `url(/selected.png)`
+                                : `linear-gradient(rgba(128, 128, 128, 0.08), rgba(128, 128, 128, 0.08)), url(/normal.png)`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                              backgroundBlendMode: 'normal',
+                              // opacity: drawnNumbers.includes(number) ? 1 : 0.9,
+                              color: drawnNumbers.includes(number) && !(drawnNumbers[drawnNumbers.length - 1] === number) 
+                                ? 'gray' 
+                                : 'gray',
+                              fontSize: '3.1rem',
+                              fontWeight: 'bolder',
+                              width: '100%',
+                              border: '1px solid rgba(0,0,0,0.1)',
+                              position: 'relative',
+                              zIndex: 1
+                            }}
+                          >
+                            {number}
+                          </Paper>
+                          {(shufflingNumbers.includes(number) || (drawnNumbers.includes(number) && drawnNumbers[drawnNumbers.length - 1] === number)) && (
+                            <motion.div
+                              initial={{ scale: 1, translateZ: 0 }}
+                              animate={{
+                                scale: [1, 1.2, 1.2, 1.4, 1.4, 1],
+                                translateZ: [0, 100, 100, 150, 150, 0]
+                              }}
+                              transition={{
+                                duration: 2,
+                                times: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                                ease: "easeInOut"
+                              }}
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: '160px',
+                                width: '100%',
+                                height: '70px',
+                                backgroundColor: '#ff0000',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontSize: '3.1rem',
+                                fontWeight: 'bolder',
+                                transformStyle: "preserve-3d",
+                                perspective: "1000px",
+                                zIndex: 2
+                              }}
+                              onAnimationComplete={() => {
+                                if (drawnNumbers.includes(number)) {
+                                  const element = document.getElementById(`cell-${number}`);
+                                  if (element) {
+                                    element.style.background = 'linear-gradient(90deg, #FF6B00 0%, #FF9B00 100%)';
+                                    element.style.color = '#000000';
+                                  }
+                                }
+                              }}
+                            >
+                              {number}
+                            </motion.div>
+                          )}
+                        </Box>
                       </Grid>
                     ))}
                   </Grid>
@@ -1180,7 +1222,7 @@ const BingoGame = () => {
                   fontWeight: 'bold'
                 }}
               >
-                {isDrawing ? 'STOP' : 'BINGO'}
+                Bingo
               </Button>
               <Button
                 variant="contained"
