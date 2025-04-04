@@ -10,7 +10,8 @@ const CartellaCheckModal = ({
   winningPattern, 
   isWinner,
   onAdditional,
-  onNewBingo 
+  onNewBingo,
+  setShowConfetti
 }) => {
   const modalStyle = {
     position: 'absolute',
@@ -33,6 +34,7 @@ const CartellaCheckModal = ({
   const handleGoodBingo = () => {
     const audio = new Audio('/sounds/effects/good.wav');
     audio.play().catch(error => console.error('Error playing sound:', error));
+    setShowConfetti(true);
   };
 
   const handleNotBingo = () => {

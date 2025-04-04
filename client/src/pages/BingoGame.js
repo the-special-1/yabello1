@@ -27,6 +27,7 @@ import CartellaRegistration from '../components/CartellaRegistration';
 import PatternVisualizer from '../components/PatternVisualizer';
 import CartellaCheckModal from '../components/CartellaCheckModal';
 import { motion } from 'framer-motion';
+import ReactConfetti from 'react-confetti';
 import { getRoundNumber, incrementRound } from '../utils/roundManager';
 
 const patternAnimations = {
@@ -75,7 +76,10 @@ const BingoGame = () => {
     const saved = localStorage.getItem('totalBetAmount');
     return saved ? parseFloat(saved) : 0;
   });
-  const [calculationDetails, setCalculationDetails] = useState(null);
+  const [calculationDetails, setCalculationDetails] = useState(() => {
+    const saved = localStorage.getItem('calculationDetails');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [currentRound, setCurrentRound] = useState(1); // Initialize with 1
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -85,6 +89,19 @@ const BingoGame = () => {
   const effectSounds = useRef({});
 
   // Preload and cache audio files
+  // Update window size on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     // Preload effect sounds
     const effects = {
@@ -118,6 +135,11 @@ const BingoGame = () => {
   const [openToast, setOpenToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [userCut, setUserCut] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
 
   const handleCloseToast = (event, reason) => {
     if (reason === 'clickaway') {
@@ -145,6 +167,31 @@ const BingoGame = () => {
   useEffect(() => {
     const fetchRound = async () => {
       if (!user || !user.branchId) return;
+
+      // Check if we need to reset the round (new day)
+      const lastResetDate = localStorage.getItem('lastRoundResetDate');
+      const today = new Date().toDateString();
+      
+      if (lastResetDate !== today) {
+        // It's a new day, reset round to 1
+        try {
+          await fetch('/api/rounds/reset', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ branchId: user.branchId })
+          });
+          localStorage.setItem('lastRoundResetDate', today);
+          setCurrentRound(1);
+          return;
+        } catch (error) {
+          console.error('Error resetting round:', error);
+        }
+      }
+
+      // Get current round
       const round = await getRoundNumber(user.branchId);
       setCurrentRound(round);
     };
@@ -184,6 +231,14 @@ const BingoGame = () => {
   useEffect(() => {
     localStorage.setItem('totalBetAmount', totalBetAmount.toString());
   }, [totalBetAmount]);
+
+  useEffect(() => {
+    if (calculationDetails) {
+      localStorage.setItem('calculationDetails', JSON.stringify(calculationDetails));
+    } else {
+      localStorage.removeItem('calculationDetails');
+    }
+  }, [calculationDetails]);
 
   useEffect(() => {
     if (lastDrawn) {
@@ -313,6 +368,10 @@ const BingoGame = () => {
   };
 
   const handleCloseModal = () => {
+    if (!calculationDetails) {
+      showErrorToast('Please register cards first');
+      return;
+    }
     if (activeCartellas.length > 0) {
       setShowStartModal(false);
     }
@@ -323,6 +382,9 @@ const BingoGame = () => {
       if (!calculationDetails) {
         throw new Error('please register cards');
       }
+
+      // Play start sound
+      playSound('start');
 
       // Calculate the total amount to deduct (bet amount)
       const totalDeduction = calculationDetails.betPerCartella * activeCartellas.length;
@@ -367,12 +429,87 @@ const BingoGame = () => {
     }
   };
 
+  const handleNewBingo = async () => {
+    if (!calculationDetails) {
+      showErrorToast('Please register cards first');
+      return;
+    }
+
+    try {
+      // Save round data
+      const response = await fetch('/api/reports/save-round', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          round: currentRound,
+          price: calculationDetails.betPerCartella,
+          noPlayer: calculationDetails.numberOfCartellas,
+          winnerPrice: calculationDetails.adjustedTotalBet,
+          income: calculationDetails.cutAmount,
+          date: new Date().toISOString(),
+          branchId: user.branchId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save round data');
+      }
+
+      // Increment round number
+      if (user?.branchId) {
+        const newRound = await incrementRound(user.branchId);
+        if (newRound) {
+          setCurrentRound(newRound);
+        }
+      }
+
+      // Reset game state
+      setDrawnNumbers([]);
+      setLastDrawn(null);
+      setIsDrawing(false);
+      setGameStarted(false);
+      setShowCheckModal(false);
+      setShowStartModal(true);
+      setActiveCartellas([]);
+      setCalculationDetails(null);
+      setTotalBetAmount(0);
+      setRecentNumbers([]);
+      setGamePattern('Any 1 Line');
+      
+      // Clear local storage
+      localStorage.removeItem('drawnNumbers');
+      localStorage.removeItem('lastDrawn');
+      localStorage.removeItem('gameStarted');
+      localStorage.removeItem('gameInProgress');
+      localStorage.removeItem('activeCartellas');
+      localStorage.removeItem('totalBetAmount');
+      localStorage.removeItem('gamePattern');
+      localStorage.removeItem('calculationDetails');
+
+      // Reset all cell styles
+      numbers.forEach(num => {
+        const element = document.getElementById(`cell-${num}`);
+        if (element) {
+          element.style.transition = 'none';
+          element.style.background = `linear-gradient(rgba(128, 128, 128, 0.08), rgba(128, 128, 128, 0.08)), url(/normal.png)`;
+          element.style.backgroundSize = 'cover';
+          element.style.backgroundPosition = 'center';
+          element.style.color = 'gray';
+        }
+      });
+
+    } catch (error) {
+      console.error('Error starting new game:', error);
+      showErrorToast('Failed to start new game. Please try again.');
+    }
+  };
+
   const toggleDrawing = () => {
     const newIsDrawing = !isDrawing;
     setIsDrawing(newIsDrawing);
-    if (newIsDrawing) {
-      playSound('start');
-    }
   };
 
   const handleSpeedChange = (_, newValue) => {
@@ -508,84 +645,6 @@ const BingoGame = () => {
 
       default:
         return false;
-    }
-  };
-
-  const handleNewBingo = async () => {
-    if (!calculationDetails) {
-      alert('No calculation details available');
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/reports/save-round', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          round: currentRound,
-          price: calculationDetails.betPerCartella,
-          noPlayer: calculationDetails.numberOfCartellas,
-          winnerPrice: calculationDetails.adjustedTotalBet,
-          income: calculationDetails.cutAmount,
-          date: new Date().toISOString(),
-          branchId: user.branchId
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save round data');
-      }
-
-      // Reset game state completely
-      setDrawnNumbers([]);
-      setLastDrawn(null);
-      if (user?.branchId) {
-        const newRound = await incrementRound(user.branchId);
-        if (newRound) {
-          setCurrentRound(newRound);
-        }
-      }
-      setActiveCartellas([]);
-      setGamePattern(null);
-      setTotalBetAmount(0);
-      setCalculationDetails(null);
-      setGameStarted(false);
-      setIsDrawing(false);
-      setShowStartModal(true); // Show start modal instead of cartella registration
-      setShowCartellaRegistration(false);
-      setCheckedCartella(null);
-      setRecentNumbers([]); // Reset recent numbers
-      // Clear local storage except round number
-      localStorage.removeItem('drawnNumbers');
-      localStorage.removeItem('lastDrawn');
-      localStorage.removeItem('gameStarted');
-      localStorage.removeItem('isDrawing');
-      localStorage.removeItem('gameInProgress');
-      localStorage.removeItem('activeCartellas');
-      localStorage.removeItem('gamePattern');
-      localStorage.removeItem('totalBetAmount');
-      
-      // Reset all cell styles
-      numbers.forEach(num => {
-        const element = document.getElementById(`cell-${num}`);
-        if (element) {
-          element.style.transition = 'none';
-          element.style.background = `linear-gradient(rgba(128, 128, 128, 0.08), rgba(128, 128, 128, 0.08)), url(/normal.png)`;
-          element.style.backgroundSize = 'cover';
-          element.style.backgroundPosition = 'center';
-          element.style.color = 'gray';
-        }
-      });
-      
-      // Clear localStorage
-      localStorage.removeItem('drawnNumbers');
-      
-    } catch (error) {
-      console.error('Error starting new game:', error);
-      alert('Failed to start new game. Please try again.');
     }
   };
 
@@ -952,13 +1011,15 @@ const BingoGame = () => {
               border: '10px solid #ffffff'
             }}>
               <motion.div
+                initial={{ scale: 1, translateZ: 0 }}
                 animate={{
-                  scale: [1.1, 0.7, 1.1],
+                  scale: [1, 1.3, 1.3, 1.5, 1.5, 1],
+                  translateZ: [0, 100, 100, 150, 150, 0]
                 }}
                 transition={{
                   duration: 2,
-                  repeat: Infinity,
-                  repeatType: "reverse"
+                  times: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                  ease: "easeInOut"
                 }}
                 style={{
                   width: '70%',
@@ -1467,7 +1528,17 @@ const BingoGame = () => {
 
       </Box>
 
+      {showConfetti && (
+        <ReactConfetti
+          width={windowSize.width}
+          height={windowSize.height}
+          numberOfPieces={500}
+          recycle={false}
+          onConfettiComplete={() => setShowConfetti(false)}
+        />
+      )}
       <CartellaCheckModal
+        setShowConfetti={setShowConfetti}
         open={showCheckModal}
         onClose={() => setShowCheckModal(false)}
         cartella={checkedCartella}
