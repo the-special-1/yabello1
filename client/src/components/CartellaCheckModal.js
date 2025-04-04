@@ -303,7 +303,8 @@ const CartellaCheckModal = ({
                                       'transparent',
                         color: showBlue || isDrawn || isMiddleCell ? 'white' : 'black',
                         borderRadius: '50%',
-                        zIndex: 1
+                        zIndex: 1,
+                        boxShadow: showBlue ? '0 0 10px #0066cc' : 'none'
                       }}
                     >
                       {isMiddleCell ? 'free' : number}

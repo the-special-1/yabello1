@@ -347,8 +347,33 @@ const BingoGame = () => {
     }
     const randomIndex = Math.floor(Math.random() * remainingNumbers.length);
     const drawn = remainingNumbers[randomIndex];
+    
+    // Update state first
     setDrawnNumbers(prev => [...prev, drawn]);
     setLastDrawn(drawn);
+    
+    // Update the background immediately and after a delay to ensure it sticks
+    const updateBackground = () => {
+      const element = document.getElementById(`cell-${drawn}`);
+      if (element) {
+        // Force immediate style update
+        requestAnimationFrame(() => {
+          element.style.cssText = `
+            background: url(/selected.png);
+            background-size: cover;
+            background-position: center;
+            color: #444444;
+            transition: none;
+            z-index: 1;
+          `;
+        });
+      }
+    };
+    
+    // Update immediately and after animation
+    updateBackground();
+    setTimeout(updateBackground, 2100); // After animation duration (2000ms) + buffer
+    
     playNumberSound(drawn);
   }, [numbers, drawnNumbers]);
 
@@ -498,6 +523,7 @@ const BingoGame = () => {
           element.style.backgroundSize = 'cover';
           element.style.backgroundPosition = 'center';
           element.style.color = 'gray';
+          element.style.zIndex = 1;
         }
       });
 
@@ -1224,16 +1250,12 @@ const BingoGame = () => {
                               alignItems: 'center',
                               justifyContent: 'center',
                               textAlign: 'center',
-                              background: drawnNumbers.includes(number) && !(drawnNumbers[drawnNumbers.length - 1] === number)
-                                ? `url(/selected.png)`
-                                : `linear-gradient(rgba(128, 128, 128, 0.08), rgba(128, 128, 128, 0.08)), url(/normal.png)`,
+                              background: drawnNumbers.includes(number) ? `url(/selected.png)` : `linear-gradient(rgba(128, 128, 128, 0.08), rgba(128, 128, 128, 0.08)), url(/normal.png)`,
                               backgroundSize: 'cover',
                               backgroundPosition: 'center',
                               backgroundBlendMode: 'normal',
-                              // opacity: drawnNumbers.includes(number) ? 1 : 0.9,
-                              color: drawnNumbers.includes(number) && !(drawnNumbers[drawnNumbers.length - 1] === number) 
-                                ? '#444444' 
-                                : 'gray',
+                              color: drawnNumbers.includes(number) ? '#444444' : 'gray',
+                              zIndex: 1,
                               fontSize: '3.1rem',
                               fontWeight: 'bolder',
                               width: '100%',
@@ -1255,6 +1277,22 @@ const BingoGame = () => {
                                 times: [0, 0.3, 0.5, 0.7, 1],
                                 ease: "easeInOut"
                               }}
+                              onAnimationComplete={() => {
+                                const element = document.getElementById(`cell-${number}`);
+                                if (element) {
+                                  // Force immediate style update
+                                  requestAnimationFrame(() => {
+                                    element.style.cssText = `
+                                      background: url(/selected.png);
+                                      background-size: cover;
+                                      background-position: center;
+                                      color: #444444;
+                                      transition: none;
+                                      z-index: 1;
+                                    `;
+                                  });
+                                }
+                              }}
                               style={{
                                 position: 'absolute',
                                 top: 0,
@@ -1270,21 +1308,7 @@ const BingoGame = () => {
                                 fontWeight: 'bolder',
                                 transformStyle: "preserve-3d",
                                 perspective: "1000px",
-                                zIndex: 2
-                              }}
-                              onAnimationComplete={() => {
-                                if (drawnNumbers.includes(number)) {
-                                  const element = document.getElementById(`cell-${number}`);
-                                  if (element) {
-                                    requestAnimationFrame(() => {
-                                      element.style.transition = 'all 0.4s ease-out';
-                                      element.style.background = `url(/selected.png)`;
-                                      element.style.backgroundSize = 'cover';
-                                      element.style.backgroundPosition = 'center';
-                                      element.style.color = '#444444';
-                                    });
-                                  }
-                                }
+                                zIndex: 999
                               }}
                             >
                               {number}
