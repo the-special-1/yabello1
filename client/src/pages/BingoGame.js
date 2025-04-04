@@ -507,6 +507,46 @@ const BingoGame = () => {
     }
   };
 
+  const handleShuffle = () => {
+    if (isShuffling) return;
+    playSound('shuffle');
+    setIsShuffling(true);
+    
+    const startTime = Date.now();
+    const SHUFFLE_DURATION = 5000; // 5 seconds
+    
+    const interval = setInterval(() => {
+      const elapsedTime = Date.now() - startTime;
+      
+      if (elapsedTime >= SHUFFLE_DURATION) {
+        clearInterval(interval);
+        setIsShuffling(false);
+        setShufflingNumbers([]);
+        const remainingNums = numbers.filter(n => !drawnNumbers.includes(n));
+        const drawn = remainingNums[Math.floor(Math.random() * remainingNums.length)];
+        setDrawnNumbers(prev => [...prev, drawn]);
+        setLastDrawn(drawn);
+        playNumberSound(drawn);
+        return;
+      }
+      
+      // Generate 6 random numbers for this iteration
+      const newShuffleNumbers = Array.from({length: 6}, () => 
+        Math.floor(Math.random() * 75) + 1
+      );
+      setShufflingNumbers(newShuffleNumbers);
+      
+    }, 300); // Change numbers every 300ms
+  };
+
+  // Add callers list
+  const callers = [
+    { id: 'auto', name: 'Auto Caller' },
+    { id: 'amharic', name: 'Amharic' },
+    { id: 'english', name: 'English' },
+    { id: 'oromifa', name: 'Oromifa' }
+  ];
+
   const toggleDrawing = () => {
     const newIsDrawing = !isDrawing;
     setIsDrawing(newIsDrawing);
@@ -532,33 +572,12 @@ const BingoGame = () => {
     }
   };
 
-  const modalStyle = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '90%',
-    maxWidth: 600,
-    bgcolor: 'background.paper',
-    boxShadow: 24,
-    p: 4,
-    borderRadius: 2
-  };
-
   const bingoLetters = ['B', 'I', 'N', 'G', 'O'];
 
   const organizedNumbers = [];
   for (let i = 0; i < 75; i += 15) {
     organizedNumbers.push(numbers.slice(i, i + 15));
   }
-
-  const sampleCartella = [
-    [1, 16, 31, 46, 61],
-    [2, 17, 32, 47, 62],
-    [3, 23, 'FREE', 48, 63],
-    [4, 19, 33, 49, 64],
-    [5, 20, 34, 50, 65]
-  ];
 
   const checkWin = (cartella) => {
     if (!cartella || !cartella.numbers || !gamePattern) return false;
@@ -647,82 +666,6 @@ const BingoGame = () => {
         return false;
     }
   };
-
-  const handleGameEnd = async () => {
-    try {
-      if (!user?.branchId) {
-        console.warn('No branch ID available for round increment');
-        return;
-      }
-
-      // Increment round number in database
-      const newRound = await incrementRound(user.branchId);
-      if (newRound) {
-        setCurrentRound(newRound);
-      }
-
-      // Reset game state
-      setDrawnNumbers([]);
-      setLastDrawn(null);
-      setIsDrawing(false);
-      setGameStarted(false);
-      setActiveCartellas([]);
-      setTotalBetAmount(0);
-      
-      // Clear localStorage game state
-      localStorage.removeItem('drawnNumbers');
-      localStorage.removeItem('lastDrawn');
-      localStorage.removeItem('isDrawing');
-      localStorage.removeItem('gameStarted');
-      localStorage.removeItem('activeCartellas');
-      localStorage.removeItem('totalBetAmount');
-      
-      // Show start modal for next game
-      setShowStartModal(true);
-    } catch (error) {
-      console.error('Error ending game:', error);
-    }
-  };
-
-  const handleShuffle = () => {
-    if (isShuffling) return;
-    playSound('shuffle');
-    setIsShuffling(true);
-    
-    const startTime = Date.now();
-    const SHUFFLE_DURATION = 5000; // 5 seconds
-    
-    const interval = setInterval(() => {
-      const elapsedTime = Date.now() - startTime;
-      
-      if (elapsedTime >= SHUFFLE_DURATION) {
-        clearInterval(interval);
-        setIsShuffling(false);
-        setShufflingNumbers([]);
-        const remainingNums = numbers.filter(n => !drawnNumbers.includes(n));
-        const drawn = remainingNums[Math.floor(Math.random() * remainingNums.length)];
-        setDrawnNumbers(prev => [...prev, drawn]);
-        setLastDrawn(drawn);
-        playNumberSound(drawn);
-        return;
-      }
-      
-      // Generate 6 random numbers for this iteration
-      const newShuffleNumbers = Array.from({length: 6}, () => 
-        Math.floor(Math.random() * 75) + 1
-      );
-      setShufflingNumbers(newShuffleNumbers);
-      
-    }, 300); // Change numbers every 300ms
-  };
-
-  // Add callers list
-  const callers = [
-    { id: 'auto', name: 'Auto Caller' },
-    { id: 'amharic', name: 'Amharic' },
-    { id: 'english', name: 'English' },
-    { id: 'oromifa', name: 'Oromifa' }
-  ];
 
   return (
     <Box
@@ -1011,14 +954,13 @@ const BingoGame = () => {
               border: '10px solid #ffffff'
             }}>
               <motion.div
-                initial={{ scale: 1, translateZ: 0 }}
+                initial={{ scale: 1 }}
                 animate={{
-                  scale: [1, 1.3, 1.3, 1.5, 1.5, 1],
-                  translateZ: [0, 100, 100, 150, 150, 0]
+                  scale: [1, 1.2, 1]
                 }}
                 transition={{
-                  duration: 2,
-                  times: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                  duration: 1.5,
+                  repeat: Infinity,
                   ease: "easeInOut"
                 }}
                 style={{
@@ -1309,14 +1251,13 @@ const BingoGame = () => {
                           </Paper>
                           {(shufflingNumbers.includes(number) || (drawnNumbers.includes(number) && drawnNumbers[drawnNumbers.length - 1] === number)) && (
                             <motion.div
-                              initial={{ scale: 1, translateZ: 0 }}
+                              initial={{ scale: 1 }}
                               animate={{
-                                scale: [1, 1.3, 1.3, 1.5, 1.5, 1],
-                                translateZ: [0, 100, 100, 150, 150, 0]
+                                scale: [1, 1.2, 1]
                               }}
                               transition={{
-                                duration: 3,
-                                times: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                                duration: 1.5,
+                                repeat: Infinity,
                                 ease: "easeInOut"
                               }}
                               style={{
