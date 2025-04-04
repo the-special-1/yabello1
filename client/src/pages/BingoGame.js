@@ -522,11 +522,6 @@ const BingoGame = () => {
         clearInterval(interval);
         setIsShuffling(false);
         setShufflingNumbers([]);
-        const remainingNums = numbers.filter(n => !drawnNumbers.includes(n));
-        const drawn = remainingNums[Math.floor(Math.random() * remainingNums.length)];
-        setDrawnNumbers(prev => [...prev, drawn]);
-        setLastDrawn(drawn);
-        playNumberSound(drawn);
         return;
       }
       
@@ -1253,11 +1248,11 @@ const BingoGame = () => {
                             <motion.div
                               initial={{ scale: 1 }}
                               animate={{
-                                scale: [1, 1.2, 1]
+                                scale: [1, 1.2, 1.2, 1.5, 1.5]
                               }}
                               transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
+                                duration: 2,
+                                times: [0, 0.3, 0.5, 0.7, 1],
                                 ease: "easeInOut"
                               }}
                               style={{
