@@ -31,11 +31,13 @@ const CartellaCheckModal = ({
   };
 
   const handleGoodBingo = () => {
-    console.log('Good Bingo clicked - Sound will be added later');
+    const audio = new Audio('/sounds/effects/good.wav');
+    audio.play().catch(error => console.error('Error playing sound:', error));
   };
 
   const handleNotBingo = () => {
-    console.log('Not Bingo clicked - Sound will be added later');
+    const audio = new Audio('/sounds/effects/notgood.wav');
+    audio.play().catch(error => console.error('Error playing sound:', error));
   };
 
   // Function to check if a number is part of the winning pattern

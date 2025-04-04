@@ -80,7 +80,36 @@ const BingoGame = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
-  const [selectedCaller, setSelectedCaller] = useState('auto');
+  const [selectedCaller, setSelectedCaller] = useState('amharic');
+  const audioCache = useRef({});
+  const effectSounds = useRef({});
+
+  // Preload and cache audio files
+  useEffect(() => {
+    // Preload effect sounds
+    const effects = {
+      start: new Audio('/sounds/effects/start.wav'),
+      shuffle: new Audio('/sounds/effects/shuffle.wav'),
+      goodBingo: new Audio('/sounds/effects/good.wav'),
+      notBingo: new Audio('/sounds/effects/notgood.wav')
+    };
+    
+    // Enable quick playback
+    Object.values(effects).forEach(audio => {
+      audio.preload = 'auto';
+    });
+    
+    effectSounds.current = effects;
+
+    // Preload number sounds for current caller
+    if (selectedCaller === 'amharic') {
+      for (let i = 1; i <= 75; i++) {
+        const audio = new Audio(`/sounds/amharic/${i}.mp3`);
+        audio.preload = 'auto';
+        audioCache.current[i] = audio;
+      }
+    }
+  }, [selectedCaller]);
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffleDisplay, setShuffleDisplay] = useState('--');
   const [shufflingNumbers, setShufflingNumbers] = useState([]);
@@ -199,6 +228,7 @@ const BingoGame = () => {
     const number = parseInt(checkNumber);
     if (isNaN(number)) {
       showErrorToast('Cartela not selected or doesn\'t exist!');
+      playSound('notBingo');
       return;
     }
     
@@ -206,6 +236,7 @@ const BingoGame = () => {
     const cartella = activeCartellas.find(c => c.id === number.toString() || c.id === number);
     if (!cartella) {
       showErrorToast('Cartela not selected or doesn\'t exist!');
+      playSound('notBingo');
       return;
     }
 
@@ -230,6 +261,29 @@ const BingoGame = () => {
     }
   }, [showCheckModal]);
 
+  const playSound = (type, number = null) => {
+    try {
+      if (type === 'number' && selectedCaller === 'amharic') {
+        const numberOnly = number.toString().replace(/[BINGO]-/g, '');
+        const audio = audioCache.current[numberOnly];
+        if (audio) {
+          audio.currentTime = 0;
+          return audio.play();
+        }
+      } else if (effectSounds.current[type]) {
+        const audio = effectSounds.current[type];
+        audio.currentTime = 0;
+        return audio.play();
+      }
+    } catch (error) {
+      console.error('Error playing sound:', error);
+    }
+  };
+
+  const playNumberSound = (number) => {
+    playSound('number', number);
+  };
+
   const drawNumber = useCallback(() => {
     const remainingNumbers = numbers.filter(n => !drawnNumbers.includes(n));
     if (remainingNumbers.length === 0) {
@@ -240,6 +294,7 @@ const BingoGame = () => {
     const drawn = remainingNumbers[randomIndex];
     setDrawnNumbers(prev => [...prev, drawn]);
     setLastDrawn(drawn);
+    playNumberSound(drawn);
   }, [numbers, drawnNumbers]);
 
   useEffect(() => {
@@ -313,7 +368,11 @@ const BingoGame = () => {
   };
 
   const toggleDrawing = () => {
-    setIsDrawing(!isDrawing);
+    const newIsDrawing = !isDrawing;
+    setIsDrawing(newIsDrawing);
+    if (newIsDrawing) {
+      playSound('start');
+    }
   };
 
   const handleSpeedChange = (_, newValue) => {
@@ -568,6 +627,7 @@ const BingoGame = () => {
 
   const handleShuffle = () => {
     if (isShuffling) return;
+    playSound('shuffle');
     setIsShuffling(true);
     
     const startTime = Date.now();
@@ -580,7 +640,11 @@ const BingoGame = () => {
         clearInterval(interval);
         setIsShuffling(false);
         setShufflingNumbers([]);
-        drawNumber(); // Draw the actual number after animation
+        const remainingNums = numbers.filter(n => !drawnNumbers.includes(n));
+        const drawn = remainingNums[Math.floor(Math.random() * remainingNums.length)];
+        setDrawnNumbers(prev => [...prev, drawn]);
+        setLastDrawn(drawn);
+        playNumberSound(drawn);
         return;
       }
       
@@ -1265,7 +1329,6 @@ const BingoGame = () => {
               </Button>
               <Button
                 variant="contained"
-                // color="primary"
                 onClick={handleShuffle}
                 disabled={isShuffling || isDrawing}
                 sx={{ 
@@ -1279,6 +1342,7 @@ const BingoGame = () => {
               >
                 Bowzew
               </Button>
+
               <Select
                 value={selectedCaller}
                 onChange={(e) => setSelectedCaller(e.target.value)}
