@@ -26,14 +26,9 @@ import { useAuth } from '../context/AuthContext';
 import CartellaRegistration from '../components/CartellaRegistration';
 import PatternVisualizer from '../components/PatternVisualizer';
 import CartellaCheckModal from '../components/CartellaCheckModal';
-import { motion } from 'framer-motion';
 import ReactConfetti from 'react-confetti';
 import { getRoundNumber, incrementRound } from '../utils/roundManager';
 
-const patternAnimations = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.5 } }
-};
 
 const BingoGame = () => {
   const [numbers] = useState(Array.from({ length: 75 }, (_, i) => i + 1));
@@ -1062,22 +1057,20 @@ const BingoGame = () => {
               boxShadow: '0 4px 8px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.2)',
               border: '10px solid #ffffff'
             }}>
-              <motion.div
-                initial={{ scale: 1 }}
-                animate={{
-                  scale: [1, 1.2, 1]
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                style={{
+              <Box
+                sx={{
                   width: '70%',
                   height: '70%',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  animation: 'pulse 1.5s ease-in-out infinite',
+                  '@keyframes pulse': {
+                    '0%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.2)' },
+                    '100%': { transform: 'scale(1)' }
+                  }
                 }}
               >
                 <Box sx={{
@@ -1097,7 +1090,7 @@ const BingoGame = () => {
                     {isShuffling ? shuffleDisplay : (lastDrawn ? `${getPrefix(lastDrawn)}-${lastDrawn}` : '')}
                   </Typography>
                 </Box>
-              </motion.div>
+              </Box>
             </Box>
           </Box>
 
@@ -1356,52 +1349,37 @@ const BingoGame = () => {
                             {number}
                           </Paper>
                           {(shufflingNumbers.includes(number) || (drawnNumbers.includes(number) && drawnNumbers[drawnNumbers.length - 1] === number)) && (
-                            <motion.div
-                              initial={{ scale: 1 }}
-                              animate={{
-                                scale: [1, 1.2, 1.2, 1.5, 1.5]
-                              }}
-                              transition={{
-                                duration: 2,
-                                times: [0, 0.3, 0.5, 0.7, 1],
-                                ease: "easeInOut"
-                              }}
-                              onAnimationComplete={() => {
-                                const element = document.getElementById(`cell-${number}`);
-                                if (element) {
-                                  // Force immediate style update
-                                  requestAnimationFrame(() => {
-                                    element.style.cssText = `
-                                      background: url(/selected.png);
-                                      background-size: cover;
-                                      background-position: center;
-                                      color: #444444;
-                                      transition: none;
-                                      z-index: 1;
-                                    `;
-                                  });
-                                }
-                              }}
-                              style={{
+                            <Box
+                              sx={{
                                 position: 'absolute',
                                 top: 0,
-                                left: '128px',
+                                left: 0,
                                 width: '100%',
-                                height: '70px',
-                                backgroundColor: '#ff0000',
+                                height: '100%',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: 'white',
+                                color: '#444444',
                                 fontSize: '3.1rem',
                                 fontWeight: 'bolder',
-                                transformStyle: "preserve-3d",
-                                perspective: "1000px",
-                                zIndex: 999
+                                zIndex: 999,
+                                animation: 'scaleUpDown 2s ease-in-out',
+                                '@keyframes scaleUpDown': {
+                                  '0%': { transform: 'scale(1)' },
+                                  '30%': { transform: 'scale(1.2)' },
+                                  '50%': { transform: 'scale(1.2)' },
+                                  '70%': { transform: 'scale(1.5)' },
+                                  '100%': {
+                                    transform: 'scale(1)',
+                                    background: 'url(/selected.png)',
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center'
+                                  }
+                                }
                               }}
                             >
                               {number}
-                            </motion.div>
+                            </Box>
                           )}
                         </Box>
                       </Grid>
