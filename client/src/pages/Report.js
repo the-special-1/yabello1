@@ -40,6 +40,8 @@ const Report = () => {
   const { user } = useAuth();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+const [userBalance, setUserBalance] = useState(0);
+
 
   const columns = [
     { id: 'name', label: 'Name:', width: '20%' },
@@ -85,6 +87,26 @@ const Report = () => {
       setLoading(false);
     }
   };
+
+   useEffect(() => {
+      const fetchBalance = async () => {
+        try {
+          const response = await fetch('/api/users/balance', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          if (!response.ok) throw new Error('Failed to fetch balance');
+          const data = await response.json();
+          setUserBalance(data.credits || 0); // Changed from data.balance to data.credits
+        } catch (error) {
+          console.error('Error fetching balance:', error);
+          setUserBalance(0); // Set to 0 on error
+        }
+      };
+      fetchBalance();
+    }, []); // Run once on mount
 
   const handleSearch = () => {
     fetchReportData();
@@ -279,6 +301,7 @@ const Report = () => {
                     </TableRow>
                   )}
                 </TableBody>
+                <Typography sx={{ color: 'green',fontSize: 24,fontWeight: 'bold' }}>Balance: {userBalance?.toLocaleString() || '0'} </Typography>
               </Table>
               <TablePagination
                 rowsPerPageOptions={[10, 25, 50]}
