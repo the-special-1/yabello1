@@ -62,7 +62,7 @@ function TabPanel(props) {
   );
 }
 
-const CartellaRegistration = ({ open, onSelect, currentRound }) => {
+const CartellaRegistration = ({ open, onSelect, currentRound, onCartellaUpdate }) => {
   const navigate = useNavigate();
   const [selectedCartellas, setSelectedCartellas] = useState([]);
   const [selectedPattern, setSelectedPattern] = useState('Any 1 Line');  
@@ -628,10 +628,8 @@ const CartellaRegistration = ({ open, onSelect, currentRound }) => {
       {showNewCartellaModal && (
         <CartellasModal
           open={showNewCartellaModal}
-          onClose={() => {
-            setShowNewCartellaModal(false);
-            fetchCartellas();
-          }}
+          onClose={() => setShowNewCartellaModal(false)}
+          onCartellaUpdate={onCartellaUpdate}
         />
       )}
     </>

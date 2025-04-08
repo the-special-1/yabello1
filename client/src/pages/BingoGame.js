@@ -80,7 +80,7 @@ const BingoGame = () => {
     const saved = localStorage.getItem('calculationDetails');
     return saved ? JSON.parse(saved) : null;
   });
-  const [currentRound, setCurrentRound] = useState(1); // Initialize with 1
+  const [currentRound, setCurrentRound] = useState(1);
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
@@ -258,46 +258,83 @@ const BingoGame = () => {
     setTotalBet(adjustedAmount);
   }, [totalBetAmount, userCut]); // Add userCut as dependency
 
+  // Fetch current round and set up polling
   useEffect(() => {
-    const fetchUserCut = async () => {
+    const fetchCurrentRound = async () => {
+      if (!user?.branchId) return;
+      
       try {
-        const response = await fetch('/api/users/my-data', {
+        const response = await fetch(`/api/rounds/current/${user.branchId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
         if (response.ok) {
           const data = await response.json();
-          console.log('User data received:', data);
-          setUserCut(data.cut);
-          console.log('Setting user cut to:', data.cut);
+          setCurrentRound(data.currentRound);
         }
       } catch (error) {
-        console.error('Error fetching user cut:', error);
+        console.error('Error fetching current round:', error);
       }
     };
-    fetchUserCut();
-  }, []);
 
-  const handleCheckCartella = () => {
+    // Initial fetch
+    fetchCurrentRound();
+
+    // Set up polling every 30 seconds
+    const interval = setInterval(fetchCurrentRound, 30000);
+
+    return () => clearInterval(interval);
+  }, [user?.branchId]);
+
+  const handleCheckCartella = async () => {
+    console.log('=== Starting Cartella Check ===');
     const number = parseInt(checkNumber);
     if (isNaN(number)) {
-      showErrorToast('Cartela not selected or doesn\'t exist!');
-      playSound('notBingo');
+      showErrorToast('Please enter a valid cartella number');
       return;
     }
     
     // Find cartella by its actual ID/number
     const cartella = activeCartellas.find(c => c.id === number.toString() || c.id === number);
+    console.log('Found cartella in activeCartellas:', cartella);
+    
     if (!cartella) {
-      showErrorToast('Cartela not selected or doesn\'t exist!');
-      playSound('notBingo');
+      showErrorToast('This cartella is not registered for the current game');
       return;
     }
 
-    setCheckedCartella(cartella);
-    setShowCheckModal(true);
-    setCheckNumber(''); // Clear the input
+    try {
+      console.log('Fetching fresh cartella data for ID:', cartella.id);
+      // Fetch fresh cartella data from server
+      const response = await fetch(`/api/cartellas/${cartella.id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch cartella');
+      }
+      
+      const freshCartella = await response.json();
+      console.log('Fresh cartella data from server:', freshCartella);
+      console.log('Fresh cartella numbers:', freshCartella.numbers);
+      
+      // Update both checked cartella and active cartellas
+      setCheckedCartella(freshCartella);
+      setActiveCartellas(prev => {
+        const updated = prev.map(c => c.id === freshCartella.id ? freshCartella : c);
+        console.log('Updated activeCartellas:', updated);
+        return updated;
+      });
+      
+      setShowCheckModal(true);
+      setCheckNumber(''); // Clear the input
+    } catch (err) {
+      console.error('Error fetching fresh cartella data:', err);
+      showErrorToast('Error checking cartella. Please try again.');
+    }
   };
 
   const handleCheckInputKeyDown = (e) => {
@@ -688,6 +725,56 @@ const BingoGame = () => {
     }
   };
 
+  const refreshCartellaData = async () => {
+    try {
+      // If we have a checked cartella, refresh its data
+      if (checkedCartella) {
+        const response = await fetch(`/api/cartellas/${checkedCartella.id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch cartella');
+        }
+        const updatedCartella = await response.json();
+        setCheckedCartella(updatedCartella);
+
+        // Also update the cartella in activeCartellas
+        setActiveCartellas(prev => 
+          prev.map(cartella => 
+            cartella.id === updatedCartella.id ? updatedCartella : cartella
+          )
+        );
+      }
+    } catch (err) {
+      console.error('Error refreshing cartella data:', err);
+    }
+  };
+
+  useEffect(() => {
+    const fetchActiveCartellas = async () => {
+      try {
+        const promises = activeCartellas.map(cartella =>
+          fetch(`/api/cartellas/${cartella.id}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }).then(res => res.json())
+        );
+        const updatedCartellas = await Promise.all(promises);
+        setActiveCartellas(updatedCartellas);
+      } catch (err) {
+        console.error('Error refreshing active cartellas:', err);
+      }
+    };
+
+    // Refresh active cartellas when showCheckModal is opened
+    if (showCheckModal) {
+      fetchActiveCartellas();
+    }
+  }, [showCheckModal]);
+
   return (
     <Box
       sx={{
@@ -933,6 +1020,7 @@ const BingoGame = () => {
         onClose={() => setShowCartellaRegistration(false)}
         onSelect={handleCartellaSelect}
         currentRound={currentRound}
+        onCartellaUpdate={refreshCartellaData}
       />
 
 <Box sx={{ 
@@ -956,7 +1044,7 @@ const BingoGame = () => {
           {/* Ball display */}
           <Box sx={{
             width: '25%',
-            height: '100%',
+            height: '90%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
@@ -1055,7 +1143,7 @@ const BingoGame = () => {
           {/* Recent Numbers */}
           <Box sx={{
             width: '40%',
-            height: '100%',
+            height: '90%',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -1132,7 +1220,7 @@ const BingoGame = () => {
           {/* Win Amount Box */}
           <Box sx={{
             width: '20%',
-            height: '100%',
+            height: '90%',
             display: 'flex',
             flexDirection: 'column',
             background: 'linear-gradient(to right, #4a0000, #800000)',
@@ -1193,7 +1281,8 @@ const BingoGame = () => {
           display: 'flex',
           flexDirection: 'column',
           flex: 1,
-          backgroundColor: '#1a1a1a'
+          backgroundColor: '#1a1a1a',
+          mt:-5
         }}>
           <Grid 
             container 

@@ -285,7 +285,7 @@ const EditCartellaDialog = ({ open, onClose, cartella, onSave }) => {
   );
 };
 
-const CartellasModal = ({ open, onClose }) => {
+const CartellasModal = ({ open, onClose, onCartellaUpdate }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
@@ -369,19 +369,11 @@ const CartellasModal = ({ open, onClose }) => {
       }
 
       await fetchCartellas();
-      setError('');
-      // Reset form
-      setNewCartella({
-        id: '',
-        numbers: Array(5).fill().map(() => Array(5).fill('')),
-        branchId: user.branchId
-      });
-      const updatedNumbers = Array(5).fill().map(() => Array(5).fill(''));
-      updatedNumbers[2][2] = '0';
-      setNewCartella(prev => ({
-        ...prev,
-        numbers: updatedNumbers
-      }));
+      // Notify parent of cartella update
+      if (onCartellaUpdate) {
+        onCartellaUpdate();
+      }
+      onClose();
     } catch (err) {
       setError(err.message);
     }
@@ -394,6 +386,23 @@ const CartellasModal = ({ open, onClose }) => {
 
   const handleSaveEdit = async () => {
     await fetchCartellas();
+    // Notify parent of cartella update
+    if (onCartellaUpdate) {
+      onCartellaUpdate();
+    }
+    setError('');
+    // Reset form
+    setNewCartella({
+      id: '',
+      numbers: Array(5).fill().map(() => Array(5).fill('')),
+      branchId: user.branchId
+    });
+    const updatedNumbers = Array(5).fill().map(() => Array(5).fill(''));
+    updatedNumbers[2][2] = '0';
+    setNewCartella(prev => ({
+      ...prev,
+      numbers: updatedNumbers
+    }));
   };
 
   // Helper function to transpose the matrix (convert rows to columns)
