@@ -19,6 +19,7 @@ import {
   TextField
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { FaRegCalendar } from "react-icons/fa";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useNavigate } from 'react-router-dom';

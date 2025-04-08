@@ -126,7 +126,9 @@ router.post('/sales', auth, async (req, res) => {
     // Process and aggregate the data based on reportType
     const aggregatedData = reports.reduce((acc, report) => {
       const key = report.user.username;
-      const income = parseFloat(report.income) || 0;
+      const reportIncome = parseFloat(report.income) || 0;
+      const winnerPrice = parseFloat(report.winnerPrice) || 0;
+      const totalIncome = reportIncome + winnerPrice;
       
       if (!acc[key]) {
         acc[key] = {
@@ -139,9 +141,8 @@ router.post('/sales', auth, async (req, res) => {
         };
       }
       
-      acc[key].income += income;
-      // Total commission is just the sum of incomes
-      acc[key].totalCommission = acc[key].income;
+      acc[key].income += totalIncome;
+      acc[key].totalCommission = (acc[key].income * acc[key].percent) / 100;
       
       return acc;
     }, {});
