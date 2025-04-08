@@ -15,7 +15,8 @@ import {
   Select,
   MenuItem,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  TextField
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -23,6 +24,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
@@ -42,11 +44,16 @@ const Report = () => {
     { id: 'name', label: 'Name:', width: '20%' },
     { id: 'city', label: 'City:', width: '15%' },
     { id: 'address', label: 'Address:', width: '20%' },
-    { id: 'phoneNo', label: 'Phone No:', width: '15%' },
+    // { id: 'phoneNo', label: 'Phone No:', width: '15%' },
     { id: 'income', label: 'Income', width: '10%' },
     { id: 'percent', label: 'Percent', width: '10%' },
     { id: 'totalCommission', label: 'Total Commission', width: '10%' },
   ];
+
+  // Format number as currency
+  const formatNumber = (number) => {
+    return parseFloat(number || 0).toFixed(2);
+  };
 
   const fetchReportData = async () => {
     try {
@@ -73,7 +80,6 @@ const Report = () => {
       setReportData(data);
     } catch (error) {
       console.error('Error fetching report:', error);
-      // TODO: Add error notification
     } finally {
       setLoading(false);
     }
@@ -133,6 +139,7 @@ const Report = () => {
       {/* Content wrapper */}
       <Box sx={{ display: 'flex', mt: '100px' }}> {/* Match header height */}
         <Sidebar />
+
         {/* Main content */}
         <Box sx={{ flexGrow: 1, marginLeft: '240px', p: 4 }}>
           <Paper sx={{ p: 3, bgcolor: 'white' }}>
@@ -145,40 +152,46 @@ const Report = () => {
             }}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  label="From"
                   value={fromDate}
+                  label="From"
                   onChange={(newValue) => setFromDate(newValue)}
+                  slots={{
+                    OpenPickerButton: CalendarTodayIcon
+                  }}
                   sx={{ 
                     '& .MuiInputBase-root': {
                       bgcolor: 'white'
                     },
                     '& .MuiInputBase-input': {
-                      color: '#333'
+                      color: 'black'
                     },
                     '& .MuiInputLabel-root': {
-                      color: '#666'
+                      color: 'black'
                     },
                     '& .MuiSvgIcon-root': {
-                      color: '#333'
+                      color: 'black'
                     }
                   }}
                 />
                 <DatePicker
-                  label="To"
                   value={toDate}
+                  label="To"
                   onChange={(newValue) => setToDate(newValue)}
+                  slots={{
+                    OpenPickerButton: CalendarTodayIcon
+                  }}
                   sx={{ 
                     '& .MuiInputBase-root': {
                       bgcolor: 'white'
                     },
                     '& .MuiInputBase-input': {
-                      color: '#333'
+                      color: 'black'
                     },
                     '& .MuiInputLabel-root': {
-                      color: '#666'
+                      color: 'black'
                     },
                     '& .MuiSvgIcon-root': {
-                      color: '#333'
+                      color: 'black'
                     }
                   }}
                 />
@@ -203,6 +216,7 @@ const Report = () => {
                 <MenuItem value="Daily">Daily</MenuItem>
                 <MenuItem value="Weekly">Weekly</MenuItem>
                 <MenuItem value="Monthly">Monthly</MenuItem>
+                <MenuItem value="Yearly">Yearly</MenuItem>
               </Select>
 
               <Button 
@@ -248,13 +262,12 @@ const Report = () => {
                       key={index}
                       sx={{ '&:nth-of-type(odd)': { bgcolor: '#f5f5f5' } }}
                     >
-                      <TableCell>{row.name}</TableCell>
-                      <TableCell>{row.city}</TableCell>
-                      <TableCell>{row.address}</TableCell>
-                      <TableCell>{row.phoneNo}</TableCell>
-                      <TableCell>{row.income}</TableCell>
-                      <TableCell>{row.percent}%</TableCell>
-                      <TableCell>{row.totalCommission}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{row.name}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>yabello</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{row.address}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{formatNumber(row.income)}</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{row.percent}%</TableCell>
+                      <TableCell sx={{ color: 'black' }}>{formatNumber(row.totalCommission)}</TableCell>
                     </TableRow>
                   ))}
                   {loading && (
@@ -277,10 +290,16 @@ const Report = () => {
                 sx={{
                   bgcolor: 'white',
                   '.MuiTablePagination-select': {
-                    color: '#333'
+                    color: 'black'
                   },
                   '.MuiTablePagination-displayedRows': {
-                    color: '#333'
+                    color: 'black'
+                  },
+                  '.MuiTablePagination-selectLabel': {
+                    color: 'black'
+                  },
+                  '.MuiTablePagination-menuItem': {
+                    color: 'black'
                   }
                 }}
               />

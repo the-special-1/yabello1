@@ -3,13 +3,12 @@ const router = express.Router();
 const db = require('../models');
 const { auth } = require('../middleware/auth');
 
-// Helper function to check if date is from a different day
-const isNewDay = (date1, date2) => {
-    const d1 = new Date(date1);
-    const d2 = new Date(date2);
-    return d1.getDate() !== d2.getDate() ||
-           d1.getMonth() !== d2.getMonth() ||
-           d1.getFullYear() !== d2.getFullYear();
+// Helper function to check if 24 hours have passed
+const shouldReset = (lastDate) => {
+    const now = new Date();
+    const last = new Date(lastDate);
+    const hoursDiff = (now - last) / (1000 * 60 * 60); // Convert to hours
+    return hoursDiff >= 24;
 };
 
 // Get current round for a user in a specific branch
@@ -30,8 +29,8 @@ router.get('/current/:branchId', auth, async (req, res) => {
                 currentRound: 1,
                 date: now
             });
-        } else if (isNewDay(round.date, now)) {
-            // Reset round if it's a new day
+        } else if (shouldReset(round.date)) {
+            // Reset round if 24 hours have passed
             round.currentRound = 1;
             round.date = now;
             await round.save();
@@ -62,8 +61,8 @@ router.post('/increment/:branchId', auth, async (req, res) => {
                 currentRound: 2, // Start at 2 since we're incrementing from 1
                 date: now
             });
-        } else if (isNewDay(round.date, now)) {
-            // Reset to 1 if it's a new day
+        } else if (shouldReset(round.date)) {
+            // Reset to 1 if 24 hours have passed
             round.currentRound = 1;
             round.date = now;
             await round.save();
