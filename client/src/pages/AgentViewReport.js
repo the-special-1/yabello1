@@ -24,7 +24,11 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  TextField
+  TextField,
+  Grid,
+  Alert,
+  Snackbar,
+  Switch
 } from '@mui/material';
 import BarChart from '@mui/icons-material/BarChart';
 import CalendarToday from '@mui/icons-material/CalendarToday';
@@ -64,6 +68,9 @@ const AgentViewReport = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [currentCut, setCurrentCut] = useState(0);
+  const [userCut, setUserCut] = useState(0);
+  const [useUserCut, setUseUserCut] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const columns = [
     { id: 'name', label: 'Name:', width: '20%' },
@@ -148,18 +155,40 @@ const AgentViewReport = () => {
 
   const fetchCut = async () => {
     try {
-      const response = await fetch('/api/users/cut', {
-        method: 'GET',
+      // Fetch agent cut
+      const agentResponse = await fetch('/api/users/my-data', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch cut');
-      const data = await response.json();
-      setCurrentCut(data.cut || 0);
+      
+      if (!agentResponse.ok) throw new Error('Failed to fetch agent cut');
+      
+      const agentData = await agentResponse.json();
+      if (agentData.cut !== undefined) {
+        setCurrentCut(agentData.cut);
+      }
+
+      // Fetch user cut
+      const userResponse = await fetch('/api/users/my-data', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        if (userData.user_cut !== undefined) {
+          setUserCut(userData.user_cut);
+        }
+      }
     } catch (error) {
       console.error('Error fetching cut:', error);
-      setCurrentCut(0);
+      setSnackbar({
+        open: true,
+        message: 'Failed to fetch commission cut. Please try again.',
+        severity: 'error'
+      });
     }
   };
 
@@ -483,7 +512,11 @@ const AgentViewReport = () => {
               </Table>
               <Box sx={{ p: 2, bgcolor: 'white' }}>
                 <Typography sx={{ color: 'green', fontSize: 24, fontWeight: 'bold' }}>
-                  Total Income: {formatNumber(reportData.reduce((sum, row) => sum + (row.income || 0), 0))}
+                  Total Income: {formatNumber(reportData.reduce((sum, row) => {
+                    const bet = parseFloat(row.totalBet || 0);
+                    const cutRate = useUserCut ? userCut : currentCut;
+                    return sum + (bet * (cutRate / 100));
+                  }, 0))}
                 </Typography>
               </Box>
               <TablePagination
@@ -505,22 +538,164 @@ const AgentViewReport = () => {
             </TableContainer>
           </Box>
         );
-      case 2: // User Info
+      case 2: // Daily Report
         return (
           <Box sx={{ p: 3 }}>
             <Paper sx={{ p: 3, bgcolor: 'white' }}>
-              <Typography variant="h6" sx={{ mb: 2, color: 'black' }}>User Information</Typography>
-              <Typography sx={{ color: 'black', mb: 1 }}>Username: {user?.username}</Typography>
-              <Typography sx={{ color: 'black', mb: 1 }}>Balance: {userBalance?.toLocaleString() || '0'}</Typography>
+              <Typography variant="h6" sx={{ mb: 3, color: 'black', borderBottom: '2px solid #1976d2', pb: 1 }}>
+                User Information
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ color: '#666', mb: 0.5, fontSize: '0.9rem' }}>Username</Typography>
+                    <Typography sx={{ color: 'black', fontWeight: 'bold' }}>{user?.username}</Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ color: '#666', mb: 0.5, fontSize: '0.9rem' }}>Role</Typography>
+                    <Typography sx={{ color: 'black', fontWeight: 'bold', textTransform: 'capitalize' }}>
+                      {user?.role || 'N/A'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ color: '#666', mb: 0.5, fontSize: '0.9rem' }}>Branch ID</Typography>
+                    <Typography sx={{ color: 'black', fontWeight: 'bold' }}>{user?.branchId || 'N/A'}</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ color: '#666', mb: 0.5, fontSize: '0.9rem' }}>Current Balance</Typography>
+                    <Typography sx={{ color: 'green', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                      {userBalance?.toLocaleString() || '0'} ETB
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ color: '#666', mb: 0.5, fontSize: '0.9rem' }}>Current Cut</Typography>
+                    <Typography sx={{ color: 'black', fontWeight: 'bold' }}>{currentCut}%</Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ color: '#666', mb: 0.5, fontSize: '0.9rem' }}>Account Status</Typography>
+                    <Typography 
+                      sx={{ 
+                        color: 'white', 
+                        fontWeight: 'bold',
+                        bgcolor: 'success.main',
+                        display: 'inline-block',
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: 1
+                      }}
+                    >
+                      Active
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
             </Paper>
           </Box>
         );
-      case 3: // Profit Margin
+      case 3: // User Info
         return (
           <Box sx={{ p: 3 }}>
             <Paper sx={{ p: 3, bgcolor: 'white' }}>
-              <Typography variant="h6" sx={{ mb: 2, color: 'black' }}>Profit Margin Settings</Typography>
-              <Typography sx={{ color: 'black', mb: 1 }}>Current Cut: {currentCut}%</Typography>
+              <Typography variant="h6" sx={{ mb: 3, color: 'black', borderBottom: '2px solid #1976d2', pb: 1 }}>
+                Profit Margin Settings
+              </Typography>
+              
+              <Box sx={{ maxWidth: 400, mx: 'auto' }}>
+                <Box sx={{ mb: 4 }}>
+                  <Typography sx={{ color: '#666', mb: 2 }}>Commission Cut Settings</Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography>Use User Cut Rate</Typography>
+                    <Switch
+                      checked={useUserCut}
+                      onChange={(e) => setUseUserCut(e.target.checked)}
+                      color="primary"
+                    />
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Box>
+                      <Typography sx={{ color: '#666', mb: 1 }}>Agent Cut</Typography>
+                      <Typography sx={{ color: useUserCut ? '#666' : '#1976d2', fontWeight: 'bold', fontSize: '1.5rem' }}>
+                        {currentCut}%
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography sx={{ color: '#666', mb: 1 }}>User Cut</Typography>
+                      <Typography sx={{ color: useUserCut ? '#1976d2' : '#666', fontWeight: 'bold', fontSize: '1.5rem' }}>
+                        {userCut}%
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography sx={{ color: '#666', mb: 1 }}>Update User Commission Cut</Typography>
+                  <TextField
+                    type="number"
+                    value={userCut}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      if (value >= 0 && value <= 100) {
+                        setUserCut(value);
+                      }
+                    }}
+                    InputProps={{
+                      endAdornment: <Typography sx={{ color: '#666' }}>%</Typography>,
+                      inputProps: { min: 0, max: 100 }
+                    }}
+                    fullWidth
+                    variant="outlined"
+                    sx={{ bgcolor: 'white' }}
+                    disabled={!useUserCut}
+                  />
+                </Box>
+
+                <Button
+                  variant="contained"
+                  fullWidth
+                  disabled={!useUserCut}
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/users/cut-update', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({ cut: userCut })
+                      });
+                      
+                      if (!response.ok) {
+                        const data = await response.json();
+                        throw new Error(data.message || 'Failed to update cut');
+                      }
+                      
+                      setSnackbar({
+                        open: true,
+                        message: 'User commission cut updated successfully!',
+                        severity: 'success'
+                      });
+
+                      // Refresh the cut values
+                      await fetchCut();
+                    } catch (error) {
+                      console.error('Error updating cut:', error);
+                      setSnackbar({
+                        open: true,
+                        message: 'Failed to update user commission cut. Please try again.',
+                        severity: 'error'
+                      });
+                    }
+                  }}
+                  sx={{
+                    bgcolor: '#1976d2',
+                    '&:hover': { bgcolor: '#115293' }
+                  }}
+                >
+                  Update Commission Cut
+                </Button>
+              </Box>
             </Paper>
           </Box>
         );
@@ -531,6 +706,20 @@ const AgentViewReport = () => {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       <Drawer
         variant="permanent"
         sx={{

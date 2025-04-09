@@ -254,6 +254,32 @@ router.post('/', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   }
 });
 
+// Update user cut
+router.post('/cut-update', auth, authorize(['user']), async (req, res) => {
+  const t = await db.sequelize.transaction();
+  try {
+    const { cut } = req.body;
+
+    // Validate cut value
+    if (cut < 0 || cut > 100) {
+      throw new Error('Cut must be between 0 and 100');
+    }
+
+    // Update user cut
+    await db.User.update(
+      { cut: cut },
+      { where: { id: req.user.id }, transaction: t }
+    );
+
+    await t.commit();
+    res.json({ message: 'Cut updated successfully' });
+  } catch (error) {
+    await t.rollback();
+    console.error('Error updating cut:', error);
+    res.status(400).json({ message: error.message || 'Failed to update cut' });
+  }
+});
+
 // Update user
 router.put('/:id', auth, authorize(['superadmin', 'agent']), async (req, res) => {
   const t = await db.sequelize.transaction();
