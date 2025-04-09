@@ -196,7 +196,8 @@ router.post('/transfer-credits', auth, authorize(['superadmin', 'agent']), async
       senderId: sender.id,
       receiverId: receiver.id,
       amount,
-      type: 'credit_transfer'
+      type: 'credit_transfer',
+      status: 'completed'
     }, { transaction: t });
 
     await t.commit();
