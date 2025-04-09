@@ -513,9 +513,7 @@ const AgentViewReport = () => {
               <Box sx={{ p: 2, bgcolor: 'white' }}>
                 <Typography sx={{ color: 'green', fontSize: 24, fontWeight: 'bold' }}>
                   Total Income: {formatNumber(reportData.reduce((sum, row) => {
-                    const bet = parseFloat(row.totalBet || 0);
-                    const cutRate = useUserCut ? userCut : currentCut;
-                    return sum + (bet * (cutRate / 100));
+                    return sum + (parseFloat(row.income || 0));
                   }, 0))}
                 </Typography>
               </Box>
