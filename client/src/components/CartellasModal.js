@@ -333,7 +333,13 @@ const CartellasModal = ({ open, onClose, onCartellaUpdate }) => {
         throw new Error('Failed to fetch cartellas');
       }
       const data = await response.json();
-      setExistingCartellas(data);
+      // Sort cartellas by ID numerically
+      const sortedCartellas = data.sort((a, b) => {
+        const numA = parseInt(a.id) || 0;
+        const numB = parseInt(b.id) || 0;
+        return numA - numB;
+      });
+      setExistingCartellas(sortedCartellas);
     } catch (err) {
       console.error('Error fetching cartellas:', err);
       setError('Failed to load existing cartellas');

@@ -48,7 +48,7 @@ const BingoGame = () => {
     const saved = localStorage.getItem('isDrawing');
     return saved ? JSON.parse(saved) : false;
   });
-  const [drawSpeed, setDrawSpeed] = useState(10000); // Start with slowest speed (10)
+  const [drawSpeed, setDrawSpeed] = useState(5000); // Start with medium speed
   const [isSliding, setIsSliding] = useState(false);
   const [gameStarted, setGameStarted] = useState(() => {
     const saved = localStorage.getItem('gameStarted');
@@ -79,49 +79,9 @@ const BingoGame = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
-  const [selectedCaller, setSelectedCaller] = useState('amharic');
+  const [selectedCaller, setSelectedCaller] = useState('alex');
   const audioCache = useRef({});
   const effectSounds = useRef({});
-
-  // Preload and cache audio files
-  // Update window size on resize
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    // Preload effect sounds
-    const effects = {
-      start: new Audio('/sounds/effects/start.wav'),
-      shuffle: new Audio('/sounds/effects/shuffle.wav'),
-      goodBingo: new Audio('/sounds/effects/good.wav'),
-      notBingo: new Audio('/sounds/effects/notgood.wav')
-    };
-    
-    // Enable quick playback
-    Object.values(effects).forEach(audio => {
-      audio.preload = 'auto';
-    });
-    
-    effectSounds.current = effects;
-
-    // Preload number sounds for current caller
-    if (selectedCaller === 'amharic') {
-      for (let i = 1; i <= 75; i++) {
-        const audio = new Audio(`/sounds/amharic/${i}.mp3`);
-        audio.preload = 'auto';
-        audioCache.current[i] = audio;
-      }
-    }
-  }, [selectedCaller]);
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffleDisplay, setShuffleDisplay] = useState('--');
   const [shufflingNumbers, setShufflingNumbers] = useState([]);
@@ -135,6 +95,19 @@ const BingoGame = () => {
     width: window.innerWidth,
     height: window.innerHeight
   });
+
+  // Update window size on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleCloseToast = (event, reason) => {
     if (reason === 'clickaway') {
@@ -158,43 +131,78 @@ const BingoGame = () => {
     return '';
   };
 
-  // Update round number when component mounts and every minute
+  // Preload and cache audio files
   useEffect(() => {
-    const fetchRound = async () => {
-      if (!user || !user.branchId) return;
+    // Preload effect sounds
+    const effects = {
+      start: new Audio('/sounds/effects/start.wav'),
+      shuffle: new Audio('/sounds/effects/shuffle.wav'),
+      goodBingo: new Audio('/sounds/effects/good.wav'),
+      notBingo: new Audio('/sounds/effects/notgood.wav')
+    };
+    
+    // Enable quick playback
+    Object.values(effects).forEach(audio => {
+      audio.preload = 'auto';
+    });
+    
+    effectSounds.current = effects;
 
-      // Check if we need to reset the round (new day)
-      const lastResetDate = localStorage.getItem('lastRoundResetDate');
-      const today = new Date().toDateString();
-      
-      if (lastResetDate !== today) {
-        // It's a new day, reset round to 1
-        try {
-          await fetch('/api/rounds/reset', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({ branchId: user.branchId })
-          });
-          localStorage.setItem('lastRoundResetDate', today);
-          setCurrentRound(1);
-          return;
-        } catch (error) {
-          console.error('Error resetting round:', error);
-        }
-      }
+    // Clear previous audio cache
+    audioCache.current = {};
 
-      // Get current round
-      const round = await getRoundNumber(user.branchId);
-      setCurrentRound(round);
+    // Helper to get file extension based on caller
+    const getFileExtension = (caller) => {
+      if (caller === 'alex') return 'mp3';
+      return 'wav';
     };
 
-    fetchRound();
-    const interval = setInterval(fetchRound, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, [user?.branchId]);
+    // Helper to get file name based on number and caller
+    const getFileName = (number, caller) => {
+      if (caller === 'alex') return `${number}`;
+      
+      // For bereket and arada, use BINGO prefixes
+      let prefix;
+      if (number <= 15) prefix = 'b';
+      else if (number <= 30) prefix = 'i';
+      else if (number <= 45) prefix = 'n';
+      else if (number <= 60) prefix = 'g';
+      else prefix = 'o';
+      
+      return `${prefix}${number}`;
+    };
+
+    // Preload number sounds for current caller
+    const loadAudio = async (number) => {
+      try {
+        const audio = new Audio();
+        const ext = getFileExtension(selectedCaller);
+        const fileName = getFileName(number, selectedCaller);
+        const path = `/sounds/${selectedCaller}/${fileName}.${ext}`;
+        
+        // Test if file exists first
+        const response = await fetch(path);
+        if (!response.ok) {
+          console.warn(`Audio file not found: ${path}`);
+          return;
+        }
+
+        audio.src = path;
+        audio.preload = 'auto';
+        audioCache.current[number] = audio;
+
+        // Load the audio
+        await audio.load();
+      } catch (error) {
+        console.warn(`Error loading audio ${number}:`, error);
+      }
+    };
+
+    // Load all number sounds
+    for (let i = 1; i <= 75; i++) {
+      loadAudio(i);
+    }
+  }, [selectedCaller]);
 
   useEffect(() => {
     localStorage.setItem('drawnNumbers', JSON.stringify(drawnNumbers));
@@ -348,19 +356,38 @@ const BingoGame = () => {
     }
   }, [showCheckModal]);
 
-  const playSound = (type, number = null) => {
+  const playSound = async (type, number = null) => {
     try {
-      if (type === 'number' && selectedCaller === 'amharic') {
+      if (type === 'number' && selectedCaller) {
         const numberOnly = number.toString().replace(/[BINGO]-/g, '');
         const audio = audioCache.current[numberOnly];
         if (audio) {
           audio.currentTime = 0;
-          return audio.play();
+          try {
+            await audio.play();
+          } catch (error) {
+            if (error.name === 'NotSupportedError') {
+              // Try reloading the audio with correct format
+              const ext = selectedCaller === 'alex' ? 'mp3' : 'wav';
+              const fileName = selectedCaller === 'alex' ? 
+                numberOnly : 
+                `${getPrefix(numberOnly).toLowerCase()}${numberOnly}`;
+              const path = `/sounds/${selectedCaller}/${fileName}.${ext}`;
+              
+              audio.src = path;
+              await audio.load();
+              await audio.play();
+            } else {
+              throw error;
+            }
+          }
+        } else {
+          console.warn(`No audio found for number ${numberOnly}`);
         }
       } else if (effectSounds.current[type]) {
         const audio = effectSounds.current[type];
         audio.currentTime = 0;
-        return audio.play();
+        await audio.play();
       }
     } catch (error) {
       console.error('Error playing sound:', error);
@@ -594,10 +621,9 @@ const BingoGame = () => {
 
   // Add callers list
   const callers = [
-    { id: 'auto', name: 'Auto Caller' },
-    { id: 'amharic', name: 'Amharic' },
-    { id: 'english', name: 'English' },
-    { id: 'oromifa', name: 'Oromifa' }
+    { id: 'alex', name: 'Alex' },
+    { id: 'bereket', name: 'Bereket' },
+    { id: 'arada', name: 'Arada' }
   ];
 
   const toggleDrawing = () => {
@@ -606,7 +632,7 @@ const BingoGame = () => {
   };
 
   const handleSpeedChange = (_, newValue) => {
-    // Convert slider value (2-10) to milliseconds (2000-10000)
+    // Convert slider value (2-10) to milliseconds (8000-2000)
     setDrawSpeed((12 - newValue) * 1000);
   };
 
@@ -1112,25 +1138,7 @@ const BingoGame = () => {
         lastDrawn={lastDrawn}
       />
 </Box>
-          {/* <Box
-      sx={{
-        width: '500px', // Adjust width as needed
-        height: '300px', // Adjust height as needed
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1px',
-        border: '1px solid red', // Debugging: Visualize the box
-        overflow: 'hidden', // Prevents content from overflowing
-      }}
-    > */}
-      {/* <PatternVisualizer
-        pattern={gamePattern}
-        gameStarted={gameStarted}
-        lastDrawn={lastDrawn}
-      /> */}
-    {/* </Box> */}
-
+         
 
 
           {/* Recent Numbers */}
@@ -1353,22 +1361,23 @@ const BingoGame = () => {
                               sx={{
                                 position: 'absolute',
                                 top: 0,
-                                left: 0,
+                                left: '128px', // Match the margin-left of the Paper
                                 width: '100%',
                                 height: '100%',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: '#444444',
+                                color: 'white',
                                 fontSize: '3.1rem',
                                 fontWeight: 'bolder',
                                 zIndex: 999,
                                 animation: 'scaleUpDown 2s ease-in-out',
                                 '@keyframes scaleUpDown': {
-                                  '0%': { transform: 'scale(1)' },
-                                  '30%': { transform: 'scale(1.2)' },
-                                  '50%': { transform: 'scale(1.2)' },
-                                  '70%': { transform: 'scale(1.5)' },
+                                  '0%': { transform: 'scale(1)', background: '#ff0000' },
+                                  '30%': { transform: 'scale(1.2)', background: '#ff0000' },
+                                  '50%': { transform: 'scale(1.2)', background: '#ff0000' },
+                                  '70%': { transform: 'scale(1.5)', background: '#ff0000' },
+                                  '90%': { transform: 'scale(1.1)', background: '#ff0000' },
                                   '100%': {
                                     transform: 'scale(1)',
                                     background: 'url(/selected.png)',
@@ -1435,21 +1444,53 @@ const BingoGame = () => {
                 value={selectedCaller}
                 onChange={(e) => setSelectedCaller(e.target.value)}
                 IconComponent={ArrowDropDown}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      bgcolor: 'white',
+                    }
+                  }
+                }}
                 sx={{ 
                   minWidth: 100,
                   height: 40,
                   color: 'black',
-                  backgroundColor: 'whitesmoke',
+                  backgroundColor: 'white',
                   '& .MuiSelect-select': {
-                    py: 1
+                    py: 1,
+                    color: 'black',
+                    fontWeight: 'bold'
                   },
                   '& .MuiSelect-icon': {
                     color: 'black'
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(0, 0, 0, 0.23)'
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(0, 0, 0, 0.87)'
                   }
                 }}
               >
                 {callers.map(caller => (
-                  <MenuItem key={caller.id} value={caller.id}>
+                  <MenuItem 
+                    key={caller.id} 
+                    value={caller.id}
+                    sx={{
+                      color: 'black',
+                      fontWeight: 'bold',
+                      '&:hover': {
+                        bgcolor: '#f5f5f5'
+                      },
+                      '&.Mui-selected': {
+                        bgcolor: '#e3f2fd',
+                        color: 'black',
+                        '&:hover': {
+                          bgcolor: '#bbdefb'
+                        }
+                      }
+                    }}
+                  >
                     {caller.name}
                   </MenuItem>
                 ))}
@@ -1498,11 +1539,11 @@ const BingoGame = () => {
                   height: '100%',
                   width: '7%',
                   backgroundColor: '#01796f',
-                  right: `${((drawSpeed/1000 - 2) / 8) * 85}%`
+                  right: `${((drawSpeed/1000 - 2) / 8) * 100}%`
                 }}
               />
               <Slider
-                value={12 - drawSpeed/1000}
+                value={10 - drawSpeed/1000}
                 onChange={handleSpeedChange}
                 min={2}
                 max={10}
