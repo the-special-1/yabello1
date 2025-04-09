@@ -716,23 +716,43 @@ const AgentViewReport = () => {
                 <Box sx={{ mb: 3 }}>
                   <Typography sx={{ color: '#666', mb: 1 }}>Update User Commission Cut</Typography>
                   <TextField
-                    type="number"
-                    value={userCut}
-                    onChange={(e) => {
-                      const value = parseFloat(e.target.value);
-                      if (value >= 0 && value <= 100) {
-                        setUserCut(value);
-                      }
-                    }}
-                    InputProps={{
-                      endAdornment: <Typography sx={{ color: '#666' }}>%</Typography>,
-                      inputProps: { min: 0, max: 100 }
-                    }}
-                    fullWidth
-                    variant="outlined"
-                    sx={{ bgcolor: 'white' }}
-                    disabled={!useUserCut}
-                  />
+  type="number"
+  value={userCut}
+  onChange={(e) => {
+    const value = parseFloat(e.target.value);
+    if (value >= 0 && value <= 100) {
+      setUserCut(value);
+    }
+  }}
+  InputProps={{
+    endAdornment: <Typography sx={{ color: '#666' }}>%</Typography>,
+    inputProps: { min: 0, max: 100 },
+  }}
+  fullWidth
+  variant="outlined"
+  sx={{
+    bgcolor: 'white', // Background color of the TextField
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: 'black', // Border color
+    },
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': {
+        borderColor: 'black',
+      },
+      '&:hover fieldset': {
+        borderColor: 'black',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: 'black',
+      },
+    },
+    '& .MuiInputBase-input': {
+      color: 'black', // Text color inside the input
+    },
+  }}
+  disabled={!useUserCut}
+/>
+
                 </Box>
 
                 <Button
