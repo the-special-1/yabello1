@@ -15,6 +15,7 @@ import BingoGame from './pages/BingoGame';
 import CartellaManagement from './pages/CartellaManagement';
 import Report from './pages/Report';
 import DailyReport from './pages/DailyReport';
+import AgentViewReport from './pages/AgentViewReport';
 
 const theme = createTheme({
   palette: {
@@ -139,6 +140,15 @@ function App() {
                 element={
                   <PrivateRoute>
                     <DailyReport />
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/agent-view"
+                element={
+                  <PrivateRoute roles={['user']}>
+                    <AgentViewReport />
                   </PrivateRoute>
                 }
               />

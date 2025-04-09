@@ -40,8 +40,7 @@ const Report = () => {
   const { user } = useAuth();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-const [userBalance, setUserBalance] = useState(0);
-
+  const [userBalance, setUserBalance] = useState(0);
 
   const columns = [
     { id: 'name', label: 'Name:', width: '20%' },
@@ -61,6 +60,13 @@ const [userBalance, setUserBalance] = useState(0);
   const fetchReportData = async () => {
     try {
       setLoading(true);
+      
+      // Format dates with timezone consideration
+      const startDate = new Date(fromDate);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+
       const response = await fetch('/api/reports/sales', {
         method: 'POST',
         headers: {
@@ -68,8 +74,8 @@ const [userBalance, setUserBalance] = useState(0);
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          fromDate: format(fromDate, 'yyyy-MM-dd'),
-          toDate: format(toDate, 'yyyy-MM-dd'),
+          fromDate: startDate.toISOString(),
+          toDate: endDate.toISOString(),
           reportType: reportType.toLowerCase(),
           branchId: user.role === 'agent' ? user.branchId : undefined
         })
@@ -88,25 +94,41 @@ const [userBalance, setUserBalance] = useState(0);
     }
   };
 
-   useEffect(() => {
-      const fetchBalance = async () => {
-        try {
-          const response = await fetch('/api/users/balance', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-          if (!response.ok) throw new Error('Failed to fetch balance');
-          const data = await response.json();
-          setUserBalance(data.credits || 0); // Changed from data.balance to data.credits
-        } catch (error) {
-          console.error('Error fetching balance:', error);
-          setUserBalance(0); // Set to 0 on error
-        }
-      };
-      fetchBalance();
-    }, []); // Run once on mount
+  const handleFromDateChange = (newValue) => {
+    if (newValue && !isNaN(new Date(newValue).getTime())) {
+      const date = new Date(newValue);
+      date.setHours(0, 0, 0, 0);
+      setFromDate(date);
+    }
+  };
+
+  const handleToDateChange = (newValue) => {
+    if (newValue && !isNaN(new Date(newValue).getTime())) {
+      const date = new Date(newValue);
+      date.setHours(23, 59, 59, 999);
+      setToDate(date);
+    }
+  };
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const response = await fetch('/api/users/balance', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (!response.ok) throw new Error('Failed to fetch balance');
+        const data = await response.json();
+        setUserBalance(data.credits || 0); // Changed from data.balance to data.credits
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+        setUserBalance(0); // Set to 0 on error
+      }
+    };
+    fetchBalance();
+  }, []); // Run once on mount
 
   const handleSearch = () => {
     fetchReportData();
@@ -177,7 +199,7 @@ const [userBalance, setUserBalance] = useState(0);
                 <DatePicker
                   value={fromDate}
                   label="From"
-                  onChange={(newValue) => setFromDate(newValue)}
+                  onChange={handleFromDateChange}
                   slots={{
                     OpenPickerButton: CalendarTodayIcon
                   }}
@@ -199,7 +221,7 @@ const [userBalance, setUserBalance] = useState(0);
                 <DatePicker
                   value={toDate}
                   label="To"
-                  onChange={(newValue) => setToDate(newValue)}
+                  onChange={handleToDateChange}
                   slots={{
                     OpenPickerButton: CalendarTodayIcon
                   }}

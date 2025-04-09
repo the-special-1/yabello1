@@ -36,15 +36,18 @@ router.post('/save-round', auth, async (req, res) => {
 // Get daily reports
 router.post('/daily', auth, async (req, res) => {
   try {
-    const { date, branchId } = req.body;
-    const searchDate = new Date(date);
+    const { fromDate } = req.body;
+    
+    // Parse date and handle timezone
+    const date = new Date(fromDate);
+    
+    if (isNaN(date.getTime())) {
+      return res.status(400).json({ message: 'Invalid date format' });
+    }
 
     let whereClause = {
       date: {
-        [Op.between]: [
-          startOfDay(searchDate),
-          endOfDay(searchDate)
-        ]
+        [Op.between]: [date, new Date(date.getTime() + 24 * 60 * 60 * 1000 - 1)]
       }
     };
 
@@ -57,8 +60,8 @@ router.post('/daily', auth, async (req, res) => {
       whereClause.branchId = req.user.branchId;
     } 
     // If superadmin and specific branch requested
-    else if (branchId) {
-      whereClause.branchId = branchId;
+    else if (req.body.branchId) {
+      whereClause.branchId = req.body.branchId;
     }
 
     const reports = await db.Report.findAll({
@@ -92,11 +95,14 @@ router.post('/sales', auth, async (req, res) => {
     const startDate = new Date(fromDate);
     const endDate = new Date(toDate);
 
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid date format' });
+    }
+
     let whereClause = {
       date: {
-        [Op.between]: [startOfDay(startDate), endOfDay(endDate)]
-      },
-      userId: req.user.id // Only show current user's sales
+        [Op.between]: [startDate, endDate]
+      }
     };
 
     // Handle branch permissions
@@ -104,6 +110,10 @@ router.post('/sales', auth, async (req, res) => {
       whereClause.branchId = req.user.branchId;
     } else if (branchId) {
       whereClause.branchId = branchId;
+    }
+
+    if (req.user.role === 'user') {
+      whereClause.userId = req.user.id;
     }
 
     const reports = await db.Report.findAll({

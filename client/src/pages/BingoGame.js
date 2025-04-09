@@ -1135,7 +1135,7 @@ const BingoGame = () => {
 
           {/* Recent Numbers */}
           <Box sx={{
-            width: '40%',
+            width: '32%',
             height: '90%',
             display: 'flex',
             flexDirection: 'column',
@@ -1169,8 +1169,8 @@ const BingoGame = () => {
             }}>
               {Array.from({ length: 5 }).map((_, index) => (
                 <Box key={index} sx={{
-                  width: 90,
-                  height: 90,
+                  width: 80,
+                  height: 80,
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -1202,7 +1202,7 @@ const BingoGame = () => {
                 alt="Phone"
                 sx={{
                   height: '60px',
-                  width: '500px',
+                  width: '480px',
                   mb:2,
                 }}
               />

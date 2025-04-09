@@ -32,13 +32,24 @@ const Login = () => {
     setLoading(true);
 
     try {
+      // Check if username has agent. prefix
+      const isAgentView = username.toLowerCase().startsWith('agent.');
+      const cleanUsername = isAgentView ? username.substring(6) : username;
+
       const response = await axios.post('/api/auth/login', {
-        username,
+        username: cleanUsername,
         password
       });
 
       const { user, token } = response.data;
-      login(user, token);
+      
+      // Add isAgentView to user object
+      const enhancedUser = {
+        ...user,
+        isAgentView
+      };
+      
+      login(enhancedUser, token);
 
       const redirectUrl = sessionStorage.getItem('redirectUrl');
       sessionStorage.removeItem('redirectUrl');
@@ -46,18 +57,22 @@ const Login = () => {
       if (redirectUrl && redirectUrl !== '/login' && redirectUrl !== '/') {
         navigate(redirectUrl);
       } else {
-        switch (user.role) {
-          case 'superadmin':
-            navigate('/superadmin');
-            break;
-          case 'agent':
-            navigate('/agent');
-            break;
-          case 'user':
-            navigate('/user');
-            break;
-          default:
-            navigate('/');
+        if (isAgentView && user.role === 'user') {
+          navigate('/agent-view');
+        } else {
+          switch (user.role) {
+            case 'superadmin':
+              navigate('/superadmin');
+              break;
+            case 'agent':
+              navigate('/agent');
+              break;
+            case 'user':
+              navigate('/user');
+              break;
+            default:
+              navigate('/');
+          }
         }
       }
     } catch (error) {

@@ -68,6 +68,11 @@ const DailyReport = () => {
   const fetchReportData = async () => {
     try {
       setLoading(true);
+
+      // Format date with timezone consideration
+      const date = new Date(selectedDate);
+      date.setHours(0, 0, 0, 0);
+
       const response = await fetch('/api/reports/daily', {
         method: 'POST',
         headers: {
@@ -75,19 +80,24 @@ const DailyReport = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          date: format(selectedDate, 'yyyy-MM-dd'),
+          fromDate: date.toISOString(),
           branchId: user.role === 'agent' ? user.branchId : undefined
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch report data');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch report data');
       }
 
       const data = await response.json();
-      setReportData(data);
+      setReportData(data.map(row => ({
+        ...row,
+        date: row.date ? new Date(row.date) : null
+      })));
     } catch (error) {
       console.error('Error fetching report:', error);
+      setReportData([]);
     } finally {
       setLoading(false);
     }
@@ -192,7 +202,13 @@ const DailyReport = () => {
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
                   value={selectedDate}
-                  onChange={(newValue) => setSelectedDate(newValue)}
+                  onChange={(newValue) => {
+                    if (newValue && !isNaN(new Date(newValue).getTime())) {
+                      const date = new Date(newValue);
+                      date.setHours(0, 0, 0, 0);
+                      setSelectedDate(date);
+                    }
+                  }}
                   sx={{ 
                     '& .MuiInputBase-root': {
                       bgcolor: 'white'
