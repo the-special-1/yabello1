@@ -15,8 +15,13 @@ export const AuthProvider = ({ children }) => {
     const storedToken = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     if (storedToken && userData) {
+      const parsedUser = JSON.parse(userData);
+      // Ensure isAgentView is preserved from localStorage
+      if (parsedUser.username && parsedUser.username.toLowerCase().startsWith('agent.')) {
+        parsedUser.isAgentView = true;
+      }
       setToken(storedToken);
-      setUser(JSON.parse(userData));
+      setUser(parsedUser);
       setupAxiosInterceptors(storedToken);
     }
     setLoading(false);

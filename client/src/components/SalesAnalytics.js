@@ -92,7 +92,7 @@ const SalesAnalytics = () => {
       data.forEach(report => {
         // Extract user info and amount
         const reportUsername = report.user?.username || report.username || report.name;
-        const amount = parseFloat(report.income || report.totalAmount || 0);
+        const amount = parseFloat(report.totalCommission || 0);
 
         console.log('Processing report:', {
           reportUsername,
@@ -360,7 +360,7 @@ const SalesAnalytics = () => {
                   }}
                 >
                   <Typography variant="h6" gutterBottom>
-                    Sales by User
+                    Commission by User
                   </Typography>
                   {salesData?.userIncome?.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -407,7 +407,7 @@ const SalesAnalytics = () => {
                   }}
                 >
                   <Typography variant="h6" gutterBottom>
-                    Total Sales
+                    Total Commission
                   </Typography>
                   <Typography component="p" variant="h4">
                     {formatCurrency(salesData?.totalIncome || 0)}
@@ -429,7 +429,7 @@ const SalesAnalytics = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>User</TableCell>
-                    <TableCell>Sales</TableCell>
+                    <TableCell>Commission</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>

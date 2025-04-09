@@ -43,9 +43,10 @@ const Login = () => {
 
       const { user, token } = response.data;
       
-      // Add isAgentView to user object
+      // Add isAgentView and preserve original username with prefix if used
       const enhancedUser = {
         ...user,
+        username: isAgentView ? username : cleanUsername,
         isAgentView
       };
       
