@@ -28,12 +28,16 @@ import {
   Grid,
   Alert,
   Snackbar,
-  Switch
+  Switch,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import BarChart from '@mui/icons-material/BarChart';
 import CalendarToday from '@mui/icons-material/CalendarToday';
 import Person from '@mui/icons-material/Person';
 import AttachMoney from '@mui/icons-material/AttachMoney';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -49,24 +53,20 @@ import { useAuth } from '../context/AuthContext';
 const AgentViewReport = () => {
   const [fromDate, setFromDate] = useState(() => {
     const date = new Date();
-    date.setHours(0, 0, 0, 0);
+    date.setDate(1);
     return date;
   });
-  const [toDate, setToDate] = useState(() => {
-    const date = new Date();
-    date.setHours(23, 59, 59, 999);
-    return date;
-  });
+  const [toDate, setToDate] = useState(new Date());
   const [reportType, setReportType] = useState('Daily');
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [userBalance, setUserBalance] = useState(0);
   const [activeTab, setActiveTab] = useState(0);
-  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentCut, setCurrentCut] = useState(0);
   const [userCut, setUserCut] = useState(0);
   const [useUserCut, setUseUserCut] = useState(false);
@@ -702,85 +702,140 @@ const AgentViewReport = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/signin');
+  };
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const handleDrawerToggle = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
+  const handleMenuItemClick = (index) => {
+    setActiveTab(index);
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
+  };
+
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: 240,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: 240,
-            boxSizing: 'border-box',
-            bgcolor: '#1976d2',
-            color: 'white',
-            borderRight: 'none'
-          },
-        }}
-      >
-        <Box sx={{ overflow: 'auto', mt: 8 }}>
-          <List>
-            {[
-              { text: 'Sales Report', icon: <AssessmentIcon /> },
-              { text: 'Daily Report', icon: <CalendarTodayIcon /> },
-              { text: 'User Info', icon: <PersonIcon /> },
-              { text: 'Profit Margin', icon: <MonetizationOnIcon /> }
-            ].map((item, index) => (
-              <ListItem 
-                key={item.text} 
-                button
-                onClick={() => setActiveTab(index)}
-                sx={{
-                  backgroundColor: activeTab === index ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                  },
-                  py: 2,
-                  borderLeft: activeTab === index ? '4px solid white' : '4px solid transparent'
-                }}
-              >
-                <ListItemIcon sx={{ color: 'white', ml: 1 }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText 
-                  primary={item.text}
-                  sx={{
-                    '& .MuiListItemText-primary': {
-                      fontWeight: activeTab === index ? 'bold' : 'normal',
-                      fontSize: '1rem'
-                    }
-                  }}
-                />
-              </ListItem>
-            ))}
-          </List>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        p: 2, 
+        bgcolor: 'primary.main', 
+        color: 'white',
+        zIndex: 1200,
+        position: 'fixed',
+        width: '100%',
+        top: 0
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <IconButton
+            color="inherit"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>Agent View Report</Typography>
         </Box>
-      </Drawer>
-      <Box 
-        component="main" 
-        sx={{ 
-          flexGrow: 1, 
-          p: 3, 
-          bgcolor: '#f5f5f5',
-          minHeight: '100vh',
-          ml: '240px' 
-        }}
-      >
-        {renderContent()}
+        <IconButton color="inherit" onClick={handleLogout} title="Logout">
+          <LogoutIcon />
+        </IconButton>
+      </Box>
+
+      <Box sx={{ display: 'flex', mt: '64px' }}>
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+        <Drawer
+          variant={isMobile ? "temporary" : "permanent"}
+          open={isMobile ? drawerOpen : true}
+          onClose={handleDrawerToggle}
+          sx={{
+            width: 240,
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: 240,
+              boxSizing: 'border-box',
+              bgcolor: '#1976d2',
+              color: 'white',
+              borderRight: 'none',
+              mt: isMobile ? 0 : '64px'
+            },
+          }}
+          ModalProps={{
+            keepMounted: true // Better mobile performance
+          }}
+        >
+          <Box sx={{ overflow: 'auto', mt: isMobile ? 8 : 0 }}>
+            <List>
+              {[
+                { text: 'Sales Report', icon: <AssessmentIcon /> },
+                { text: 'Daily Report', icon: <CalendarTodayIcon /> },
+                { text: 'User Info', icon: <PersonIcon /> },
+                { text: 'Profit Margin', icon: <MonetizationOnIcon /> }
+              ].map((item, index) => (
+                <ListItem 
+                  key={item.text} 
+                  button
+                  onClick={() => handleMenuItemClick(index)}
+                  sx={{
+                    backgroundColor: activeTab === index ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                    },
+                    py: 2,
+                    borderLeft: activeTab === index ? '4px solid white' : '4px solid transparent'
+                  }}
+                >
+                  <ListItemIcon sx={{ color: 'white', ml: 1 }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={item.text}
+                    sx={{
+                      '& .MuiListItemText-primary': {
+                        fontWeight: activeTab === index ? 'bold' : 'normal',
+                        fontSize: '0.9rem'
+                      }
+                    }}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Drawer>
+        <Box 
+          component="main" 
+          sx={{ 
+            flexGrow: 1, 
+            p: { xs: 2, sm: 3 }, 
+            bgcolor: '#f5f5f5',
+            minHeight: '100vh',
+            ml: { xs: 0, sm: isMobile ? 0 : '240px' }
+          }}
+        >
+          {renderContent()}
+        </Box>
       </Box>
     </Box>
   );
