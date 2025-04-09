@@ -3,12 +3,11 @@ const router = express.Router();
 const db = require('../models');
 const { auth } = require('../middleware/auth');
 
-// Helper function to check if 24 hours have passed
+// Helper function to check if it's a new day
 const shouldReset = (lastDate) => {
     const now = new Date();
     const last = new Date(lastDate);
-    const hoursDiff = (now - last) / (1000 * 60 * 60); // Convert to hours
-    return hoursDiff >= 24;
+    return now.toDateString() !== last.toDateString();
 };
 
 // Get current round for a user in a specific branch
@@ -55,12 +54,14 @@ router.post('/increment/:branchId', auth, async (req, res) => {
         });
 
         if (!round) {
+            // For new entries, start at round 1 and then increment
             round = await db.Round.create({
                 userId,
                 branchId,
-                currentRound: 2, // Start at 2 since we're incrementing from 1
+                currentRound: 1,
                 date: now
             });
+            round.currentRound = 2; // Increment to 2
         } else if (shouldReset(round.date)) {
             // Reset to 1 if 24 hours have passed
             round.currentRound = 1;
@@ -98,10 +99,12 @@ router.post('/set/:branchId', auth, async (req, res) => {
             round = await db.Round.create({
                 userId,
                 branchId,
-                currentRound: roundNumber
+                currentRound: roundNumber,
+                date: new Date()
             });
         } else {
             round.currentRound = roundNumber;
+            round.date = new Date();
             await round.save();
         }
 
@@ -126,10 +129,12 @@ router.post('/reset/:branchId', auth, async (req, res) => {
             round = await db.Round.create({
                 userId,
                 branchId,
-                currentRound: 1
+                currentRound: 1,
+                date: new Date()
             });
         } else {
             round.currentRound = 1;
+            round.date = new Date();
             await round.save();
         }
 

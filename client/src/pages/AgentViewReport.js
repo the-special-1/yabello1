@@ -51,11 +51,7 @@ import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 
 const AgentViewReport = () => {
-  const [fromDate, setFromDate] = useState(() => {
-    const date = new Date();
-    date.setDate(1);
-    return date;
-  });
+  const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
   const [reportType, setReportType] = useState('Daily');
   const [reportData, setReportData] = useState([]);
