@@ -296,7 +296,37 @@ const AgentViewReport = () => {
                     textField: {
                       variant: "outlined",
                       error: false,
-                      sx: { bgcolor: 'white', borderRadius: 1 }
+                      sx: { 
+                        bgcolor: 'white', 
+                        borderRadius: 1,
+                        '& .MuiInputBase-input': {
+                          color: '#000',
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: '#666',
+                        },
+                        '& .MuiIconButton-root': {
+                          color: '#666',
+                        }
+                      }
+                    },
+                    popper: {
+                      sx: {
+                        '& .MuiPaper-root': {
+                          bgcolor: 'white',
+                          color: '#000',
+                        },
+                        '& .MuiPickersDay-root': {
+                          color: '#000',
+                          '&.Mui-selected': {
+                            bgcolor: '#1976d2',
+                            color: 'white',
+                            '&:hover': {
+                              bgcolor: '#1565c0',
+                            }
+                          }
+                        }
+                      }
                     }
                   }}
                 />
@@ -312,7 +342,37 @@ const AgentViewReport = () => {
                     textField: {
                       variant: "outlined",
                       error: false,
-                      sx: { bgcolor: 'white', borderRadius: 1 }
+                      sx: { 
+                        bgcolor: 'white', 
+                        borderRadius: 1,
+                        '& .MuiInputBase-input': {
+                          color: '#000',
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: '#666',
+                        },
+                        '& .MuiIconButton-root': {
+                          color: '#666',
+                        }
+                      }
+                    },
+                    popper: {
+                      sx: {
+                        '& .MuiPaper-root': {
+                          bgcolor: 'white',
+                          color: '#000',
+                        },
+                        '& .MuiPickersDay-root': {
+                          color: '#000',
+                          '&.Mui-selected': {
+                            bgcolor: '#1976d2',
+                            color: 'white',
+                            '&:hover': {
+                              bgcolor: '#1565c0',
+                            }
+                          }
+                        }
+                      }
                     }
                   }}
                 />
@@ -442,7 +502,37 @@ const AgentViewReport = () => {
                     textField: {
                       variant: "outlined",
                       error: false,
-                      sx: { bgcolor: 'white', borderRadius: 1 }
+                      sx: { 
+                        bgcolor: 'white', 
+                        borderRadius: 1,
+                        '& .MuiInputBase-input': {
+                          color: '#000',
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: '#666',
+                        },
+                        '& .MuiIconButton-root': {
+                          color: '#666',
+                        }
+                      }
+                    },
+                    popper: {
+                      sx: {
+                        '& .MuiPaper-root': {
+                          bgcolor: 'white',
+                          color: '#000',
+                        },
+                        '& .MuiPickersDay-root': {
+                          color: '#000',
+                          '&.Mui-selected': {
+                            bgcolor: '#1976d2',
+                            color: 'white',
+                            '&:hover': {
+                              bgcolor: '#1565c0',
+                            }
+                          }
+                        }
+                      }
                     }
                   }}
                 />
