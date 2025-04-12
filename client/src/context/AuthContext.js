@@ -2,7 +2,16 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
 // Configure axios defaults
-axios.defaults.baseURL = 'http://localhost:5001';
+const getBaseUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return window.location.protocol === 'https:' 
+      ? 'https://www.yabellobingo.com/api'
+      : 'http://www.yabellobingo.com/api';
+  }
+  return 'http://localhost:5001';
+};
+
+axios.defaults.baseURL = getBaseUrl();
 
 const AuthContext = createContext(null);
 
