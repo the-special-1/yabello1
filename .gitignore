@@ -11,7 +11,7 @@ node_modules/
 .env.production.local
 
 # Build outputs
-/build
+
 /dist
 
 # Debug logs
@@ -28,7 +28,7 @@ yarn-error.log*
 .DS_Store
 
 # Client specific
-/client/build
+
 /client/node_modules
 /client/.env
 
