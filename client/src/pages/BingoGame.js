@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Paper,
   Typography,
@@ -80,7 +80,50 @@ const BingoGame = () => {
   const { logout, user } = useAuth();
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
   const [selectedCaller, setSelectedCaller] = useState('alex');
-  const audioCache = useRef({});
+  const playSound = useCallback(async (type, number = null) => {
+    if (type === 'number' && number) {
+      try {
+        const ext = selectedCaller === 'alex' ? 'mp3' : 'wav';
+        const fileName = selectedCaller === 'alex' ? 
+          `${number}` : 
+          `${number <= 15 ? 'b' : number <= 30 ? 'i' : number <= 45 ? 'n' : number <= 60 ? 'g' : 'o'}${number}`;
+        
+        const audio = new Audio(`/sounds/${selectedCaller}/${fileName}.${ext}`);
+        await audio.play();
+
+        audio.onended = () => {
+          audio.remove();
+        };
+      } catch (error) {
+        console.warn('Error playing number sound:', error);
+      }
+    } else if (effectSounds.current[type]) {
+      try {
+        const audio = effectSounds.current[type];
+        audio.currentTime = 0;
+        await audio.play();
+      } catch (error) {
+        console.warn('Error playing effect sound:', error);
+      }
+    }
+  }, [selectedCaller]);
+
+
+
+  // Simple audio player
+  const callers = useMemo(() => [
+    { id: 'alex', name: 'Alex' },
+    { id: 'bereket', name: 'Bereket' },
+    { id: 'arada', name: 'Arada' }
+  ], []);
+
+  // Preload next possible numbers
+  const handleCallerChange = useCallback((e) => {
+    const newCaller = e.target.value;
+    if (newCaller === selectedCaller) return;
+    setSelectedCaller(newCaller);
+  }, [selectedCaller]);
+
   const effectSounds = useRef({});
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffleDisplay, setShuffleDisplay] = useState('--');
@@ -131,166 +174,21 @@ const BingoGame = () => {
     return '';
   };
 
-  // Preload and cache audio files
   useEffect(() => {
-    // Preload effect sounds
-    const effects = {
-      start: new Audio('/sounds/effects/start.wav'),
-      shuffle: new Audio('/sounds/effects/shuffle.wav'),
-      goodBingo: new Audio('/sounds/effects/good.wav'),
-      notBingo: new Audio('/sounds/effects/notgood.wav')
-    };
-    
-    // Enable quick playback
-    Object.values(effects).forEach(audio => {
-      audio.preload = 'auto';
-    });
-    
-    effectSounds.current = effects;
-
-    // Clear previous audio cache
-    audioCache.current = {};
-
-    // Helper to get file extension based on caller
-    const getFileExtension = (caller) => {
-      if (caller === 'alex') return 'mp3';
-      return 'wav';
-    };
-
-    // Helper to get file name based on number and caller
-    const getFileName = (number, caller) => {
-      if (caller === 'alex') return `${number}`;
-      
-      // For bereket and arada, use BINGO prefixes
-      let prefix;
-      if (number <= 15) prefix = 'b';
-      else if (number <= 30) prefix = 'i';
-      else if (number <= 45) prefix = 'n';
-      else if (number <= 60) prefix = 'g';
-      else prefix = 'o';
-      
-      return `${prefix}${number}`;
-    };
-
-    // Preload number sounds for current caller
-    const loadAudio = async (number) => {
+    // Load effect sounds
+    const effectFiles = ['bingo', 'win', 'lose'];
+    for (const effect of effectFiles) {
       try {
-        const audio = new Audio();
-        const ext = getFileExtension(selectedCaller);
-        const fileName = getFileName(number, selectedCaller);
-        const path = `/sounds/${selectedCaller}/${fileName}.${ext}`;
-        
-        // Test if file exists first
-        const response = await fetch(path);
-        if (!response.ok) {
-          console.warn(`Audio file not found: ${path}`);
-          return;
-        }
-
-        audio.src = path;
+        const audio = new Audio(`/sounds/effects/${effect}.mp3`);
         audio.preload = 'auto';
-        audioCache.current[number] = audio;
-
-        // Load the audio
-        await audio.load();
+        effectSounds.current[effect] = audio;
       } catch (error) {
-        console.warn(`Error loading audio ${number}:`, error);
+        console.warn(`Error loading effect sound ${effect}:`, error);
       }
     };
-
-    // Load all number sounds
-    for (let i = 1; i <= 75; i++) {
-      loadAudio(i);
-    }
-  }, [selectedCaller]);
-
-  useEffect(() => {
-    localStorage.setItem('drawnNumbers', JSON.stringify(drawnNumbers));
-  }, [drawnNumbers]);
-
-  useEffect(() => {
-    localStorage.setItem('lastDrawn', JSON.stringify(lastDrawn));
-  }, [lastDrawn]);
-
-  useEffect(() => {
-    localStorage.setItem('gameStarted', JSON.stringify(gameStarted));
-    localStorage.setItem('gameInProgress', gameStarted ? 'true' : '');
-  }, [gameStarted]);
-
-  useEffect(() => {
-    localStorage.setItem('isDrawing', JSON.stringify(isDrawing));
-  }, [isDrawing]);
-
-  useEffect(() => {
-    localStorage.setItem('activeCartellas', JSON.stringify(activeCartellas));
-  }, [activeCartellas]);
-
-  useEffect(() => {
-    if (gamePattern) {
-      localStorage.setItem('gamePattern', gamePattern);
-    }
-  }, [gamePattern]);
-
-  useEffect(() => {
-    localStorage.setItem('totalBetAmount', totalBetAmount.toString());
-  }, [totalBetAmount]);
-
-  useEffect(() => {
-    if (calculationDetails) {
-      localStorage.setItem('calculationDetails', JSON.stringify(calculationDetails));
-    } else {
-      localStorage.removeItem('calculationDetails');
-    }
-  }, [calculationDetails]);
-
-  useEffect(() => {
-    if (lastDrawn) {
-      setRecentNumbers(prev => {
-        const updated = [lastDrawn, ...prev].slice(0, 5);
-        return updated;
-      });
-    }
-  }, [lastDrawn]);
-
-  useEffect(() => {
-    setTotalBet(25000); // Example value
   }, []);
 
-  useEffect(() => {
-    const adjustedAmount = totalBetAmount * (1 - (userCut || 20) / 100); // Use userCut or fallback to 20%
-    setTotalBet(adjustedAmount);
-  }, [totalBetAmount, userCut]); // Add userCut as dependency
-
-  // Fetch current round and set up polling
-  useEffect(() => {
-    const fetchCurrentRound = async () => {
-      if (!user?.branchId) return;
-      
-      try {
-        const response = await fetch(`/api/rounds/current/${user.branchId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setCurrentRound(data.currentRound);
-        }
-      } catch (error) {
-        console.error('Error fetching current round:', error);
-      }
-    };
-
-    // Initial fetch
-    fetchCurrentRound();
-
-    // Set up polling every 30 seconds
-    const interval = setInterval(fetchCurrentRound, 30000);
-
-    return () => clearInterval(interval);
-  }, [user?.branchId]);
-
-  const handleCheckCartella = async () => {
+  const handleCheckCartella = useCallback(async () => {
     console.log('=== Starting Cartella Check ===');
     const number = parseInt(checkNumber);
     if (isNaN(number)) {
@@ -338,65 +236,20 @@ const BingoGame = () => {
       console.error('Error fetching fresh cartella data:', err);
       showErrorToast('Error checking cartella. Please try again.');
     }
-  };
+  }, [activeCartellas, checkNumber, showErrorToast]);
 
-  const handleCheckInputKeyDown = (e) => {
+  const handleCheckInputKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       handleCheckCartella();
     } else if (e.key === 'Backspace' && checkNumber === '') {
       // When backspace is pressed on empty input, close modal
       setShowCheckModal(false);
     }
-  };
+  }, [handleCheckCartella, checkNumber]);
 
-  // Keep input focused when modal opens
-  useEffect(() => {
-    if (showCheckModal && checkInputRef.current) {
-      checkInputRef.current.focus();
-    }
-  }, [showCheckModal]);
-
-  const playSound = async (type, number = null) => {
-    try {
-      if (type === 'number' && selectedCaller) {
-        const numberOnly = number.toString().replace(/[BINGO]-/g, '');
-        const audio = audioCache.current[numberOnly];
-        if (audio) {
-          audio.currentTime = 0;
-          try {
-            await audio.play();
-          } catch (error) {
-            if (error.name === 'NotSupportedError') {
-              // Try reloading the audio with correct format
-              const ext = selectedCaller === 'alex' ? 'mp3' : 'wav';
-              const fileName = selectedCaller === 'alex' ? 
-                numberOnly : 
-                `${getPrefix(numberOnly).toLowerCase()}${numberOnly}`;
-              const path = `/sounds/${selectedCaller}/${fileName}.${ext}`;
-              
-              audio.src = path;
-              await audio.load();
-              await audio.play();
-            } else {
-              throw error;
-            }
-          }
-        } else {
-          console.warn(`No audio found for number ${numberOnly}`);
-        }
-      } else if (effectSounds.current[type]) {
-        const audio = effectSounds.current[type];
-        audio.currentTime = 0;
-        await audio.play();
-      }
-    } catch (error) {
-      console.error('Error playing sound:', error);
-    }
-  };
-
-  const playNumberSound = (number) => {
+  const playNumberSound = useCallback((number) => {
     playSound('number', number);
-  };
+  }, [playSound]);
 
   const drawNumber = useCallback(() => {
     const remainingNumbers = numbers.filter(n => !drawnNumbers.includes(n));
@@ -619,12 +472,7 @@ const BingoGame = () => {
     }, 300); // Change numbers every 300ms
   };
 
-  // Add callers list
-  const callers = [
-    { id: 'alex', name: 'Alex' },
-    { id: 'bereket', name: 'Bereket' },
-    { id: 'arada', name: 'Arada' }
-  ];
+
 
   const toggleDrawing = () => {
     const newIsDrawing = !isDrawing;
@@ -1442,7 +1290,7 @@ const BingoGame = () => {
 
               <Select
                 value={selectedCaller}
-                onChange={(e) => setSelectedCaller(e.target.value)}
+                onChange={handleCallerChange}
                 IconComponent={ArrowDropDown}
                 MenuProps={{
                   PaperProps: {
@@ -1456,19 +1304,36 @@ const BingoGame = () => {
                   height: 40,
                   color: 'black',
                   backgroundColor: 'white',
+                  transition: 'all 0.2s ease-in-out',
+                  willChange: 'transform',
                   '& .MuiSelect-select': {
                     py: 1,
                     color: 'black',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    transition: 'color 0.2s ease-in-out'
                   },
                   '& .MuiSelect-icon': {
-                    color: 'black'
+                    color: 'black',
+                    transition: 'transform 0.2s ease-in-out'
                   },
                   '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 0, 0, 0.23)'
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                    transition: 'border-color 0.2s ease-in-out'
                   },
                   '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'rgba(0, 0, 0, 0.87)'
+                  },
+                  '&:hover .MuiSelect-icon': {
+                    transform: 'rotate(180deg)'
+                  }
+                }}
+                slotProps={{
+                  paper: {
+                    sx: {
+                      mt: 1,
+                      transition: 'opacity 0.2s ease-in-out',
+                      transformOrigin: 'top'
+                    }
                   }
                 }}
               >
