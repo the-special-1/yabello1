@@ -60,7 +60,7 @@ const SuperAdminDashboard = () => {
   const fetchBranches = async () => {
     try {
       setError('');
-      const response = await axios.get('/api/branches');
+      const response = await axios.get('/branches');
       setBranches(response.data);
     } catch (error) {
       setError('Failed to fetch branches');
@@ -70,7 +70,7 @@ const SuperAdminDashboard = () => {
   const fetchAgents = async () => {
     try {
       setError('');
-      const response = await axios.get('/api/users/agents');
+      const response = await axios.get('/users/agents');
       setAgents(response.data);
     } catch (error) {
       setError('Failed to fetch agents');
@@ -87,7 +87,7 @@ const SuperAdminDashboard = () => {
     e.preventDefault();
     try {
       setError('');
-      await axios.post('/api/branches', branchForm);
+      await axios.post('/branches', branchForm);
       setSuccess('Branch created successfully');
       setBranchForm({ name: '', location: '' });
       fetchBranches();
@@ -100,7 +100,7 @@ const SuperAdminDashboard = () => {
     e.preventDefault();
     try {
       setError('');
-      await axios.post('/api/users/create-agent', {
+      await axios.post('/users/create-agent', {
         ...agentForm,
         commission: parseFloat(agentForm.commission)
       });
@@ -125,7 +125,7 @@ const SuperAdminDashboard = () => {
         return;
       }
 
-      await axios.post('/api/users/transfer-credits', {
+      await axios.post('/users/transfer-credits', {
         receiverId: agentId,
         amount: parseFloat(creditTransfer.amount)
       });
@@ -141,7 +141,7 @@ const SuperAdminDashboard = () => {
   const handleEditAgent = async () => {
     try {
       setError('');
-      await axios.put(`/api/users/${selectedAgent.id}`, {
+      await axios.put(`/users/${selectedAgent.id}`, {
         username: agentForm.username,
         branchId: agentForm.branchId,
         commission: parseFloat(agentForm.commission),
@@ -166,7 +166,7 @@ const SuperAdminDashboard = () => {
   const handleDeleteAgent = async () => {
     try {
       setError('');
-      await axios.delete(`/api/users/${selectedAgent.id}`);
+      await axios.delete(`/users/${selectedAgent.id}`);
       
       setSuccess('Agent deleted successfully');
       setOpenDeleteDialog(false);
