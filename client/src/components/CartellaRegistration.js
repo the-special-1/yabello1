@@ -28,8 +28,8 @@ import CartellaCircleView from './CartellaCircleView';
 import { getRoundNumber } from '../utils/roundManager';
 
 const PATTERNS = [
-  { name: 'Any 1 Line', description: 'Complete any single line' },
-  { name: 'Any 2 Lines', description: 'Complete any two lines' },
+  { name: 'Any one Line', description: 'Complete any single line' },
+  { name: 'Any two Lines', description: 'Complete any two lines' },
   { name: 'Any Vertical', description: 'Complete any vertical line' },
   { name: 'Any Horizontal', description: 'Complete any horizontal line' },
   { name: 'T Pattern', description: 'Complete T shape' },
@@ -65,7 +65,7 @@ function TabPanel(props) {
 const CartellaRegistration = ({ open, onSelect, currentRound, onCartellaUpdate }) => {
   const navigate = useNavigate();
   const [selectedCartellas, setSelectedCartellas] = useState([]);
-  const [selectedPattern, setSelectedPattern] = useState('Any 1 Line');  
+  const [selectedPattern, setSelectedPattern] = useState('Any one Line');  
   const [betAmount, setBetAmount] = useState('');  
   const [availableCartellas, setAvailableCartellas] = useState([]);
   const [error, setError] = useState('');
@@ -130,7 +130,7 @@ const CartellaRegistration = ({ open, onSelect, currentRound, onCartellaUpdate }
       // Reset states when modal opens
       setError('');
       setSelectedCartellas([]);
-      setSelectedPattern('Any 1 Line');
+      setSelectedPattern('Any one Line');
       setBetAmount('');
       setTabValue(0);
     }

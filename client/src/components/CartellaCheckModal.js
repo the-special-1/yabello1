@@ -90,7 +90,7 @@ const CartellaCheckModal = ({
     });
 
     switch (winningPattern) {
-      case 'Any 1 Line': {
+      case 'Any one Line': {
         // Debug current cell
         console.log('Checking Any 1 Line pattern:', {
           rowIndex,
@@ -162,7 +162,7 @@ const CartellaCheckModal = ({
         }
       }
 
-      case 'Any 2 Lines': {
+      case 'Any two Lines': {
         // Debug current cell
         console.log('Checking Any 2 Lines pattern:', {
           rowIndex,
@@ -709,7 +709,7 @@ const CartellaCheckModal = ({
           borderTopRightRadius: 4
         }}>
           <Typography variant="h4" align="center" sx={{ color: 'white', fontWeight: 'bold' }}>
-            ካርድ ቁጥር: {cartellaNumber}
+           Card No: {cartellaNumber}
           </Typography>
         </Box>
 
@@ -816,7 +816,7 @@ const CartellaCheckModal = ({
                         color: showBlue || isDrawn ? 'white' : 'black',
                         borderRadius: '50%',
                         zIndex: 1,
-                        boxShadow: showBlue ? '0 0 10px #0066cc' : 'none'
+                        // boxShadow: showBlue ? '0 0 10px #0066cc' : 'none'
                       }}
                     >
                       {isMiddleCell ? 'free' : number}

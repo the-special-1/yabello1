@@ -7,7 +7,7 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
   // Define patterns based on the selected pattern
   const getPatternDots = (patternName) => {
     switch (patternName) {
-      case 'Any 1 Line':
+      case 'Any one Line':
         return [
           Array(25).fill(false).map((_, i) => i < 5), // Top row
           Array(25).fill(false).map((_, i) => i >= 5 && i < 10), // Second row
@@ -22,7 +22,7 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
           Array(25).fill(false).map((_, i) => i % 6 === 0), // Diagonal from top-left
           Array(25).fill(false).map((_, i) => i % 4 === 0 && i > 0 && i < 24) // Diagonal from top-right
         ];
-      case 'Any 2 Lines':
+      case 'Any two Lines':
         return [
           Array(25).fill(false).map((_, i) => i < 10), // Top two rows
           Array(25).fill(false).map((_, i) => i >= 5 && i < 15), // Middle two rows

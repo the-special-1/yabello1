@@ -48,7 +48,7 @@ const BingoGame = () => {
     const saved = localStorage.getItem('isDrawing');
     return saved ? JSON.parse(saved) : false;
   });
-  const [drawSpeed, setDrawSpeed] = useState(5000); // Start with medium speed
+  const [drawSpeed, setDrawSpeed] = useState(3000); // Default speed: 3s per draw
   const [isSliding, setIsSliding] = useState(false);
   const [gameStarted, setGameStarted] = useState(() => {
     const saved = localStorage.getItem('gameStarted');
@@ -61,7 +61,7 @@ const BingoGame = () => {
   });
   const [gamePattern, setGamePattern] = useState(() => {
     const saved = localStorage.getItem('gamePattern');
-    return saved || 'Any 1 Line';  // Set default pattern to 'Any 1 Line'
+    return saved || 'Any one Line';  // Set default pattern to 'Any 1 Line'
   });
   const [checkNumber, setCheckNumber] = useState('');
   const checkInputRef = useRef(null);
@@ -78,8 +78,8 @@ const BingoGame = () => {
   const [currentRound, setCurrentRound] = useState(1);
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const [selectedCaller, setSelectedCaller] = useState('bereket');
   const [selectedPattern, setSelectedPattern] = useState('oneLine'); // Example state
-  const [selectedCaller, setSelectedCaller] = useState('alex');
   const playSound = useCallback(async (type, number = null) => {
     if (type === 'number' && number) {
       try {
@@ -112,8 +112,8 @@ const BingoGame = () => {
 
   // Simple audio player
   const callers = useMemo(() => [
-    { id: 'alex', name: 'Alex' },
     { id: 'bereket', name: 'Bereket' },
+    { id: 'alex', name: 'Alex' },
     { id: 'arada', name: 'Arada' }
   ], []);
 
@@ -176,10 +176,10 @@ const BingoGame = () => {
 
   useEffect(() => {
     // Load effect sounds
-    const effectFiles = ['bingo', 'win', 'lose'];
+    const effectFiles = ['bingo', 'win', 'lose', 'start'];
     for (const effect of effectFiles) {
       try {
-        const audio = new Audio(`/sounds/effects/${effect}.mp3`);
+        const audio = new Audio(`/sounds/effects/${effect}.wav`);
         audio.preload = 'auto';
         effectSounds.current[effect] = audio;
       } catch (error) {
@@ -414,7 +414,7 @@ const BingoGame = () => {
       setCalculationDetails(null);
       setTotalBetAmount(0);
       setRecentNumbers([]);
-      setGamePattern('Any 1 Line');
+      setGamePattern('Any one Line');
       
       // Clear local storage
       localStorage.removeItem('drawnNumbers');
@@ -489,7 +489,7 @@ const BingoGame = () => {
       // First update the state
       setActiveCartellas(cartellas);
       setGamePattern(pattern);
-      setTotalBetAmount(calculationDetails.rawTotalBet);
+      setTotalBetAmount(calculationDetails.adjustedTotalBet);
       setCalculationDetails(calculationDetails);
       setShowCartellaRegistration(false);
     } catch (error) {
@@ -516,7 +516,7 @@ const BingoGame = () => {
     };
 
     switch (gamePattern) {
-      case 'Any 1 Line': {
+      case 'Any one Line': {
         // Check rows
         if (cartella.numbers.some(row => checkLine(row))) return true;
         // Check columns
@@ -528,7 +528,7 @@ const BingoGame = () => {
         return false;
       }
 
-      case 'Any 2 Lines': {
+      case 'Any two Lines': {
         let lineCount = 0;
         // Check rows
         lineCount += cartella.numbers.filter(row => checkLine(row)).length;
@@ -643,6 +643,23 @@ const BingoGame = () => {
       fetchActiveCartellas();
     }
   }, [showCheckModal]);
+
+  // Persist game state to localStorage
+  useEffect(() => {
+    localStorage.setItem('gameStarted', JSON.stringify(gameStarted));
+    if (gameStarted) {
+      localStorage.setItem('gameInProgress', 'true');
+    } else {
+      localStorage.removeItem('gameInProgress');
+    }
+    localStorage.setItem('drawnNumbers', JSON.stringify(drawnNumbers));
+    localStorage.setItem('lastDrawn', JSON.stringify(lastDrawn));
+    localStorage.setItem('isDrawing', JSON.stringify(isDrawing));
+    localStorage.setItem('activeCartellas', JSON.stringify(activeCartellas));
+    localStorage.setItem('totalBetAmount', totalBetAmount);
+    localStorage.setItem('gamePattern', gamePattern);
+    localStorage.setItem('calculationDetails', calculationDetails ? JSON.stringify(calculationDetails) : '');
+  }, [gameStarted, drawnNumbers, lastDrawn, isDrawing, activeCartellas, totalBetAmount, gamePattern, calculationDetails]);
 
   return (
     <Box
@@ -811,7 +828,7 @@ const BingoGame = () => {
                       width: '40%',
                       fontFamily: 'serif',
                       fontWeight: 'bolder',
-                      height: 45,
+                      height: { xs: 35, sm: 38, md: 40 },
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -868,9 +885,9 @@ const BingoGame = () => {
                   py: 1,
                   mt: 1,
                   fontSize: '1.2rem',
-                  bgcolor: '#800000',
+                  backgroundColor: '#800000',
                   '&:hover': {
-                    bgcolor: '#600000'
+                    backgroundColor: '#600000'
                   },
                   borderRadius: 0
                 }}
@@ -903,31 +920,34 @@ const BingoGame = () => {
   {/* Top section - all boxes */}
   <Box sx={{ 
     display: 'flex',
-    height: 'auto', // Allow height to adjust dynamically
+    flexDirection: { xs: 'column', md: 'row' },
+    height: { xs: 'auto', md: '340px' },
     width: '100%',
     backgroundColor: '#1a1a1a',
     mb: 0,
-    minHeight: '0', // Allows the parent to shrink
+    p: 0
   }}>
 
           {/* Ball display */}
           <Box sx={{
-            width: '25%',
+            width: { xs: '100%', md: '19%' },
+            borderRight: '1px solid rgba(255,255,255,0.1)',
             height: '90%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
             p: 0,
-            border: '1px solid #fff',
+            border: '1px solid whitesmoke',
+
           }}>
             <Box sx={{
-              width: 280,
-              height: 280,
+              width: { xs: 200, sm: 240, md: 280 },
+              height: { xs: 200, sm: 240, md: 280 },
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'radial-gradient(circle at 30% 30%, #ff0000, #990000)',
+              background: 'radial-gradient(circle at 30% 30%, #791600, #cb2400)',
               boxShadow: '0 4px 8px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.2)',
               border: '10px solid #ffffff'
             }}>
@@ -971,13 +991,15 @@ const BingoGame = () => {
           {/* Pattern display */}
           <Box
   sx={{
-    width: '580px',
-    height: '340px',
-    // backgroundColor: 'red',
+    width: { xs: '100%', md: '23%' },
+    height: '100%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+    overflow: 'visible',
+    borderRight: '1px solid rgba(255,255,255,0.1)',
+    position: 'relative',
+    ml: 6.7
   }}
 >
    <PatternVisualizer
@@ -991,17 +1013,19 @@ const BingoGame = () => {
 
           {/* Recent Numbers */}
           <Box sx={{
-            width: '32%',
-            height: '90%',
+            width: { xs: '100%', md: '32%' },
+            height: '100%',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
+            background: 'linear-gradient(to right, #040124, #710819)',
             borderRight: '1px solid rgba(255,255,255,0.1)',
-            background: 'linear-gradient(to right, #4a0000, #800000)',
             p: 1,
             borderRadius: '8px',
-            m: 0,
+            ml: 5,
+            
+            
             
           }}>
             <Typography variant="h4" sx={{ 
@@ -1009,7 +1033,7 @@ const BingoGame = () => {
               textAlign: 'center',
               fontWeight: 'bold',
               textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-              mt: '10px',
+              mt: { xs: '5px', sm: '8px', md: '10px' },
            
             }}>
               Recent 5 Numbers
@@ -1021,12 +1045,12 @@ const BingoGame = () => {
               flex: 1,
               // alignItems: 'center',
               // justifyContent: 'center',
-              mt: '50px',
+              mt: { xs: '20px', sm: '35px', md: '50px' },
             }}>
               {Array.from({ length: 5 }).map((_, index) => (
                 <Box key={index} sx={{
-                  width: 80,
-                  height: 80,
+                  width: { xs: 60, sm: 70, md: 80 },
+                  height: { xs: 60, sm: 70, md: 80 },
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -1035,7 +1059,7 @@ const BingoGame = () => {
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   color: '#444444',
-                  fontSize: '4rem',
+                  fontSize: { xs: '2rem', sm: '2.5rem', md: '3.1rem' },
                   fontWeight: 'bolder',
                   boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
                   border: '1px solid rgba(0,0,0,0.1)',
@@ -1057,9 +1081,9 @@ const BingoGame = () => {
                 src="/phoneimage.png"
                 alt="Phone"
                 sx={{
-                  height: '60px',
-                  width: '480px',
-                  mb:2,
+                  height: { xs: '40px', sm: '50px', md: '60px' },
+                  width: { xs: '300px', sm: '400px', md: '480px' },
+                  mb:5,
                 }}
               />
             
@@ -1068,38 +1092,53 @@ const BingoGame = () => {
 
           {/* Win Amount Box */}
           <Box sx={{
-            width: '20%',
-            height: '90%',
+            width: { xs: '100%', md: '20%' },
+            height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            background: 'linear-gradient(to right, #4a0000, #800000)',
+            background: 'linear-gradient(to right, #040124, #710819)',
             p: 0,
-            // borderRadius: '8px',
+            borderLeft: '1px solid rgba(255,255,255,0.1)',
             m: 0,
           }}>
-            <Box sx={{
+             <Box
+                component="img"
+                src="/derash.png"
+                alt="derash"
+                sx={{
+                  height: { xs: '50px', sm: '60px', md: '70px' },
+                  width: { xs: '220px', sm: '300px', md: '320px' },
+                  mb:5,
+                }}
+              />
+            {/* <Box sx={{
               backgroundColor: '#fff',
               // borderRadius: '4px',
               px: 6,
           
-              width: '300px',
-              height: '100px',
-              alignSelf: 'center'
+              width: { xs: '250px', sm: '280px', md: '300px' },
+              height: { xs: '60px', sm: '70px', md: '80px' },
+              alignSelf: 'center',
+              
             }}>
-              <Typography variant="h1" sx={{ 
+              <Typography  sx={{ 
                 color: '#4a0000',
-                fontWeight: 'bold'
+                fontWeight: 'bolder',
+                fontSize: '4px',
+                
+                
               }}>
                 ደራሽ
               </Typography>
-            </Box>
+            </Box> */}
             <Box sx={{
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 0
+              gap: 0,
+              mt: -16
             }}>
               <Typography sx={{ 
                 fontSize: '5rem',
@@ -1108,12 +1147,12 @@ const BingoGame = () => {
                 fontWeight: 'bolder',
                 textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
               }}>
-                {Number(totalBet).toLocaleString('en-US', {
+                {Number(totalBetAmount).toLocaleString('en-US', {
                   maximumFractionDigits: 0
                 })}
               </Typography>
               <Typography sx={{ 
-                fontSize: '5rem',
+                fontSize: { xs: '2.5rem', sm: '3.5rem', md: '5rem' },
                 color: '#f0efe7',
                 fontWeight: 'bolder',
                 textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
@@ -1139,7 +1178,7 @@ const BingoGame = () => {
             sx={{ 
               width: '100%',
               margin: 0,
-              padding: '0 16px',
+              padding: { xs: '0 8px', sm: '0 12px', md: '0 16px' },
               backgroundColor: '#1a1a1a'
             }}
           >
@@ -1149,17 +1188,17 @@ const BingoGame = () => {
                   display: 'flex', 
                   alignItems: 'center',
                   width: '100%',
-                  mb: 0.2
+                  mb: 0.1
                 }}>
                   <Typography 
                     variant="h5" 
                     sx={{ 
-                      minWidth: 40,
+                      minWidth: { xs: 30, sm: 35, md: 40 },
                       fontWeight: 'bold',
                       color: '#444444',
-                      ml: 6,
-                      width: 70,
-                      height: 70,
+                       ml: { xs: 2, sm: 4, md: 6 },
+                       width: { xs: 50, sm: 60, md: 70 },
+                       height: { xs: 50, sm: 60, md: 70 },
                       borderRadius: '10px',
                       display: 'flex',
                       alignItems: 'center',
@@ -1168,7 +1207,8 @@ const BingoGame = () => {
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
-                      fontSize: '3rem'
+                      fontSize: '3.5rem',
+                
                     }}
                   >
                     {bingoLetters[rowIndex]}
@@ -1181,9 +1221,9 @@ const BingoGame = () => {
                             id={`cell-${number}`}
                             elevation={2}
                             sx={{
-                              ml: 16,
+                              ml: { xs: 8, sm: 12, md: 16 },
                               p: 1.5,
-                              height: '70px',
+                              height: { xs: '50px', sm: '60px', md: '70px' },
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -1253,10 +1293,15 @@ const BingoGame = () => {
             justifyContent: 'center', 
             alignItems: 'center',
             padding: '0 16px',
-            ml: 20,
+            ml: { xs: 2, sm: 10, md: 20 },
             backgroundColor: '#1a1a1a'
           }}>
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={{ xs: 1, sm: 2 }} 
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              width={{ xs: '100%', sm: 'auto' }}
+            >
               <Button
                 variant="contained"
                 // color={isDrawing ? 'success' : 'primary'}
@@ -1266,8 +1311,10 @@ const BingoGame = () => {
                   height: 40,
                   fontSize: '1rem',
                   fontWeight: 'bold',
-                  backgroundColor: isDrawing ? '#4CAF50' : '#1976D2',
-                 
+                  backgroundColor: isDrawing ? '#4CAF50' : '#790918',
+                  '&:hover': {
+                    backgroundColor: isDrawing ? '#4CAF50' : '#790918'
+                  },
                 }}
               >
                    {isDrawing ? 'STOP' : 'BINGO'}
@@ -1365,8 +1412,8 @@ const BingoGame = () => {
               sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
-                width: 370,
-                height: 45,
+                width: { xs: '100%', sm: 300, md: 370 },
+              height: { xs: 40, sm: 42, md: 45 },
                 ml:2,
                 backgroundColor: 'silver',
                 position: 'relative',
@@ -1423,7 +1470,12 @@ const BingoGame = () => {
                 }}
               />
             </Box>
-            <Stack direction="row" spacing={0} alignItems="center">
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={{ xs: 1, sm: 0 }} 
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              width={{ xs: '100%', sm: 'auto' }}
+            >
               <TextField
                 inputRef={checkInputRef}
                 value={checkNumber}
@@ -1433,7 +1485,7 @@ const BingoGame = () => {
                 variant="outlined"
                 size="small"
                 sx={{
-                  width: 200,
+                  width: { xs: '100%', sm: 200 },
                   ml: 2,
                   '& .MuiOutlinedInput-root': {
                     backgroundColor: 'white',
