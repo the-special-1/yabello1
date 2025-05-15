@@ -38,7 +38,7 @@ const Login = () => {
       const isAgentView = username.toLowerCase().startsWith('agent.');
       const cleanUsername = isAgentView ? username.substring(6) : username;
 
-      const response = await axios.post('/auth/login', {
+      const response = await axios.post('/api/auth/login', {
         username: cleanUsername,
         password
       });

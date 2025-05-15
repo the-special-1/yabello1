@@ -95,7 +95,7 @@ const AgentDashboard = () => {
   const fetchUsers = async () => {
     try {
       setError('');
-      const response = await axios.get('/users/my-users');
+      const response = await axios.get('/api/users/my-users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -105,7 +105,7 @@ const AgentDashboard = () => {
 
   const fetchBalance = async () => {
     try {
-      const response = await axios.get('/users/balance');
+      const response = await axios.get('/api/users/balance');
       setBalance(response.data.credits);
       setCommission(response.data.commission || 0);
       setBranchName(response.data.branch?.name || '');
@@ -117,7 +117,7 @@ const AgentDashboard = () => {
   const handleCreateUser = async () => {
     try {
       setError('');
-      await axios.post('/users/create-user', {
+      await axios.post('/api/users/create-user', {
         ...formData,
         cut: parseFloat(formData.cut)
       });
@@ -144,7 +144,7 @@ const AgentDashboard = () => {
         return;
       }
 
-      await axios.post('/users/transfer-credits', {
+      await axios.post('/api/users/transfer-credits', {
         receiverId: userId,
         amount: parseFloat(creditTransfer.amount)
       });
@@ -160,7 +160,7 @@ const AgentDashboard = () => {
   const handleEditUser = async () => {
     try {
       setError('');
-      await axios.put(`/users/${selectedUser.id}`, {
+      await axios.put(`/api/users/${selectedUser.id}`, {
         username: formData.username,
         ...(formData.password ? { password: formData.password } : {}),
         cut: parseFloat(formData.cut)
@@ -179,7 +179,7 @@ const AgentDashboard = () => {
   const handleDeleteUser = async () => {
     try {
       setError('');
-      await axios.delete(`/users/${selectedUser.id}`);
+      await axios.delete(`/api/users/${selectedUser.id}`);
       
       setSuccess('User deleted successfully');
       setOpenDeleteDialog(false);

@@ -40,7 +40,7 @@ const allowedOrigins = [
 //   allowedHeaders: ['Content-Type', 'Authorization']
 // }));
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://www.yabellobingo.com', 'https://www.yabellobingo.com', 'http://yabellobingo.com', 'https://yabellobingo.com', 'http://yabellobingo.com', 'https://yabellobingo.com'],
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true
 
 
