@@ -51,7 +51,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "client/build/"
-          target: "/var/www/yabellobingo"  # Nginx web root directory
+          target: "/var/yabellobingo"  # Nginx web root directory
           strip_components: 2  # Removes 'client/build/' from the path
           
   deploy-server:

@@ -181,7 +181,7 @@ const DailyReport = () => {
             
             textAlign: 'center'
           }}>
-            ቀሪ ሒሳብ/balance: {userBalance?.toLocaleString() || '0'} 
+            ቀሪ ሒሳብ/ available balance: {userBalance?.toLocaleString() || '0'} 
           </Typography>
         {/* </Box> */}
       </Box>
