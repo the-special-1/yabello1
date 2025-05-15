@@ -26,16 +26,7 @@ module.exports = (sequelize) => {
             }
           }
 
-          // Check for duplicates and ranges, excluding FREE space
-          const usedNumbers = new Set();
-          const columnRanges = [
-            [1, 15],   // B: 1-15
-            [16, 30],  // I: 16-30
-            [31, 45],  // N: 31-45
-            [46, 60],  // G: 46-60
-            [61, 75]   // O: 61-75
-          ];
-
+          // Only validate that the center is FREE or 0
           for (let col = 0; col < 5; col++) {
             for (let row = 0; row < 5; row++) {
               const num = value[row][col];
@@ -45,28 +36,11 @@ module.exports = (sequelize) => {
                 continue;
               }
 
-              // Check if it's FREE in wrong position
-              if (num === 'FREE' || num === '0' || num === 0) {
-                throw new Error('FREE/0 space must be in the center');
-              }
-
-              // Validate number
+              // Validate number is a number
               const numValue = parseInt(num);
               if (isNaN(numValue)) {
                 throw new Error('Invalid number in card');
               }
-
-              // Check range for column
-              const [min, max] = columnRanges[col];
-              if (numValue < min || numValue > max) {
-                throw new Error(`Number ${numValue} is out of range for column ${col + 1}`);
-              }
-
-              // Check for duplicates
-              if (usedNumbers.has(numValue)) {
-                throw new Error('Duplicate number in card');
-              }
-              usedNumbers.add(numValue);
             }
           }
         }
@@ -148,3 +122,4 @@ module.exports = (sequelize) => {
 
   return Cartella;
 };
+//miki

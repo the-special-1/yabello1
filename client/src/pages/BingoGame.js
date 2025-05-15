@@ -86,7 +86,7 @@ const BingoGame = () => {
         const ext = selectedCaller === 'alex' ? 'mp3' : 'wav';
         const fileName = selectedCaller === 'alex' ? 
           `${number}` : 
-          `${number <= 15 ? 'b' : number <= 30 ? 'i' : number <= 45 ? 'n' : number <= 60 ? 'g' : 'o'}${number}`;
+          `${number <= 15 ? 'B' : number <= 30 ? 'I' : number <= 45 ? 'N' : number <= 60 ? 'G' : 'O'}${number}`;
         
         const audio = new Audio(`/sounds/${selectedCaller}/${fileName}.${ext}`);
         await audio.play();
