@@ -7,8 +7,8 @@ const AuthContext = createContext(null);
 const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
     return window.location.protocol === 'https:' 
-      ? 'https://www.yabellobingo.com/'
-      : 'http://www.yabellobingo.com/';
+      ? 'https://www.yabellobingo.com/api'
+      : 'http://www.yabellobingo.com/api';
   }
   return 'http://localhost:5001';
 };

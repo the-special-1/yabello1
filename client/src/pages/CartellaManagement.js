@@ -80,7 +80,7 @@ const CartellaManagement = () => {
 
   const fetchBranches = async () => {
     try {
-      const response = await axios.get('/branches', {
+      const response = await axios.get('/api/branches', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBranches(response.data);
@@ -93,7 +93,7 @@ const CartellaManagement = () => {
   const fetchCartellas = async () => {
     try {
       setError('');
-      const response = await axios.get('/cartellas', {
+      const response = await axios.get('/api/cartellas', {
         params: {
           branchId: selectedBranch
         },
@@ -111,7 +111,7 @@ const CartellaManagement = () => {
     try {
       setError('');
       setLoading(true);
-      const response = await axios.post('/cartellas/generate', {}, {
+      const response = await axios.post('/api/cartellas/generate', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNewCartella(prev => ({ ...prev, numbers: response.data.numbers }));
@@ -165,7 +165,7 @@ const CartellaManagement = () => {
         }
       }
       
-      await axios.post('/cartellas', {
+      await axios.post('/api/cartellas', {
         id: newCartella.id,
         numbers: numbers,
         branchId: selectedBranch
@@ -242,7 +242,7 @@ const CartellaManagement = () => {
         })
       );
 
-      await axios.put(`/cartellas/${selectedCartella.id}`, {
+      await axios.put(`/api/cartellas/${selectedCartella.id}`, {
         numbers
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -268,7 +268,7 @@ const CartellaManagement = () => {
       setLoading(true);
       setError('');
 
-      await axios.delete(`/cartellas/${selectedCartella.id}`, {
+      await axios.delete(`/api/cartellas/${selectedCartella.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

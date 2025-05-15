@@ -246,8 +246,8 @@ const CartellaRegistration = ({ open, onSelect, currentRound, onCartellaUpdate }
       // Calculate values
       const parsedBetAmount = parseFloat(betAmount);
       const rawTotalBet = selectedCartellas.length * parsedBetAmount;
-      const cutAmount = Math.ceil(rawTotalBet * (userCut / 100)); // Round up cut amount
-      const adjustedTotalBet = Math.floor(rawTotalBet - cutAmount); // Round down total bet
+      const cutAmount = rawTotalBet * (userCut / 100);
+      const adjustedTotalBet = rawTotalBet - cutAmount;
       
       // Prepare data
       const calculationDetails = {
