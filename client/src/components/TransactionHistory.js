@@ -24,7 +24,7 @@ const TransactionHistory = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const endpoint = user.role === 'superadmin' ? '/api/transactions/all' : '/api/transactions/history';
+        const endpoint = user.role === 'superadmin' ? 'api/transactions/all' : 'api/transactions/history';
         const response = await fetch(endpoint, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
