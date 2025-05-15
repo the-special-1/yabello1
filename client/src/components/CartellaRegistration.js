@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import apiService from '../utils/apiService';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -143,10 +144,12 @@ const CartellaRegistration = ({ open, onSelect, currentRound, onCartellaUpdate }
   const fetchCartellas = async () => {
     try {
       console.log('Fetching cartellas...');
-      const response = await fetch('/api/cartellas/available', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      const response = await import('../utils/apiService').then(module => {
+        return module.default.get('cartellas/available', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
       });
       
       if (!response.ok) {
@@ -171,7 +174,7 @@ const CartellaRegistration = ({ open, onSelect, currentRound, onCartellaUpdate }
 
   const fetchUserBalance = async () => {
     try {
-      const response = await fetch('/api/users/balance', {
+      const response = await apiService.get('users/balance', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -190,7 +193,7 @@ const CartellaRegistration = ({ open, onSelect, currentRound, onCartellaUpdate }
 
   const fetchUserCut = async () => {
     try {
-      const response = await fetch('/api/users/my-data', {
+      const response = await apiService.get('users/my-data', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

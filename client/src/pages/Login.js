@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import apiService from '../utils/apiService';
 import {
   Container,
   Paper,
@@ -38,12 +38,18 @@ const Login = () => {
       const isAgentView = username.toLowerCase().startsWith('agent.');
       const cleanUsername = isAgentView ? username.substring(6) : username;
 
-      const response = await axios.post('/auth/login', {
+      const response = await apiService.post('auth/login', {
         username: cleanUsername,
         password
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Login failed');
+      }
 
-      const { user, token } = response.data;
+      const responseData = await response.json();
+      const { user, token } = responseData;
       
       // Add isAgentView and preserve original username with prefix if used
       const enhancedUser = {
@@ -81,7 +87,7 @@ const Login = () => {
     } catch (error) {
       console.error('Login error:', error);
       setError(
-        error.response?.data?.error || 
+        error.message || 
         'Login failed. Please check your credentials and try again.'
       );
     } finally {

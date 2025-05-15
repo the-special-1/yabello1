@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiService from '../utils/apiService';
 import {
   Container,
   Paper,
@@ -95,8 +95,12 @@ const AgentDashboard = () => {
   const fetchUsers = async () => {
     try {
       setError('');
-      const response = await axios.get('/users/my-users');
-      setUsers(response.data);
+      const response = await apiService.get('users/my-users');
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      const data = await response.json();
+      setUsers(data);
     } catch (error) {
       console.error('Error fetching users:', error);
       setError('Failed to fetch users. Please try again.');
@@ -105,29 +109,39 @@ const AgentDashboard = () => {
 
   const fetchBalance = async () => {
     try {
-      const response = await axios.get('/users/balance');
-      setBalance(response.data.credits);
-      setCommission(response.data.commission || 0);
-      setBranchName(response.data.branch?.name || '');
+      const response = await apiService.get('users/balance');
+      if (!response.ok) {
+        throw new Error('Failed to fetch balance');
+      }
+      const data = await response.json();
+      setBalance(data.credits || 0);
+      setCommission(data.commission || 0);
+      setBranchName(data.branch?.name || '');
     } catch (error) {
       console.error('Error fetching balance:', error);
+      setBalance(0); // Set default value to prevent undefined errors
     }
   };
 
   const handleCreateUser = async () => {
     try {
       setError('');
-      await axios.post('/users/create-user', {
+      const response = await apiService.post('users/create-user', {
         ...formData,
         cut: parseFloat(formData.cut)
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create user');
+      }
       
       setSuccess('User created successfully');
       setOpenDialog(false);
       setFormData({ username: '', password: '', cut: '0' });
       fetchUsers();
     } catch (error) {
-      setError(error.response?.data?.error || 'Failed to create user');
+      setError(error.message || 'Failed to create user');
     }
   };
 
@@ -144,10 +158,15 @@ const AgentDashboard = () => {
         return;
       }
 
-      await axios.post('/users/transfer-credits', {
+      const response = await apiService.post('users/transfer-credits', {
         receiverId: userId,
         amount: parseFloat(creditTransfer.amount)
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to transfer credits');
+      }
 
       setSuccess('Credits transferred successfully');
       fetchData();
@@ -160,11 +179,16 @@ const AgentDashboard = () => {
   const handleEditUser = async () => {
     try {
       setError('');
-      await axios.put(`/users/${selectedUser.id}`, {
+      const response = await apiService.put(`users/${selectedUser.id}`, {
         username: formData.username,
         ...(formData.password ? { password: formData.password } : {}),
         cut: parseFloat(formData.cut)
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update user');
+      }
       
       setSuccess('User updated successfully');
       setOpenEditDialog(false);
@@ -172,21 +196,26 @@ const AgentDashboard = () => {
       setSelectedUser(null);
       fetchUsers();
     } catch (error) {
-      setError(error.response?.data?.error || 'Failed to update user');
+      setError(error.message || 'Failed to update user');
     }
   };
 
   const handleDeleteUser = async () => {
     try {
       setError('');
-      await axios.delete(`/users/${selectedUser.id}`);
+      const response = await apiService.delete(`users/${selectedUser.id}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete user');
+      }
       
       setSuccess('User deleted successfully');
       setOpenDeleteDialog(false);
       setSelectedUser(null);
       fetchUsers();
     } catch (error) {
-      setError(error.response?.data?.error || 'Failed to delete user');
+      setError(error.message || 'Failed to delete user');
     }
   };
 

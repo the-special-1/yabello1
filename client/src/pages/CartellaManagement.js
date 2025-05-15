@@ -31,7 +31,7 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Refresh as RefreshIcon, Visibility as ViewIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import apiService from '../utils/apiService';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -80,30 +80,43 @@ const CartellaManagement = () => {
 
   const fetchBranches = async () => {
     try {
-      const response = await axios.get('/branches', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBranches(response.data);
+      setLoading(true);
+      const response = await apiService.get('branches');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch branches');
+      }
+      
+      const data = await response.json();
+      setBranches(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching branches:', error);
       setError('Failed to fetch branches');
+      setBranches([]); // Set default empty array to prevent map errors
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchCartellas = async () => {
     try {
       setError('');
-      const response = await axios.get('/cartellas', {
-        params: {
-          branchId: selectedBranch
-        },
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCartellas(response.data || []);
+      setLoading(true);
+      // Use URL with query parameter for branchId
+      const response = await apiService.get(`cartellas?branchId=${selectedBranch}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch cartellas');
+      }
+      
+      const data = await response.json();
+      setCartellas(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching cartellas:', error);
       setError('Failed to fetch cartellas');
-      setCartellas([]);
+      setCartellas([]); // Set default empty array to prevent map errors
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,10 +124,14 @@ const CartellaManagement = () => {
     try {
       setError('');
       setLoading(true);
-      const response = await axios.post('/cartellas/generate', {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setNewCartella(prev => ({ ...prev, numbers: response.data.numbers }));
+      const response = await apiService.post('cartellas/generate', {});
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate cartella numbers');
+      }
+      
+      const data = await response.json();
+      setNewCartella(prev => ({ ...prev, numbers: data.numbers }));
     } catch (error) {
       console.error('Error generating numbers:', error);
       setError('Failed to generate cartella numbers. Please try again.');
@@ -165,13 +182,16 @@ const CartellaManagement = () => {
         }
       }
       
-      await axios.post('/cartellas', {
+      const response = await apiService.post('cartellas', {
         id: newCartella.id,
         numbers: numbers,
         branchId: selectedBranch
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create cartella');
+      }
       
       setSuccess('Cartella created successfully');
       setCreateDialogOpen(false);
@@ -182,7 +202,7 @@ const CartellaManagement = () => {
       setSelectedBranch('');
     } catch (error) {
       console.error('Error creating cartella:', error);
-      setError(error.response?.data?.error || 'Failed to create cartella. Please try again.');
+      setError(error.message || 'Failed to create cartella. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -242,11 +262,14 @@ const CartellaManagement = () => {
         })
       );
 
-      await axios.put(`/cartellas/${selectedCartella.id}`, {
+      const response = await apiService.put(`cartellas/${selectedCartella.id}`, {
         numbers
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update cartella');
+      }
 
       setSuccess('Cartella updated successfully');
       setEditDialog(false);
@@ -255,7 +278,7 @@ const CartellaManagement = () => {
       setManualNumbers(Array(5).fill().map(() => Array(5).fill('')));
     } catch (error) {
       console.error('Error updating cartella:', error);
-      setError(error.response?.data?.error || 'Failed to update cartella. Please try again.');
+      setError(error.message || 'Failed to update cartella. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -268,9 +291,12 @@ const CartellaManagement = () => {
       setLoading(true);
       setError('');
 
-      await axios.delete(`/cartellas/${selectedCartella.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiService.delete(`cartellas/${selectedCartella.id}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete cartella');
+      }
 
       setSuccess('Cartella deleted successfully');
       setDeleteDialog(false);
@@ -278,7 +304,7 @@ const CartellaManagement = () => {
       setSelectedCartella(null);
     } catch (error) {
       console.error('Error deleting cartella:', error);
-      setError(error.response?.data?.error || 'Failed to delete cartella. Please try again.');
+      setError(error.message || 'Failed to delete cartella. Please try again.');
     } finally {
       setLoading(false);
     }

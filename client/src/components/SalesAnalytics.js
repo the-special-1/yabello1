@@ -31,6 +31,7 @@ import { useAuth } from '../context/AuthContext';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import apiService from '../utils/apiService';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -58,23 +59,68 @@ const SalesAnalytics = () => {
       // Get selected user's username if we have a userId
       const selectedUsername = userId ? users.find(u => u._id === userId)?.username : null;
       console.log('Selected username:', selectedUsername);
-
-      const response = await fetch('/api/reports/sales', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          fromDate: startDate.toISOString(),
-          toDate: endDate.toISOString(),
-          branchId: auth?.user?.role === 'agent' ? auth?.user?.branchId : branchId || undefined,
-          userId: userId || undefined
-        })
-      });
+      
+      // Format dates as YYYY-MM-DD for the API
+      const formatDateForAPI = (date) => {
+        if (!date) return null;
+        try {
+          // Ensure we have a valid date object
+          const dateObj = date instanceof Date ? date : new Date(date);
+          if (isNaN(dateObj.getTime())) {
+            console.error('Invalid date object:', date);
+            return null;
+          }
+          return format(dateObj, 'yyyy-MM-dd');
+        } catch (error) {
+          console.error('Error formatting date:', error);
+          return null;
+        }
+      };
+      
+      const fromDateStr = formatDateForAPI(startDate);
+      const toDateStr = formatDateForAPI(endDate);
+      
+      console.log('Formatted dates for API:', { fromDateStr, toDateStr });
+      
+      if (!fromDateStr || !toDateStr) {
+        throw new Error('Unable to format dates properly. Please check date selections.');
+      }
+      
+      // Prepare request payload
+      const payload = {
+        fromDate: fromDateStr,
+        toDate: toDateStr,
+        reportType: period // Add report type from period state
+      };
+      
+      // Only add branchId if it's relevant
+      if (auth?.user?.role === 'agent') {
+        payload.branchId = auth.user.branchId;
+      } else if (branchId) {
+        payload.branchId = branchId;
+      }
+      
+      // Only add userId if it's selected
+      if (userId) {
+        payload.userId = userId;
+      }
+      
+      console.log('Sending sales report request:', payload);
+      
+      const response = await apiService.post('reports/sales', payload);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch sales data');
+        // Try to get more detailed error information
+        let errorMessage = 'Failed to fetch sales data';
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          console.error('Error parsing error response:', e);
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -146,12 +192,12 @@ const SalesAnalytics = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('/api/users', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        const response = await apiService.get('users');
+        
         if (!response.ok) {
           throw new Error('Failed to fetch users');
         }
+        
         const data = await response.json();
         console.log('Raw user data:', data);
         // Make sure we have the required fields
@@ -173,9 +219,12 @@ const SalesAnalytics = () => {
 
     const fetchBranches = async () => {
       try {
-        const response = await fetch('/api/branches', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        const response = await apiService.get('branches');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch branches');
+        }
+        
         const data = await response.json();
         setBranches(data);
       } catch (error) {

@@ -1,19 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
-import axios from 'axios';
+import apiService from '../utils/apiService';
 
 const AuthContext = createContext(null);
-
-// Configure axios defaults
-const getBaseUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    return window.location.protocol === 'https:' 
-      ? 'https://www.yabellobingo.com/'
-      : 'http://www.yabellobingo.com/';
-  }
-  return 'http://localhost:5001';
-};
-
-axios.defaults.baseURL = getBaseUrl();
 
 export const useAuth = () => {
   return useContext(AuthContext);
@@ -22,18 +10,12 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  const login = async (token) => {
+  const login = async (userData, token) => {
     try {
       localStorage.setItem('token', token);
-      const response = await axios.get('/users/my-data', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const userData = await response.data;
       setUser(userData);
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Error in login:', error);
     }
   };
 
