@@ -159,7 +159,7 @@ const DailyReport = () => {
               mr: 2
             }}
           >
-            Play Bingo
+            Play Bingo 
           </Typography>
           <img 
             src="/logob.png" 
@@ -181,7 +181,7 @@ const DailyReport = () => {
             
             textAlign: 'center'
           }}>
-            ቀሪ ሒሳብ: {userBalance?.toLocaleString() || '0'} 
+            ቀሪ ሒሳብ/balance: {userBalance?.toLocaleString() || '0'} 
           </Typography>
         {/* </Box> */}
       </Box>
