@@ -9,12 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '16'  # Use your Node.js version
-          
       - name: Install Dependencies
         run: |
           cd client
@@ -59,7 +58,7 @@ jobs:
     needs: deploy-client  # Run after client deployment
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Deploy Server Files
         uses: appleboy/scp-action@master
         with:
