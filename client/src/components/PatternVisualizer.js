@@ -149,7 +149,7 @@ const PatternVisualizer = ({ pattern, gameStarted }) => {
     >
       <Box
         sx={{
-          width: '460px',
+          width: '360px',
           height: '250px',
           mb: 10,
           borderSpacing: 0,

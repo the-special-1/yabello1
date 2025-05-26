@@ -26,6 +26,8 @@ import { useAuth } from '../context/AuthContext';
 import CartellaRegistration from '../components/CartellaRegistration';
 import PatternVisualizer from '../components/PatternVisualizer';
 import CartellaCheckModal from '../components/CartellaCheckModal';
+import LotteryDrum from '../components/LotteryDrum';
+import BonusTable from '../components/BonusTable';
 import ReactConfetti from 'react-confetti';
 import { getRoundNumber, incrementRound } from '../utils/roundManager';
 
@@ -39,6 +41,32 @@ const BingoGame = () => {
   const [lastDrawn, setLastDrawn] = useState(() => {
     const saved = localStorage.getItem('lastDrawn');
     return saved ? JSON.parse(saved) : null;
+  });
+  
+  // Generate random BINGO numbers for CHEERS bonus
+  const [cheersNumbers, setCheersNumbers] = useState(() => {
+    const generateRandomBingoNumbers = () => {
+      const newNumbers = [];
+      
+      // B: 1-15
+      newNumbers.push({ prefix: 'B', number: Math.floor(Math.random() * 15) + 1 });
+      
+      // I: 16-30
+      newNumbers.push({ prefix: 'I', number: Math.floor(Math.random() * 15) + 16 });
+      
+      // N: 31-45
+      newNumbers.push({ prefix: 'N', number: Math.floor(Math.random() * 15) + 31 });
+      
+      // G: 46-60
+      newNumbers.push({ prefix: 'G', number: Math.floor(Math.random() * 15) + 46 });
+      
+      // O: 61-75
+      newNumbers.push({ prefix: 'O', number: Math.floor(Math.random() * 15) + 61 });
+      
+      return newNumbers;
+    };
+    
+    return generateRandomBingoNumbers();
   });
   const [showStartModal, setShowStartModal] = useState(() => {
     const gameInProgress = localStorage.getItem('gameInProgress');
@@ -402,6 +430,17 @@ const BingoGame = () => {
           setCurrentRound(newRound);
         }
       }
+
+      // Generate new CHEERS numbers for the next game
+      setCheersNumbers(() => {
+        const newNumbers = [];
+        newNumbers.push({ prefix: 'B', number: Math.floor(Math.random() * 15) + 1 });
+        newNumbers.push({ prefix: 'I', number: Math.floor(Math.random() * 15) + 16 });
+        newNumbers.push({ prefix: 'N', number: Math.floor(Math.random() * 15) + 31 });
+        newNumbers.push({ prefix: 'G', number: Math.floor(Math.random() * 15) + 46 });
+        newNumbers.push({ prefix: 'O', number: Math.floor(Math.random() * 15) + 61 });
+        return newNumbers;
+      });
 
       // Reset game state
       setDrawnNumbers([]);
@@ -928,7 +967,7 @@ const BingoGame = () => {
     p: 0
   }}>
 
-          {/* Ball display */}
+          {/* Lottery Drum display */}
           <Box sx={{
             width: { xs: '100%', md: '19%' },
             borderRight: '1px solid rgba(255,255,255,0.1)',
@@ -938,60 +977,22 @@ const BingoGame = () => {
             justifyContent: 'flex-start',
             p: 0,
             border: '1px solid whitesmoke',
-
           }}>
-            <Box sx={{
-              width: { xs: 200, sm: 240, md: 280 },
-              height: { xs: 200, sm: 240, md: 280 },
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'radial-gradient(circle at 30% 30%, #791600, #cb2400)',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.2)',
-              border: '10px solid #ffffff'
-            }}>
-              <Box
-                sx={{
-                  width: '70%',
-                  height: '70%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  animation: 'pulse 1.5s ease-in-out infinite',
-                  '@keyframes pulse': {
-                    '0%': { transform: 'scale(1)' },
-                    '50%': { transform: 'scale(1.2)' },
-                    '100%': { transform: 'scale(1)' }
-                  }
-                }}
-              >
-                <Box sx={{
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '50%',
-                  backgroundColor: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Typography variant="h2" sx={{
-                    color: '#990000',
-                    fontWeight: 'bold',
-                    fontFamily: "'Roboto Condensed', sans-serif"
-                  }}>
-                    {isShuffling ? shuffleDisplay : (lastDrawn ? `${getPrefix(lastDrawn)}-${lastDrawn}` : '')}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
+            <LotteryDrum 
+              lastDrawn={lastDrawn} 
+              isDrawing={isDrawing}
+              isShuffling={isShuffling}
+              shuffleDisplay={shuffleDisplay}
+              getPrefix={getPrefix}
+              recentNumbers={recentNumbers}
+              bingoLetters={bingoLetters}
+            />
           </Box>
 
           {/* Pattern display */}
           <Box
   sx={{
-    width: { xs: '100%', md: '23%' },
+    width: { xs: '100%', md: '16%' },
     height: '100%',
     display: 'flex',
     alignItems: 'center',
@@ -1011,69 +1012,84 @@ const BingoGame = () => {
          
 
 
-          {/* Recent Numbers */}
+          {/* Recent Numbers Box */}
           <Box sx={{
-            width: { xs: '100%', md: '32%' },
+            width: { xs: '100%', md: '26%' },
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
             background: 'linear-gradient(to right, #040124, #710819)',
             borderRight: '1px solid rgba(255,255,255,0.1)',
             p: 1,
             borderRadius: '8px',
-            ml: 5,
-            
-            
-            
+            ml: 7,
+            overflow: 'hidden'
           }}>
-            <Typography variant="h4" sx={{ 
+            <Typography variant="h5" sx={{ 
               color: 'white', 
               textAlign: 'center',
               fontWeight: 'bold',
               textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
               mt: { xs: '5px', sm: '8px', md: '10px' },
-           
+              mb: 1
             }}>
               Recent 5 Numbers
             </Typography>
+            
             <Box sx={{ 
               display: 'flex',
               flexDirection: 'row',
               gap: 1,
-              flex: 1,
-              // alignItems: 'center',
-              // justifyContent: 'center',
-              mt: { xs: '20px', sm: '35px', md: '50px' },
+              justifyContent: 'center',
+              alignItems: 'center',
+              flex: 1
             }}>
               {Array.from({ length: 5 }).map((_, index) => (
                 <Box key={index} sx={{
-                  width: { xs: 60, sm: 70, md: 80 },
-                  height: { xs: 60, sm: 70, md: 80 },
+                  width: { xs: 50, sm: 60, md: 65 },
+                  height: { xs: 50, sm: 60, md: 65 },
                   borderRadius: '50%',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   background: `url(/selected.png)`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   color: '#444444',
-                  fontSize: { xs: '2rem', sm: '2.5rem', md: '3.1rem' },
-                  fontWeight: 'bolder',
                   boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
                   border: '1px solid rgba(0,0,0,0.1)',
-                  mt: 0
+                  opacity: recentNumbers[4 - index] ? 1 : 0.3
                 }}>
-                  {recentNumbers[4 - index] || ''}
+                  {recentNumbers[4 - index] && (
+                    <>
+                      <Typography sx={{
+                        fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' },
+                        fontWeight: 'bold',
+                        color: '#444444',
+                        mb: -0.5
+                      }}>
+                        {getPrefix(recentNumbers[4 - index])}
+                      </Typography>
+                      <Typography sx={{
+                        fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
+                        fontWeight: 'bolder',
+                        color: '#444444'
+                      }}>
+                        {recentNumbers[4 - index]}
+                      </Typography>
+                    </>
+                  )}
                 </Box>
               ))}
             </Box>
+            
+            {/* Phone Image */}
             <Box sx={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              mt: 0,
+              mt: 'auto',
               gap: 0
             }}>
               <Box
@@ -1081,25 +1097,39 @@ const BingoGame = () => {
                 src="/phoneimage.png"
                 alt="Phone"
                 sx={{
-                  height: { xs: '40px', sm: '50px', md: '60px' },
-                  width: { xs: '300px', sm: '400px', md: '480px' },
-                  mb:5,
+                  height: { xs: '40px', sm: '45px', md: '50px' },
+                  width: { xs: '280px', sm: '320px', md: '360px' },
+                  mb: 5,
                 }}
               />
-            
             </Box>
+          </Box>
+          
+          {/* Bonus Table Box */}
+          <Box sx={{
+            width: { xs: '100%', md: '15%' },
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            background: 'linear-gradient(to right, #040124, #710819)',
+            borderRight: '1px solid rgba(255,255,255,0.1)',
+            p: 1,
+            borderRadius: '8px',
+            overflow: 'hidden'
+          }}>
+            <BonusTable cheersNumbers={cheersNumbers} />
           </Box>
 
           {/* Win Amount Box */}
           <Box sx={{
-            width: { xs: '100%', md: '20%' },
+            width: { xs: '100%', md: '17%' },
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
             background: 'linear-gradient(to right, #040124, #710819)',
             p: 0,
             borderLeft: '1px solid rgba(255,255,255,0.1)',
-            m: 0,
+            mr: 0,
           }}>
              <Box
                 component="img"
@@ -1107,7 +1137,7 @@ const BingoGame = () => {
                 alt="derash"
                 sx={{
                   height: { xs: '50px', sm: '60px', md: '70px' },
-                  width: { xs: '220px', sm: '300px', md: '320px' },
+                  width: { xs: '180px', sm: '260px', md: '280px' },
                   mb:5,
                 }}
               />
@@ -1138,7 +1168,9 @@ const BingoGame = () => {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 0,
-              mt: -16
+              mt: -16,
+              mr:0
+
             }}>
               <Typography sx={{ 
                 fontSize: '5rem',
