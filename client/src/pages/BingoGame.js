@@ -1568,6 +1568,7 @@ const BingoGame = () => {
           // Continue the game
         }}
         onNewBingo={handleNewBingo}
+        cheersNumbers={cheersNumbers}
       />
 
       {/* Toast Message */}
