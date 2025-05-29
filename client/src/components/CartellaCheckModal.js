@@ -17,12 +17,29 @@ const CartellaCheckModal = ({
   const [selectedBonus, setSelectedBonus] = useState('');
   const [bonusResult, setBonusResult] = useState(null);
   const [showBonusSection, setShowBonusSection] = useState(false);
+  const [testMode, setTestMode] = useState(false);
   
   // Reset bonus result when modal opens/closes or cartella changes
   useEffect(() => {
     setSelectedBonus('');
     setBonusResult(null);
   }, [open, cartella]);
+  
+  // Add keyboard shortcut for test mode (Alt+B)
+  useEffect(() => {
+    if (!open) return;
+    
+    const handleKeyDown = (e) => {
+      // Alt+B to toggle test mode (B for Bonus)
+      if (e.altKey && e.key === 'b') {
+        setTestMode(prev => !prev);
+        console.log('Test mode ' + (!testMode ? 'enabled' : 'disabled'));
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, testMode]);
   const modalStyle = {
     position: 'absolute',
     top: '50%',
@@ -69,6 +86,41 @@ const CartellaCheckModal = ({
     if (!selectedBonus || !cartella || !cartella.numbers) {
       setBonusResult(null);
       return;
+    }
+    
+    // If test mode is enabled, we'll simulate a winning condition
+    if (testMode) {
+      console.log('🧪 Test mode active - simulating winning condition for:', selectedBonus);
+      
+      // Simulate different bonus types
+      switch (selectedBonus) {
+        case 'anyOneLine':
+          setBonusResult({
+            success: true,
+            message: 'አንድ ዝግ ተሸላሚ ነዎት! (TEST MODE)',
+            details: `Row 1 is complete within ${drawnNumbers.length} calls. (TEST MODE)`,
+            prize: 2000
+          });
+          return;
+          
+        case 'anyTwoLines':
+          setBonusResult({
+            success: true,
+            message: 'ሁለት ዝግ ተሸላሚ ነዎት! (TEST MODE)',
+            details: `Two lines completed within ${drawnNumbers.length} calls. (TEST MODE)`,
+            prize: 5000
+          });
+          return;
+          
+        case 'cheers':
+          setBonusResult({
+            success: true,
+            message: 'ቺርስ ተሸላሚ ነዎት! (TEST MODE)',
+            details: `All CHEERS numbers found! (TEST MODE)`,
+            prize: 1000
+          });
+          return;
+      }
     }
     
     switch (selectedBonus) {
@@ -915,35 +967,60 @@ const CartellaCheckModal = ({
           borderTopRightRadius: 4,
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center'
+          alignItems: 'center',
+          position: 'relative'
         }}>
+          {testMode && (
+            <Box sx={{
+              position: 'absolute',
+              top: 5,
+              right: 10,
+              bgcolor: '#ffeb3b',
+              color: '#000',
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              fontSize: '0.7rem',
+              fontWeight: 'bold',
+              animation: 'pulse 2s infinite',
+              '@keyframes pulse': {
+                '0%': { opacity: 0.7 },
+                '50%': { opacity: 1 },
+                '100%': { opacity: 0.7 }
+              }
+            }}>
+              TEST MODE
+            </Box>
+          )}
+          
           <Typography variant="h4" align="center" sx={{ color: 'white', fontWeight: 'bold' }}>
            Card No: {cartellaNumber}
           </Typography>
           
-          <FormControlLabel
-            control={
-              <Checkbox 
-                checked={showBonusSection}
-                onChange={(e) => setShowBonusSection(e.target.checked)}
-                sx={{ 
-                  color: 'white',
-                  '&.Mui-checked': {
+          <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+            <FormControlLabel
+              control={
+                <Checkbox 
+                  checked={showBonusSection}
+                  onChange={(e) => setShowBonusSection(e.target.checked)}
+                  sx={{ 
                     color: 'white',
-                  },
-                }}
-              />
-            }
-            label="Show Bonus Options"
-            sx={{ 
-              color: 'white',
-              mt: 0.5,
-              '.MuiFormControlLabel-label': {
-                fontSize: '0.9rem',
-                fontWeight: 'medium'
+                    '&.Mui-checked': {
+                      color: 'white',
+                    },
+                  }}
+                />
               }
-            }}
-          />
+              label="Show Bonus Options"
+              sx={{ 
+                color: 'white',
+                '.MuiFormControlLabel-label': {
+                  fontSize: '0.9rem',
+                  fontWeight: 'medium'
+                }
+              }}
+            />
+          </Box>
         </Box>
 
         {/* BINGO Header */}
