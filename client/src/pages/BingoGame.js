@@ -970,13 +970,12 @@ const BingoGame = () => {
           {/* Lottery Drum display */}
           <Box sx={{
             width: { xs: '100%', md: '19%' },
-            borderRight: '1px solid rgba(255,255,255,0.1)',
             height: '90%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
             p: 0,
-            border: '1px solid whitesmoke',
+            position: 'relative'
           }}>
             <LotteryDrum 
               lastDrawn={lastDrawn} 
@@ -988,42 +987,104 @@ const BingoGame = () => {
               bingoLetters={bingoLetters}
             />
           </Box>
-
-          {/* Pattern display */}
-          <Box
-  sx={{
-    width: { xs: '100%', md: '16%' },
-    height: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'visible',
-    borderRight: '1px solid rgba(255,255,255,0.1)',
-    position: 'relative',
-    ml: 6.7
-  }}
->
-   <PatternVisualizer
-        pattern={gamePattern}
-        gameStarted={gameStarted}
-        lastDrawn={lastDrawn}
-      />
-</Box>
-         
-
-
-          {/* Recent Numbers Box */}
+          
+          {/* Glass tube as part of the lottery drum with recent balls */}
           <Box sx={{
+            width: { xs: '100%', md: '30%' },
+            height: '95%',
+            display: { xs: 'none', md: 'flex' },
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            position: 'relative',
+            ml: -1,
+            zIndex: 1
+          }}>
+            <Box sx={{
+              width: '100%',
+              height: '80px',
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,0.2))',
+              borderRadius: '0 35px 35px 0',
+              border: '3px solid rgba(255,255,255,0.5)',
+              borderLeft: 'none',
+              boxShadow: 'inset 0 0 20px rgba(255,255,255,0.3), 0 5px 15px rgba(0,0,0,0.5)',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-around',
+              paddingLeft: '10%',
+              paddingRight: '5%',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: '12px',
+                bottom: '12px',
+                left: '10px',
+                right: '60%',
+                background: 'linear-gradient(to right, rgba(255,255,255,0.3), rgba(255,255,255,0))',
+                borderRadius: '0 35px 35px 0',
+                zIndex: 0
+              }
+            }}>
+              {/* Real drawn numbers from the game state - in reverse order to show most recent first */}
+              {[...drawnNumbers].reverse().slice(0, 5).map((number, index) => (
+                <Box 
+                  key={index} 
+                  sx={{
+                    width: { xs: 40, sm: 45, md: 50 },
+                    height: { xs: 40, sm: 45, md: 50 },
+                    borderRadius: '50%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: `url(/selected.png)`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    color: '#444444',
+                    boxShadow: index === 0 ? '0 0 15px rgba(255,255,255,0.8)' : '0 4px 8px rgba(0,0,0,0.3)',
+                    border: '2px solid rgba(255,255,255,0.5)',
+                    zIndex: 5 - index,
+                    opacity: 1 - (index * 0.15),
+                    transform: `scale(${1 - (index * 0.1)})`,
+                    animation: index === 0 ? 'newBallPulse 1.5s infinite' : 'none',
+                    '@keyframes newBallPulse': {
+                      '0%': { boxShadow: '0 0 15px rgba(255,255,255,0.7)' },
+                      '50%': { boxShadow: '0 0 25px rgba(255,255,255,1)' },
+                      '100%': { boxShadow: '0 0 15px rgba(255,255,255,0.7)' }
+                    }
+                  }}
+                >
+                  <Typography sx={{
+                    fontSize: { xs: '0.6rem', sm: '0.7rem', md: '0.8rem' },
+                    fontWeight: 'bold',
+                    color: '#444444',
+                    mb: -0.5
+                  }}>
+                    {getPrefix(number)}
+                  </Typography>
+                  <Typography sx={{
+                    fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
+                    fontWeight: 'bolder',
+                    color: '#444444'
+                  }}>
+                    {number}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+ {/* recent 5*/}
+          {/* <Box sx={{
             width: { xs: '100%', md: '26%' },
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            background: 'linear-gradient(to right, #040124, #710819)',
-            borderRight: '1px solid rgba(255,255,255,0.1)',
+         
             p: 1,
             borderRadius: '8px',
-            ml: 7,
+            ml: 0,
             overflow: 'hidden'
+          
           }}>
             <Typography variant="h5" sx={{ 
               color: 'white', 
@@ -1084,30 +1145,39 @@ const BingoGame = () => {
               ))}
             </Box>
             
-            {/* Phone Image */}
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mt: 'auto',
-              gap: 0
-            }}>
-              <Box
-                component="img"
-                src="/phoneimage.png"
-                alt="Phone"
-                sx={{
-                  height: { xs: '40px', sm: '45px', md: '50px' },
-                  width: { xs: '280px', sm: '320px', md: '360px' },
-                  mb: 5,
-                }}
-              />
-            </Box>
-          </Box>
+            
+          </Box> */}
+
+          {/* Pattern display */}
+          <Box
+  sx={{
+    width: { xs: '100%', md: '16%' },
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
+    borderRight: '1px solid rgba(255,255,255,0.1)',
+    position: 'relative',
+ mr:1,
+ ml:10
+  }}
+>
+   <PatternVisualizer
+        pattern={gamePattern}
+        gameStarted={gameStarted}
+        lastDrawn={lastDrawn}
+      />
+</Box>
+         
+
+
+        
+          
           
           {/* Bonus Table Box */}
           <Box sx={{
-            width: { xs: '100%', md: '15%' },
+            width: { xs: '100%', md: '14%' },
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
@@ -1115,7 +1185,8 @@ const BingoGame = () => {
             borderRight: '1px solid rgba(255,255,255,0.1)',
             p: 1,
             borderRadius: '8px',
-            overflow: 'hidden'
+            overflow: 'hidden',
+ml:6,
           }}>
             <BonusTable cheersNumbers={cheersNumbers} />
           </Box>
@@ -1129,7 +1200,7 @@ const BingoGame = () => {
             background: 'linear-gradient(to right, #040124, #710819)',
             p: 0,
             borderLeft: '1px solid rgba(255,255,255,0.1)',
-            mr: 0,
+            mr:1,
           }}>
              <Box
                 component="img"
