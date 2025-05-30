@@ -7,23 +7,14 @@
 const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
     return window.location.protocol === 'https:' 
-      ? 'https://www.yabellobingo.com/'
-      : 'http://www.yabellobingo.com/';
+      ? 'https://www.yabellobingo.com'
+      : 'http://www.yabellobingo.com';
   }
   return 'http://localhost:5001';
 };
 
-// Configure API prefix based on environment
-const getApiPrefix = () => {
-  if (process.env.NODE_ENV === 'production') {
-    return ''; // In production, Nginx handles the /api prefix
-  }
-  return '/api'; // In development, we need to include the /api prefix
-};
-
 // Base URL for API requests
 const baseUrl = getBaseUrl();
-const apiPrefix = getApiPrefix();
 
 /**
  * Format the API endpoint with the correct prefix based on environment
@@ -34,26 +25,12 @@ const formatEndpoint = (endpoint) => {
   // Remove any leading slash from the endpoint
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
   
-  let formattedEndpoint;
+  // Format the endpoint with the correct base URL and prefix
+  const formattedEndpoint = `${baseUrl}/api/${cleanEndpoint}`;
   
-  // In development, use the full URL with baseUrl
-  if (process.env.NODE_ENV !== 'production') {
-    // If the endpoint already includes 'api/', don't add the prefix again
-    if (cleanEndpoint.startsWith('api/')) {
-      formattedEndpoint = `${baseUrl}/${cleanEndpoint}`;
-    } else {
-      formattedEndpoint = `${baseUrl}/api/${cleanEndpoint}`;
-    }
-  } else {
-    // In production
-    if (cleanEndpoint.startsWith('api/')) {
-      formattedEndpoint = `/${cleanEndpoint}`;
-    } else {
-      formattedEndpoint = `${apiPrefix}/${cleanEndpoint}`;
-    }
-  }
-  
+  // Log the formatted endpoint for debugging
   console.log(`API Request: ${endpoint} → ${formattedEndpoint}`);
+  
   return formattedEndpoint;
 };
 
