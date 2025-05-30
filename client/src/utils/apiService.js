@@ -7,14 +7,23 @@
 const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
     return window.location.protocol === 'https:' 
-      ? 'https://www.yabellobingo.com'
-      : 'http://www.yabellobingo.com';
+      ? 'https://www.yabellobingo.com/'
+      : 'http://www.yabellobingo.com/';
   }
   return 'http://localhost:5001';
 };
 
+// Configure API prefix based on environment
+const getApiPrefix = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return ''; // In production, Nginx handles the /api prefix
+  }
+  return '/api'; // In development, we need to include the /api prefix
+};
+
 // Base URL for API requests
 const baseUrl = getBaseUrl();
+const apiPrefix = getApiPrefix();
 
 /**
  * Format the API endpoint with the correct prefix based on environment
@@ -25,23 +34,18 @@ const formatEndpoint = (endpoint) => {
   // Remove any leading slash from the endpoint
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
   
-  // For auth endpoints in production
-  if (process.env.NODE_ENV === 'production' && cleanEndpoint.startsWith('auth/')) {
-    return `/api/${cleanEndpoint}`;
-  }
-
-  // For auth endpoints in development
-  if (cleanEndpoint.startsWith('auth/')) {
+  // If the endpoint already includes 'api/', don't add the prefix again
+  if (cleanEndpoint.startsWith('api/')) {
     return `/${cleanEndpoint}`;
   }
   
-  // For API endpoints in production
-  if (process.env.NODE_ENV === 'production') {
-    return `/api/${cleanEndpoint}`;
+  // Special handling for reports/sales endpoint which has issues in development
+  if (cleanEndpoint === 'reports/sales' && process.env.NODE_ENV !== 'production') {
+    console.log('Using special handling for reports/sales endpoint in development');
+    return `/api/reports/sales`;
   }
   
-  // For API endpoints in development
-  return `/api/${cleanEndpoint}`;
+  return `${apiPrefix}/${cleanEndpoint}`;
 };
 
 /**
