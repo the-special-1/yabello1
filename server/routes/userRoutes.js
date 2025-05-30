@@ -91,56 +91,115 @@ router.get('/my-data', auth, async (req, res) => {
 
 // Create a new user under the agent's branch
 router.post('/create-user', auth, async (req, res) => {
-  const t = await db.sequelize.transaction();
-
+  // Log the request body to help debug
+  console.log('Create user request body:', req.body);
+  console.log('Request headers:', req.headers);
+  
+  let t;
+  
   try {
-    const agent = await db.User.findByPk(req.user.id);
-    if (!agent || agent.role !== 'agent') {
+    t = await db.sequelize.transaction();
+    
+    try {
+      // Verify agent authorization
+      console.log('Agent ID:', req.user?.id);
+      console.log('Agent role:', req.user?.role);
+      
+      const agent = await db.User.findByPk(req.user.id);
+      if (!agent) {
+        console.error('Agent not found with ID:', req.user.id);
+        await t.rollback();
+        return res.status(403).json({ message: 'Agent not found' });
+      }
+      
+      if (agent.role !== 'agent') {
+        console.error('User is not an agent. Role:', agent.role);
+        await t.rollback();
+        return res.status(403).json({ message: 'Unauthorized - Not an agent' });
+      }
+
+      // Extract and validate username
+      const username = req.body.username;
+      const password = req.body.password;
+      const cut = req.body.cut;
+      
+      console.log('Extracted values:', { 
+        username: username || 'undefined', 
+        password: password ? '****' : 'undefined', 
+        cut: cut || 'undefined' 
+      });
+      
+      // Validate required fields
+      if (!username) {
+        await t.rollback();
+        return res.status(400).json({ message: 'Username is required' });
+      }
+      
+      if (!password) {
+        await t.rollback();
+        return res.status(400).json({ message: 'Password is required' });
+      }
+      
+      // Check if username already exists
+      try {
+        const existingUser = await db.User.findOne({
+          where: { username: String(username) }
+        });
+
+        if (existingUser) {
+          await t.rollback();
+          return res.status(400).json({ message: 'Username already exists' });
+        }
+      } catch (findError) {
+        console.error('Error checking for existing username:', findError);
+        await t.rollback();
+        return res.status(500).json({ message: 'Error checking username' });
+      }
+
+      // Validate cut percentage
+      if (cut < 0 || cut > 100) {
+        await t.rollback();
+        return res.status(400).json({ message: 'Cut percentage must be between 0 and 100' });
+      }
+
+      // Create new user with explicit values
+      try {
+        console.log('Creating user with values:', {
+          username: username,
+          password: '****',
+          role: 'user',
+          cut: cut,
+          branchId: agent.branchId,
+          createdBy: agent.id
+        });
+        
+        const newUser = await db.User.create({
+          username: String(username),
+          password: String(password),
+          role: 'user',
+          cut: parseFloat(cut),
+          branchId: agent.branchId,
+          createdBy: agent.id,
+          credits: process.env.DEFAULT_USER_CREDITS || 0
+        }, { transaction: t });
+
+        await t.commit();
+        console.log('User created successfully:', newUser.id);
+        return res.status(201).json({ message: 'User created successfully', userId: newUser.id });
+      } catch (createError) {
+        console.error('Error in db.User.create:', createError);
+        await t.rollback();
+        return res.status(500).json({ message: `Error creating user: ${createError.message}` });
+      }
+    } catch (innerError) {
+      console.error('Inner try-catch error:', innerError);
       await t.rollback();
-      return res.status(403).json({ message: 'Unauthorized' });
+      return res.status(500).json({ message: `Inner error: ${innerError.message}` });
     }
-
-    const { username, password, cut } = req.body;
-
-    // Check if username already exists
-    const existingUser = await db.User.findOne({
-      where: { username }
-    });
-
-    if (existingUser) {
-      await t.rollback();
-      return res.status(400).json({ message: 'Username already exists' });
-    }
-
-    // Validate cut percentage
-    if (cut < 0 || cut > 100) {
-      await t.rollback();
-      return res.status(400).json({ message: 'Cut percentage must be between 0 and 100' });
-    }
-
-    // Create new user
-    const newUser = await db.User.create({
-      username,
-      password,
-      role: 'user',
-      cut,
-      branchId: agent.branchId,
-      createdBy: agent.id,
-      credits: process.env.DEFAULT_USER_CREDITS || 0
-    }, { transaction: t });
-
-    await t.commit();
-    res.status(201).json({
-      id: newUser.id,
-      username: newUser.username,
-      role: newUser.role,
-      credits: parseFloat(newUser.credits || 0),
-      status: newUser.status
-    });
-  } catch (error) {
-    await t.rollback();
-    console.error('Error creating user:', error);
-    res.status(500).json({ message: 'Error creating user' });
+  } catch (outerError) {
+    console.error('Outer try-catch error:', outerError);
+    if (t) await t.rollback();
+    return res.status(500).json({ message: `Server error: ${outerError.message}` });
   }
 });
 

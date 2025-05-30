@@ -34,18 +34,27 @@ const formatEndpoint = (endpoint) => {
   // Remove any leading slash from the endpoint
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
   
-  // If the endpoint already includes 'api/', don't add the prefix again
-  if (cleanEndpoint.startsWith('api/')) {
-    return `/${cleanEndpoint}`;
+  let formattedEndpoint;
+  
+  // In development, use the full URL with baseUrl
+  if (process.env.NODE_ENV !== 'production') {
+    // If the endpoint already includes 'api/', don't add the prefix again
+    if (cleanEndpoint.startsWith('api/')) {
+      formattedEndpoint = `${baseUrl}/${cleanEndpoint}`;
+    } else {
+      formattedEndpoint = `${baseUrl}/api/${cleanEndpoint}`;
+    }
+  } else {
+    // In production
+    if (cleanEndpoint.startsWith('api/')) {
+      formattedEndpoint = `/${cleanEndpoint}`;
+    } else {
+      formattedEndpoint = `${apiPrefix}/${cleanEndpoint}`;
+    }
   }
   
-  // Special handling for reports/sales endpoint which has issues in development
-  if (cleanEndpoint === 'reports/sales' && process.env.NODE_ENV !== 'production') {
-    console.log('Using special handling for reports/sales endpoint in development');
-    return `/api/reports/sales`;
-  }
-  
-  return `${apiPrefix}/${cleanEndpoint}`;
+  console.log(`API Request: ${endpoint} → ${formattedEndpoint}`);
+  return formattedEndpoint;
 };
 
 /**
@@ -124,9 +133,13 @@ const post = async (endpoint, data, options = {}) => {
         'Content-Type': 'application/json',
         ...authOptions.headers
       },
-      body: JSON.stringify(processedData),
-      ...authOptions
+      body: JSON.stringify(processedData)
     });
+  }
+  
+  // Debug the request data for user creation
+  if (endpoint === 'users/create-user') {
+    console.log('Creating user with data:', data);
   }
   
   // Standard POST request for other endpoints
@@ -136,8 +149,7 @@ const post = async (endpoint, data, options = {}) => {
       'Content-Type': 'application/json',
       ...authOptions.headers
     },
-    body: JSON.stringify(data),
-    ...authOptions
+    body: JSON.stringify(data)
   });
 };
 

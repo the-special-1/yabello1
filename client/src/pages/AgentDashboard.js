@@ -126,6 +126,19 @@ const AgentDashboard = () => {
   const handleCreateUser = async () => {
     try {
       setError('');
+      
+      // Validate username length (must be at least 3 characters)
+      if (!formData.username || formData.username.length < 3) {
+        setError('Username must be at least 3 characters long');
+        return;
+      }
+      
+      // Validate password
+      if (!formData.password || formData.password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        return;
+      }
+      
       const response = await apiService.post('users/create-user', {
         ...formData,
         cut: parseFloat(formData.cut)
