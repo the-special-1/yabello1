@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Modal, Box, Typography, Button } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Modal, Box, Typography, Button, FormControl, InputLabel, Select, MenuItem, Divider, Checkbox, FormControlLabel } from '@mui/material';
 
 const CartellaCheckModal = ({ 
   open, 
@@ -11,8 +11,35 @@ const CartellaCheckModal = ({
   isWinner,
   onAdditional,
   onNewBingo,
-  setShowConfetti
+  setShowConfetti,
+  cheersNumbers
 }) => {
+  const [selectedBonus, setSelectedBonus] = useState('');
+  const [bonusResult, setBonusResult] = useState(null);
+  const [showBonusSection, setShowBonusSection] = useState(false);
+  const [testMode, setTestMode] = useState(false);
+  
+  // Reset bonus result when modal opens/closes or cartella changes
+  useEffect(() => {
+    setSelectedBonus('');
+    setBonusResult(null);
+  }, [open, cartella]);
+  
+  // Add keyboard shortcut for test mode (Alt+B)
+  useEffect(() => {
+    if (!open) return;
+    
+    const handleKeyDown = (e) => {
+      // Alt+B to toggle test mode (B for Bonus)
+      if (e.altKey && e.key === 'b') {
+        setTestMode(prev => !prev);
+        console.log('Test mode ' + (!testMode ? 'enabled' : 'disabled'));
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, testMode]);
   const modalStyle = {
     position: 'absolute',
     top: '50%',
@@ -26,7 +53,8 @@ const CartellaCheckModal = ({
     borderRadius: 1,
     outline: 'none',
     alignItems: 'center',
-    minHeight: '60vh',
+    maxHeight: '90vh',
+    overflow: 'auto',
     opacity: 0.9,
     tabIndex: -1
   };
@@ -51,6 +79,236 @@ const CartellaCheckModal = ({
   const handleNotBingo = () => {
     const audio = new Audio('/sounds/effects/notgood.wav');
     audio.play().catch(error => console.error('Error playing sound:', error));
+  };
+  
+  // Check for bonus
+  const checkBonus = () => {
+    if (!selectedBonus || !cartella || !cartella.numbers) {
+      setBonusResult(null);
+      return;
+    }
+    
+    // If test mode is enabled, we'll simulate a winning condition
+    if (testMode) {
+      console.log('🧪 Test mode active - simulating winning condition for:', selectedBonus);
+      
+      // Simulate different bonus types
+      switch (selectedBonus) {
+        case 'anyOneLine':
+          setBonusResult({
+            success: true,
+            message: 'አንድ ዝግ ተሸላሚ ነዎት! (TEST MODE)',
+            details: `Row 1 is complete within ${drawnNumbers.length} calls. (TEST MODE)`,
+            prize: 2000
+          });
+          return;
+          
+        case 'anyTwoLines':
+          setBonusResult({
+            success: true,
+            message: 'ሁለት ዝግ ተሸላሚ ነዎት! (TEST MODE)',
+            details: `Two lines completed within ${drawnNumbers.length} calls. (TEST MODE)`,
+            prize: 5000
+          });
+          return;
+          
+        case 'cheers':
+          setBonusResult({
+            success: true,
+            message: 'ቺርስ ተሸላሚ ነዎት! (TEST MODE)',
+            details: `All CHEERS numbers found! (TEST MODE)`,
+            prize: 1000
+          });
+          return;
+      }
+    }
+    
+    switch (selectedBonus) {
+      case 'anyOneLine': {
+        // Check for any one line (row, column, or diagonal)
+        // Check rows
+        for (let i = 0; i < 5; i++) {
+          const row = cartella.numbers[i];
+          if (row.every(num => num === 'free' || drawnNumbers.includes(parseInt(num)))) {
+            setBonusResult({
+              success: true,
+              message: 'አንድ ዝግ ተሸላሚ ነዎት!',
+              details: `Row ${i+1} is complete within ${drawnNumbers.length} calls.`,
+              prize: drawnNumbers.length <= 4 ? 2000 : 
+                     drawnNumbers.length <= 5 ? 200 : 
+                     drawnNumbers.length <= 6 ? 100 : 0
+            });
+            return;
+          }
+        }
+        
+        // Check columns
+        for (let j = 0; j < 5; j++) {
+          const column = cartella.numbers.map(row => row[j]);
+          if (column.every(num => num === 'free' || drawnNumbers.includes(parseInt(num)))) {
+            setBonusResult({
+              success: true,
+              message: 'አንድ ዝግ ተሸላሚ ነዎት!',
+              details: `Column ${j+1} is complete within ${drawnNumbers.length} calls.`,
+              prize: drawnNumbers.length <= 4 ? 2000 : 
+                     drawnNumbers.length <= 5 ? 200 : 
+                     drawnNumbers.length <= 6 ? 100 : 0
+            });
+            return;
+          }
+        }
+        
+        // Check diagonals
+        const mainDiagonal = cartella.numbers.map((row, i) => row[i]);
+        if (mainDiagonal.every(num => num === 'free' || drawnNumbers.includes(parseInt(num)))) {
+          setBonusResult({
+            success: true,
+            message: 'አንድ ዝግ ተሸላሚ ነዎት!',
+            details: `Main diagonal is complete within ${drawnNumbers.length} calls.`,
+            prize: drawnNumbers.length <= 4 ? 2000 : 
+                   drawnNumbers.length <= 5 ? 200 : 
+                   drawnNumbers.length <= 6 ? 100 : 0
+          });
+          return;
+        }
+        
+        const antiDiagonal = cartella.numbers.map((row, i) => row[4 - i]);
+        if (antiDiagonal.every(num => num === 'free' || drawnNumbers.includes(parseInt(num)))) {
+          setBonusResult({
+            success: true,
+            message: 'አንድ ዝግ ተሸላሚ ነዎት!',
+            details: `Anti-diagonal is complete within ${drawnNumbers.length} calls.`,
+            prize: drawnNumbers.length <= 4 ? 2000 : 
+                   drawnNumbers.length <= 5 ? 200 : 
+                   drawnNumbers.length <= 6 ? 100 : 0
+          });
+          return;
+        }
+        
+        // No line found
+        setBonusResult({
+          success: false,
+          message: 'ይቅርታ፣ አንድ ዝግ አላገኙም።',
+          details: 'No complete line found.',
+          prize: 0
+        });
+        break;
+      }
+      
+      case 'anyTwoLines': {
+        // Check for any two lines (rows, columns, or diagonals)
+        let completedLines = [];
+        
+        // Check rows
+        for (let i = 0; i < 5; i++) {
+          const row = cartella.numbers[i];
+          if (row.every(num => num === 'free' || drawnNumbers.includes(parseInt(num)))) {
+            completedLines.push(`Row ${i+1}`);
+          }
+        }
+        
+        // Check columns
+        for (let j = 0; j < 5; j++) {
+          const column = cartella.numbers.map(row => row[j]);
+          if (column.every(num => num === 'free' || drawnNumbers.includes(parseInt(num)))) {
+            completedLines.push(`Column ${j+1}`);
+          }
+        }
+        
+        // Check diagonals
+        const mainDiagonal = cartella.numbers.map((row, i) => row[i]);
+        if (mainDiagonal.every(num => num === 'free' || drawnNumbers.includes(parseInt(num)))) {
+          completedLines.push('Main diagonal');
+        }
+        
+        const antiDiagonal = cartella.numbers.map((row, i) => row[4 - i]);
+        if (antiDiagonal.every(num => num === 'free' || drawnNumbers.includes(parseInt(num)))) {
+          completedLines.push('Anti-diagonal');
+        }
+        
+        if (completedLines.length >= 2) {
+          setBonusResult({
+            success: true,
+            message: 'ሁለት ዝግ ተሸላሚ ነዎት!',
+            details: `${completedLines.slice(0, 2).join(' and ')} are complete within ${drawnNumbers.length} calls.`,
+            prize: drawnNumbers.length <= 11 ? 1000 : 
+                   drawnNumbers.length <= 12 ? 500 : 
+                   drawnNumbers.length <= 13 ? 300 : 
+                   drawnNumbers.length <= 14 ? 200 : 
+                   drawnNumbers.length <= 15 ? 100 : 0
+          });
+        } else {
+          setBonusResult({
+            success: false,
+            message: 'ይቅርታ፣ ሁለት ዝግ አላገኙም።',
+            details: `Only ${completedLines.length} line(s) found: ${completedLines.join(', ') || 'None'}.`,
+            prize: 0
+          });
+        }
+        break;
+      }
+      
+      case 'cheers': {
+        // Check if cartella contains all 5 specific CHEERS numbers
+        if (!cheersNumbers || cheersNumbers.length !== 5) {
+          setBonusResult({
+            success: false,
+            message: 'ይቅርታ፣ የቺርስ ቁጥሮች አልተገኙም።',
+            details: 'CHEERS numbers not available.',
+            prize: 0
+          });
+          return;
+        }
+        
+        // Extract the actual numbers from the cheersNumbers objects
+        const targetNumbers = cheersNumbers.map(item => item.number);
+        
+        // Check if all target numbers are in the cartella and have been drawn
+        let foundNumbers = [];
+        let notFoundNumbers = [];
+        
+        for (const targetNum of targetNumbers) {
+          let found = false;
+          
+          // Check if number is in cartella and has been drawn
+          for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 5; j++) {
+              const num = cartella.numbers[i][j];
+              if (num !== 'free' && parseInt(num) === targetNum && drawnNumbers.includes(targetNum)) {
+                found = true;
+                foundNumbers.push(targetNum);
+                break;
+              }
+            }
+            if (found) break;
+          }
+          
+          if (!found) {
+            notFoundNumbers.push(targetNum);
+          }
+        }
+        
+        if (foundNumbers.length === 5) {
+          setBonusResult({
+            success: true,
+            message: 'ቺርስ ተሸላሚ ነዎት!',
+            details: 'All 5 CHEERS numbers found in your cartella!',
+            prize: 100
+          });
+        } else {
+          setBonusResult({
+            success: false,
+            message: 'ይቅርታ፣ ቺርስ አላገኙም።',
+            details: `Found ${foundNumbers.length}/5 CHEERS numbers. Missing: ${notFoundNumbers.join(', ')}.`,
+            prize: 0
+          });
+        }
+        break;
+      }
+      
+      default:
+        setBonusResult(null);
+    }
   };
 
   // Helper function to check if a number is drawn
@@ -706,11 +964,63 @@ const CartellaCheckModal = ({
           mb: 2,
           p: 1,
           borderTopLeftRadius: 4,
-          borderTopRightRadius: 4
+          borderTopRightRadius: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          position: 'relative'
         }}>
+          {testMode && (
+            <Box sx={{
+              position: 'absolute',
+              top: 5,
+              right: 10,
+              bgcolor: '#ffeb3b',
+              color: '#000',
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              fontSize: '0.7rem',
+              fontWeight: 'bold',
+              animation: 'pulse 2s infinite',
+              '@keyframes pulse': {
+                '0%': { opacity: 0.7 },
+                '50%': { opacity: 1 },
+                '100%': { opacity: 0.7 }
+              }
+            }}>
+              TEST MODE
+            </Box>
+          )}
+          
           <Typography variant="h4" align="center" sx={{ color: 'white', fontWeight: 'bold' }}>
            Card No: {cartellaNumber}
           </Typography>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+            <FormControlLabel
+              control={
+                <Checkbox 
+                  checked={showBonusSection}
+                  onChange={(e) => setShowBonusSection(e.target.checked)}
+                  sx={{ 
+                    color: 'white',
+                    '&.Mui-checked': {
+                      color: 'white',
+                    },
+                  }}
+                />
+              }
+              label="Show Bonus Options"
+              sx={{ 
+                color: 'white',
+                '.MuiFormControlLabel-label': {
+                  fontSize: '0.9rem',
+                  fontWeight: 'medium'
+                }
+              }}
+            />
+          </Box>
         </Box>
 
         {/* BINGO Header */}
@@ -828,6 +1138,146 @@ const CartellaCheckModal = ({
           ))}
         </Box>
 
+        {/* Bonus Check Section */}
+        {showBonusSection && (
+          <Box sx={{ 
+            mt: 2, 
+            mb: 3,
+            mx: 'auto',
+            width: '90%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+            position: 'relative'
+          }}>
+            <Divider sx={{ mb: 1 }}>
+              <Typography variant="subtitle1" sx={{ 
+                fontWeight: 'bold',
+                fontSize: '1.1rem',
+                color: '#790918'
+              }}>
+                Check for Bonus
+              </Typography>
+            </Divider>
+            
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <FormControl sx={{ flex: 1 }}>
+                <InputLabel id="bonus-type-label" sx={{ 
+                  fontSize: '1rem',
+                  fontWeight: 'medium',
+                  backgroundColor: 'white',
+                  px: 0.5,
+                  color: '#000000'
+                }}>
+                  Bonus Type
+                </InputLabel>
+                <Select
+                  labelId="bonus-type-label"
+                  value={selectedBonus}
+                  label="Bonus Type"
+                  onChange={(e) => setSelectedBonus(e.target.value)}
+                  sx={{ 
+                    minWidth: 150,
+                    height: 45,
+                    color: 'white',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#790918',
+                      borderWidth: 2
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#790918',
+                      borderWidth: 2
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#790918',
+                      borderWidth: 2
+                    },
+                    '& .MuiSelect-select': {
+                      fontSize: '1rem',
+                      fontWeight: 'medium',
+                      color: '#000000'
+                    }
+                  }}
+                >
+                  <MenuItem value="" sx={{ color: 'white' }}><em>None</em></MenuItem>
+                  <MenuItem value="anyOneLine" sx={{ color: 'white' }}>አንድ ዝግ (One Line)</MenuItem>
+                  <MenuItem value="anyTwoLines" sx={{ color: 'white' }}>ሁለት ዝግ (Two Lines)</MenuItem>
+                  <MenuItem value="cheers" sx={{ color: 'white' }}>ቺርስ (CHEERS)</MenuItem>
+                </Select>
+              </FormControl>
+              
+              <Button 
+                variant="contained" 
+                disabled={!selectedBonus}
+                onClick={checkBonus}
+                sx={{ 
+                  minWidth: 120,
+                  height: 45,
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  backgroundColor: '#790918',
+                  '&:hover': {
+                    backgroundColor: '#5d0713'
+                  }
+                }}
+              >
+                Check Bonus
+              </Button>
+            </Box>
+            
+            {bonusResult && (
+              <Box sx={{ 
+                mt: 2, 
+                p: 2, 
+                borderRadius: 1,
+                bgcolor: bonusResult.success ? 'rgba(46, 125, 50, 0.1)' : 'rgba(211, 47, 47, 0.1)',
+                border: `1px solid ${bonusResult.success ? 'rgba(46, 125, 50, 0.5)' : 'rgba(211, 47, 47, 0.5)'}`,
+                position: 'relative',
+                mb: 1
+              }}>
+                <Button 
+                  onClick={() => setBonusResult(null)}
+                  sx={{ 
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    minWidth: 'auto',
+                    width: 30,
+                    height: 30,
+                    borderRadius: '50%',
+                    p: 0,
+                    color: bonusResult.success ? '#2e7d32' : '#d32f2f',
+                    '&:hover': {
+                      backgroundColor: bonusResult.success ? 'rgba(46, 125, 50, 0.1)' : 'rgba(211, 47, 47, 0.1)'
+                    }
+                  }}
+                >
+                  ✕
+                </Button>
+                
+                <Typography variant="h6" sx={{ 
+                  color: bonusResult.success ? '#2e7d32' : '#d32f2f',
+                  fontWeight: 'bold',
+                  mb: 1,
+                  pr: 4 // Make room for the close button
+                }}>
+                  {bonusResult.message}
+                </Typography>
+                
+                <Typography variant="body2" sx={{ mb: 1, color: '#000000' }}>
+                  {bonusResult.details}
+                </Typography>
+                
+                {bonusResult.success && (
+                  <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                    Prize: {bonusResult.prize.toLocaleString()} ETB
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </Box>
+        )}
+        
         {/* Action Buttons */}
         <Box sx={{ 
           display: 'grid', 
