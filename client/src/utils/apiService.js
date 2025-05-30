@@ -25,7 +25,22 @@ const formatEndpoint = (endpoint) => {
   // Remove any leading slash from the endpoint
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
   
-  // All endpoints (including auth) should be prefixed with /api/ in both environments
+  // For auth endpoints in production
+  if (process.env.NODE_ENV === 'production' && cleanEndpoint.startsWith('auth/')) {
+    return `/api/${cleanEndpoint}`;
+  }
+
+  // For auth endpoints in development
+  if (cleanEndpoint.startsWith('auth/')) {
+    return `/${cleanEndpoint}`;
+  }
+  
+  // For API endpoints in production
+  if (process.env.NODE_ENV === 'production') {
+    return `/api/${cleanEndpoint}`;
+  }
+  
+  // For API endpoints in development
   return `/api/${cleanEndpoint}`;
 };
 
