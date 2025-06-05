@@ -330,71 +330,26 @@ const CartellaManagement = () => {
 
       console.log('Sending update data:', JSON.stringify(requestBody, null, 2));
 
-      try {
-        let response;
-        
-        if (process.env.NODE_ENV === 'production') {
-          // In production, use apiService
-          response = await apiService.put(`cartellas/${cartellaId}`, requestBody);
-          
-          // In production, we need to manually parse the response
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `Server returned status ${response.status}`);
-          }
-          
-          // Force refresh the cartella list in production
-          console.log('Refreshing cartellas list in production...');
-          await fetchCartellas();
-          
-          setSuccess('Cartella updated successfully!');
-        } else {
-          // Development mode with detailed logging
-          console.log('Sending update request in development mode');
-          response = await fetch(`http://localhost:5001/api/cartellas/${cartellaId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-              numbers: requestBody.numbers,
-              branchId: requestBody.branchId
-            })
-          });
-          
-          console.log('Request sent with status:', response.status);
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Raw error response:', errorText);
-            throw new Error(`Server error: ${response.status} - ${errorText}`);
-          }
-          
-          const responseData = await response.json();
-          console.log('Update successful, response:', responseData);
-          
-          // Refresh the cartellas list in development
-          console.log('Refreshing cartellas list in development...');
-          await fetchCartellas();
-          
-          setSuccess('Cartella updated successfully!');
-        }
-        
-        // Update UI state
-        setEditDialog(false);
-        setSelectedCartella(null);
-        setManualNumbers(Array(5).fill().map(() => Array(5).fill('')));
-        
-        // Clear success message after delay
-        setTimeout(() => setSuccess(''), 3000);
-        
-      } catch (error) {
-        console.error('Error updating cartella:', error);
-        setError(`Failed to update cartella: ${error.message}`);
-        throw error; // Re-throw to be caught by the outer try-catch
+      // Use the apiService for all environments
+      const response = await apiService.put(`cartellas/${cartellaId}`, requestBody);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server returned status ${response.status}`);
       }
+      
+      // Refresh the cartella list
+      console.log('Refreshing cartellas list...');
+      await fetchCartellas();
+      
+      // Update UI state
+      setSuccess('Cartella updated successfully!');
+      setEditDialog(false);
+      setSelectedCartella(null);
+      setManualNumbers(Array(5).fill().map(() => Array(5).fill('')));
+      
+      // Clear success message after delay
+      setTimeout(() => setSuccess(''), 3000);
       
     } catch (error) {
       console.error('Error in handleUpdateCartella:', error);

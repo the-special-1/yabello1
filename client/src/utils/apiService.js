@@ -139,16 +139,41 @@ const post = async (endpoint, data, options = {}) => {
  */
 const put = async (endpoint, data, options = {}) => {
   const formattedEndpoint = formatEndpoint(endpoint);
-  const authOptions = addAuthHeaders(options);
-  return fetch(formattedEndpoint, {
+  
+  // Prepare the request options with proper headers and body
+  const requestOptions = {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      ...authOptions.headers
+      'Accept': 'application/json',
+      ...(options.headers || {})
     },
-    body: JSON.stringify(data),
-    ...authOptions
+    body: JSON.stringify(data)
+  };
+  
+  // Add auth headers
+  const authOptions = addAuthHeaders(requestOptions);
+  
+  console.log('PUT Request to:', formattedEndpoint);
+  console.log('Request options:', {
+    ...authOptions,
+    body: JSON.parse(authOptions.body) // Log parsed body for better readability
   });
+  
+  const response = await fetch(formattedEndpoint, authOptions);
+  
+  // Log response for debugging
+  console.log('PUT Response status:', response.status);
+  const responseClone = response.clone();
+  try {
+    const responseData = await responseClone.json();
+    console.log('PUT Response data:', responseData);
+  } catch (e) {
+    const text = await response.text();
+    console.log('PUT Response text:', text);
+  }
+  
+  return response;
 };
 
 /**
