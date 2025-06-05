@@ -88,11 +88,18 @@ const CartellaManagement = () => {
       }
       
       const data = await response.json();
-      setBranches(Array.isArray(data) ? data : []);
+      const branchesArray = Array.isArray(data) ? data : [];
+      setBranches(branchesArray);
+      
+      // If user is an agent and there are branches, select the first one
+      if (user?.role === 'agent' && branchesArray.length > 0) {
+        console.log('Auto-selecting branch for agent:', branchesArray[0].id);
+        setSelectedBranch(branchesArray[0].id);
+      }
     } catch (error) {
       console.error('Error fetching branches:', error);
-      setError('Failed to fetch branches');
-      setBranches([]); // Set default empty array to prevent map errors
+      setError('Failed to fetch branches: ' + error.message);
+      setBranches([]);
     } finally {
       setLoading(false);
     }
@@ -100,21 +107,43 @@ const CartellaManagement = () => {
 
   const fetchCartellas = async () => {
     try {
+      if (!selectedBranch) {
+        console.log('No branch selected, skipping cartella fetch');
+        return;
+      }
+      
       setError('');
       setLoading(true);
-      // Use URL with query parameter for branchId
+      
+      console.log('Fetching cartellas for branch:', selectedBranch);
       const response = await apiService.get(`cartellas?branchId=${selectedBranch}`);
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to fetch cartellas:', errorText);
         throw new Error('Failed to fetch cartellas');
       }
       
       const data = await response.json();
-      setCartellas(Array.isArray(data) ? data : []);
+      console.log('Fetched cartellas:', data);
+      
+      // Sort cartellas in ascending order by ID and update state
+      setCartellas(prevCartellas => {
+        const newCartellas = Array.isArray(data) ? data : [];
+        // Sort cartellas by ID in ascending order (treating IDs as numbers for proper numeric sort)
+        const sortedCartellas = [...newCartellas].sort((a, b) => {
+          const idA = parseInt(a.id, 10) || 0;
+          const idB = parseInt(b.id, 10) || 0;
+          return idA - idB;
+        });
+        console.log('Setting sorted cartellas:', sortedCartellas);
+        return sortedCartellas;
+      });
+      
     } catch (error) {
-      console.error('Error fetching cartellas:', error);
-      setError('Failed to fetch cartellas');
-      setCartellas([]); // Set default empty array to prevent map errors
+      console.error('Error in fetchCartellas:', error);
+      setError('Failed to fetch cartellas: ' + error.message);
+      setCartellas([]);
     } finally {
       setLoading(false);
     }
@@ -233,7 +262,13 @@ const CartellaManagement = () => {
   };
 
   const handleEditCartella = (cartella) => {
+    if (!cartella || !cartella.branchId) {
+      setError('Cannot edit cartella: Missing branch information');
+      return;
+    }
+    
     setSelectedCartella(cartella);
+    setSelectedBranch(cartella.branchId);
     setManualNumbers(cartella.numbers);
     setEditDialog(true);
   };
@@ -245,40 +280,127 @@ const CartellaManagement = () => {
 
   const handleUpdateCartella = async () => {
     try {
-      if (!selectedCartella) return;
+      if (!selectedCartella) {
+        setError('No cartella selected');
+        return;
+      }
 
       setLoading(true);
       setError('');
+      setSuccess('');
 
-      // Convert empty strings to numbers and validate
-      const numbers = manualNumbers.map((row, i) => 
-        row.map((cell, j) => {
-          if (i === 2 && j === 2) return 'FREE';
-          const num = parseInt(cell);
-          if (isNaN(num) || num < 1 || num > 75) {
-            throw new Error(`Invalid number at position ${i+1},${j+1}. Must be between 1 and 75.`);
-          }
-          return num;
-        })
-      );
-
-      const response = await apiService.put(`cartellas/${selectedCartella.id}`, {
-        numbers
-      });
+      // Ensure cartella ID is a string
+      const cartellaId = String(selectedCartella.id);
+      console.log('Starting cartella update for ID:', cartellaId, typeof cartellaId);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update cartella');
+      // Convert manual numbers to proper format
+      const numbers = [];
+      for (let i = 0; i < 5; i++) {
+        const row = [];
+        for (let j = 0; j < 5; j++) {
+          if (i === 2 && j === 2) {
+            row.push('FREE');
+          } else {
+            const cell = manualNumbers[i]?.[j] || '';
+            const num = parseInt(cell, 10);
+            if (isNaN(num) || num < 1 || num > 75) {
+              throw new Error(`Invalid number at position ${i+1},${j+1}. Must be between 1 and 75.`);
+            }
+            row.push(num);
+          }
+        }
+        numbers.push(row);
       }
 
-      setSuccess('Cartella updated successfully');
+      console.log('Validated numbers:', JSON.stringify(numbers, null, 2));
+
+      // Get the current branch ID from the selected cartella
+      const branchId = selectedCartella.branchId;
+      if (!branchId) {
+        throw new Error('No branch ID found for the selected cartella');
+      }
+
+      console.log('Using branch ID from cartella:', branchId, typeof branchId);
+
+      // Prepare the update data with proper types and structure
+      const requestBody = {
+        numbers: numbers,
+        branchId: String(branchId) // Ensure branchId is a string
+      };
+
+      console.log('Sending update data:', JSON.stringify(requestBody, null, 2));
+
+      // Use apiService for production, fallback to direct fetch for development
+      let response;
+      if (process.env.NODE_ENV === 'production') {
+        response = await apiService.put(`cartellas/${cartellaId}`, requestBody);
+      } else {
+        // Development mode with detailed logging
+        console.log('Sending update request in development mode');
+        response = await fetch(`http://localhost:5001/api/cartellas/${cartellaId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            numbers: requestBody.numbers,
+            branchId: requestBody.branchId
+          })
+        });
+        
+        console.log('Request sent with status:', response.status);
+        
+        // Log response headers for debugging
+        console.log('Response headers:', [...response.headers.entries()]);
+        
+        // Try to parse response body
+        let responseBody;
+        try {
+          responseBody = await response.clone().json();
+          console.log('Response body:', responseBody);
+        } catch (e) {
+          const text = await response.text();
+          console.log('Raw response:', text);
+          throw new Error(`Failed to parse response: ${text}`);
+        }
+      }
+      
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.error('Update failed with status:', response.status, 'Data:', errorData);
+        } catch (e) {
+          console.error('Failed to parse error response:', e);
+          const errorText = await response.text();
+          console.error('Raw error response:', errorText);
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+        throw new Error(errorData.error || `Server returned status ${response.status}`);
+      }
+
+      // Get the updated cartella data from the response
+      const responseData = await response.json().catch(() => ({}));
+      console.log('Update successful, response:', responseData);
+
+      // Refresh the cartellas list
+      console.log('Refreshing cartellas list...');
+      await fetchCartellas();
+      
+      // Update UI state
+      setSuccess('Cartella updated successfully!');
       setEditDialog(false);
-      fetchCartellas();
       setSelectedCartella(null);
       setManualNumbers(Array(5).fill().map(() => Array(5).fill('')));
+      
+      // Clear success message after delay
+      setTimeout(() => setSuccess(''), 3000);
+      
     } catch (error) {
-      console.error('Error updating cartella:', error);
-      setError(error.message || 'Failed to update cartella. Please try again.');
+      console.error('Error in handleUpdateCartella:', error);
+      setError(`Failed to update cartella: ${error.message}`);
     } finally {
       setLoading(false);
     }

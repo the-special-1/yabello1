@@ -38,40 +38,77 @@ router.put('/:id', auth, async (req, res) => {
   const t = await db.sequelize.transaction();
   try {
     const { id } = req.params;
-    const { numbers } = req.body;
+    const { numbers, branchId } = req.body;
+
+    if (!numbers || !branchId) {
+      throw new Error('Missing required fields');
+    }
 
     const user = await db.User.findByPk(req.user.id, { transaction: t });
     if (!user) {
-      throw new Error('User not found');
+      await t.rollback();
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    // Find the cartella
+    // Find the cartella with the specific ID and branch ID
     const cartella = await db.Cartella.findOne({
       where: {
-        id,
-        branchId: user.branchId
+        id: id,
+        branchId: branchId
       },
-      transaction: t
+      transaction: t,
+      lock: t.LOCK.UPDATE
     });
 
     if (!cartella) {
-      throw new Error('Cartella not found');
+      await t.rollback();
+      return res.status(404).json({ error: 'Cartella not found' });
     }
 
     // Only allow superadmin or the creator to update
     if (user.role !== 'superadmin' && cartella.createdBy !== user.id) {
-      throw new Error('Unauthorized to update this cartella');
+      await t.rollback();
+      return res.status(403).json({ error: 'Unauthorized to update this cartella' });
     }
 
     // Update cartella numbers
-    await cartella.update({ numbers }, { transaction: t });
+    const updatedCartella = await cartella.update({ 
+      numbers: numbers,
+      updatedAt: new Date()
+    }, { 
+      transaction: t,
+      returning: true,
+      plain: true
+    });
 
+    // Fetch the updated cartella with associations before committing
+    const result = await db.Cartella.findByPk(updatedCartella.id, {
+      include: [{
+        model: db.Branch,
+        as: 'branch',  // Using the correct alias from the association
+        attributes: ['name']
+      }],
+      transaction: t
+    });
+
+    // Commit the transaction
     await t.commit();
-    res.json({ message: 'Cartella updated successfully', cartella });
+    
+    // Send the response after successful commit
+    res.json({ 
+      message: 'Cartella updated successfully', 
+      cartella: result.get({ plain: true })
+    });
   } catch (error) {
-    await t.rollback();
+    // Only rollback if transaction is still active
+    if (t && !t.finished) {
+      await t.rollback();
+    }
     console.error('Update cartella error:', error);
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ 
+      error: error.message || 'Failed to update cartella',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
