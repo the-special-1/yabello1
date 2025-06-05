@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import apiService from '../utils/apiService';
 import {
   Paper,
   Typography,
@@ -235,15 +236,12 @@ const BingoGame = () => {
 
     try {
       console.log('Fetching fresh cartella data for ID:', cartella.id);
-      // Fetch fresh cartella data from server
-      const response = await fetch(`/api/cartellas/${cartella.id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      // Fetch fresh cartella data from server using apiService
+      const response = await apiService.get(`cartellas/${cartella.id}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch cartella');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch cartella');
       }
       
       const freshCartella = await response.json();

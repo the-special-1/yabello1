@@ -144,28 +144,22 @@ const CartellaRegistration = ({ open, onSelect, currentRound, onCartellaUpdate }
   const fetchCartellas = async () => {
     try {
       console.log('Fetching cartellas...');
-      const response = await import('../utils/apiService').then(module => {
-        return module.default.get('cartellas/available', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-      });
+      const response = await apiService.get('cartellas/available');
       
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to fetch cartellas');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch cartellas');
       }
 
       const { cartellas } = await response.json();
-      console.log('Full cartella object example:', cartellas[0]); // Log first cartella
+      console.log('Full cartella object example:', cartellas[0]);
       
       // Filter and sort cartellas by ID
-      const filteredCartellas = cartellas
-        .filter(cartella => !['playing', 'won', 'lost'].includes(cartella.status))
-        .sort((a, b) => parseInt(a.id) - parseInt(b.id)); // Sort by ID in ascending order
+      const filteredCartellas = (cartellas || [])
+        .filter(cartella => cartella && !['playing', 'won', 'lost'].includes(cartella.status))
+        .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10));
       
-      setAvailableCartellas(filteredCartellas || []);
+      setAvailableCartellas(filteredCartellas);
     } catch (err) {
       console.error('Error fetching cartellas:', err);
       setError(err.message);
