@@ -186,7 +186,31 @@ router.get('/', auth, async (req, res) => {
 // Get a specific cartella
 router.get('/:id', auth, async (req, res) => {
   try {
-    const cartella = await db.Cartella.findByPk(req.params.id, {
+    const { id } = req.params;
+    const { user } = req;
+
+    // Superadmin can access any cartella by its ID
+    if (user.role === 'superadmin') {
+      const cartella = await db.Cartella.findByPk(id, {
+        include: [{ model: db.Branch, as: 'branch', attributes: ['name'] }]
+      });
+      if (!cartella) {
+        return res.status(404).json({ error: 'Cartella not found' });
+      }
+      return res.json(cartella);
+    }
+
+    // For other users, enforce branch access
+    const fullUser = await db.User.findByPk(user.id);
+    if (!fullUser || !fullUser.branchId) {
+        return res.status(403).json({ error: 'Access denied: User branch not found.' });
+    }
+    
+    const cartella = await db.Cartella.findOne({
+      where: {
+        id: id,
+        branchId: fullUser.branchId
+      },
       include: [{
         model: db.Branch,
         as: 'branch',
@@ -195,7 +219,7 @@ router.get('/:id', auth, async (req, res) => {
     });
 
     if (!cartella) {
-      return res.status(404).json({ error: 'Cartella not found' });
+      return res.status(404).json({ error: 'Cartella not found in your branch' });
     }
 
     res.json(cartella);
