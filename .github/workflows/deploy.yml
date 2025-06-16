@@ -75,29 +75,15 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # Source NVM to set up the Node.js environment
+            export NVM_DIR="/root/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            # Navigate to the server directory
             cd /root/yabello1/server
-            # Source profile to ensure environment variables are loaded
-            source /root/.bashrc || true
-            # Try to find npm and pm2 in various locations
-            export PATH="$PATH:/usr/bin:/usr/local/bin:/root/.nvm/versions/node/*/bin:/usr/local/nodejs/bin"
-            # Check if node and npm are available
-            which node || echo "Node not found in PATH"
-            which npm || echo "npm not found in PATH"
-            which pm2 || echo "pm2 not found in PATH"
-            # Install dependencies using available npm
-            if command -v npm &> /dev/null; then
-              npm ci --production
-            else
-              echo "npm not found, skipping dependency installation"
-            fi
-            # Restart server using available pm2
-            if command -v pm2 &> /dev/null; then
-              pm2 restart index || pm2 start index.js --name index
-            else
-              echo "pm2 not found, skipping server restart"
-              # Try to install pm2 globally
-              if command -v npm &> /dev/null; then
-                npm install -g pm2
-                pm2 restart yabello-server || pm2 start server.js --name yabello-server
-              fi
-            fi
+            
+            # Install production dependencies
+            npm ci --production
+            
+            # Restart the server with PM2, or start it if it's not running
+            pm2 restart index || pm2 start index.js --name index
