@@ -331,7 +331,7 @@ const CartellaManagement = () => {
       console.log('Sending update data:', JSON.stringify(requestBody, null, 2));
 
       // Use the apiService for all environments
-      const response = await apiService.put(`cartellas/${cartellaId}`, requestBody);
+      const response = await apiService.put(`cartellas/${cartellaId}/${branchId}`, { numbers });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -366,7 +366,12 @@ const CartellaManagement = () => {
       setLoading(true);
       setError('');
 
-      const response = await apiService.delete(`cartellas/${selectedCartella.id}`);
+      const branchId = selectedCartella.branchId;
+      if (!branchId) {
+        throw new Error('Cannot delete: Branch ID is missing.');
+      }
+
+      const response = await apiService.delete(`cartellas/${selectedCartella.id}/${branchId}`);
       
       if (!response.ok) {
         const errorData = await response.json();
