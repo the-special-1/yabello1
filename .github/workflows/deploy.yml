@@ -85,5 +85,6 @@ jobs:
             # Install production dependencies
             npm ci --production
 
-            # Start or restart the application using the ecosystem file and ensuring production env
-            pm2 startOrRestart ecosystem.config.js --env production
+            # Start or restart the application in production mode
+            NODE_ENV=production pm2 start index.js --name index --update-env || \
+            NODE_ENV=production pm2 restart index
