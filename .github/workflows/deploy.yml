@@ -78,12 +78,12 @@ jobs:
             # Source NVM to set up the Node.js environment
             export NVM_DIR="/root/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            
+
             # Navigate to the server directory
             cd /root/yabello1/server
-            
+
             # Install production dependencies
             npm ci --production
-            
-            # Restart the server with PM2, or start it if it's not running
-            pm2 restart index || pm2 start index.js --name index
+
+            # Start or restart the application using the ecosystem file and ensuring production env
+            pm2 startOrRestart ecosystem.config.js --env production
