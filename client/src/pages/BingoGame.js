@@ -225,22 +225,11 @@ const BingoGame = () => {
       return;
     }
     
-    // Find cartella by its actual ID/number
-    const cartella = activeCartellas.find(c => c.id === number.toString() || c.id === number);
-    console.log('Found cartella in activeCartellas:', cartella);
-    
-    if (!cartella) {
-      showErrorToast('This cartella is not registered for the current game');
-      return;
-    }
-
     try {
-      console.log('Fetching fresh cartella data for ID:', cartella.id);
-      // Fetch fresh cartella data from server using apiService
-      const response = await apiService.get(`cartellas/${cartella.id}`);
-      
+      const response = await apiService.get(`/cartellas/${number}`);
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Cartella not found');
         throw new Error(errorData.error || 'Failed to fetch cartella');
       }
       
