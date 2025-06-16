@@ -71,12 +71,19 @@ app.use((err, req, res, next) => {
 });
 
 // Serve static files from the React app
-app.use(express.static(path.join(__dirname, '../client/build')));
-
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
-});
+if (NODE_ENV === 'production') {
+  // In production, serve the static files from the path configured in Nginx
+  app.use(express.static('/var/yabellobingo'));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve('/var/yabellobingo', 'index.html'));
+  });
+} else {
+  // In development, serve from the local client build directory
+  app.use(express.static(path.join(__dirname, '../client/build')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 5001;
 console.log('Starting server on port:', PORT);

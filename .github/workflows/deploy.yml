@@ -92,7 +92,7 @@ jobs:
             fi
             # Restart server using available pm2
             if command -v pm2 &> /dev/null; then
-              pm2 restart yabello-server || pm2 start server.js --name yabello-server
+              pm2 restart index || pm2 start index.js --name index
             else
               echo "pm2 not found, skipping server restart"
               # Try to install pm2 globally
