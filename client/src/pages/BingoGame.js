@@ -226,16 +226,28 @@ const BingoGame = () => {
     }
     
     try {
-      const response = await apiService.get(`/cartellas/${number}`);
+      // Fetch the cartella with authentication
+      const response = await fetch(`/api/cartellas/${number}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Cartella not found');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Error response:', errorData);
         throw new Error(errorData.error || 'Failed to fetch cartella');
       }
       
       const freshCartella = await response.json();
       console.log('Fresh cartella data from server:', freshCartella);
-      console.log('Fresh cartella numbers:', freshCartella.numbers);
+      
+      // Verify the cartella is from the user's branch
+      const userBranchId = JSON.parse(localStorage.getItem('user'))?.branchId;
+      if (userBranchId && freshCartella.branchId !== userBranchId) {
+        throw new Error('This cartella does not belong to your branch');
+      }
       
       // Update both checked cartella and active cartellas
       setCheckedCartella(freshCartella);

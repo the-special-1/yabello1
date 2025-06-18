@@ -143,23 +143,33 @@ const CartellaRegistration = ({ open, onSelect, currentRound, onCartellaUpdate }
 
   const fetchCartellas = async () => {
     try {
-      console.log('Fetching cartellas...');
+      console.log('Fetching cartellas for user:', {
+        userId: user?.id,
+        userRole: user?.role,
+        userBranchId: user?.branchId
+      });
+      
+      // Let the backend handle the branch filtering based on the authenticated user
       const response = await apiService.get('cartellas/available');
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to fetch cartellas');
+        throw new Error(errorData.error || errorData.message || 'Failed to fetch cartellas');
       }
 
       const { cartellas } = await response.json();
-      console.log('Full cartella object example:', cartellas[0]);
       
-      // Filter and sort cartellas by ID
-      const filteredCartellas = (cartellas || [])
-        .filter(cartella => cartella && !['playing', 'won', 'lost'].includes(cartella.status))
-        .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10));
+      if (!Array.isArray(cartellas)) {
+        throw new Error('Invalid response format: expected cartellas array');
+      }
+
+      console.log('Received cartellas:', cartellas.length);
       
-      setAvailableCartellas(filteredCartellas);
+      // Sort cartellas by ID
+      const sortedCartellas = [...cartellas].sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10));
+      
+      setAvailableCartellas(sortedCartellas);
+      setError(''); // Clear any previous errors
     } catch (err) {
       console.error('Error fetching cartellas:', err);
       setError(err.message);
