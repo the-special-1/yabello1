@@ -49,7 +49,6 @@ module.exports = (sequelize) => {
     branchId: {
       type: DataTypes.UUID,
       allowNull: false,
-      primaryKey: true, 
       references: {
         model: 'Branches',
         key: 'id'
