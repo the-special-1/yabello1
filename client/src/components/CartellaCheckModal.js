@@ -53,8 +53,9 @@ const CartellaCheckModal = ({
     borderRadius: 1,
     outline: 'none',
     alignItems: 'center',
-    maxHeight: '90vh',
-    overflow: 'auto',
+    maxHeight: '95vh',
+    overflowY: showBonusSection ? 'auto' : 'hidden',
+    overflowX: 'hidden',
     opacity: 0.9,
     tabIndex: -1
   };

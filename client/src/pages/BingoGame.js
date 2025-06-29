@@ -220,6 +220,13 @@ const BingoGame = () => {
   const handleCheckCartella = useCallback(async () => {
     console.log('=== Starting Cartella Check ===');
     const number = parseInt(checkNumber);
+
+    // First, check if the cartella is even in the active game
+    const isCartellaActive = activeCartellas.some(c => c.id === number.toString());
+    if (!isCartellaActive) {
+      showErrorToast(`Cartella #${number} is not selected for this game.`);
+      return;
+    }
     if (isNaN(number)) {
       showErrorToast('Please enter a valid cartella number');
       return;
